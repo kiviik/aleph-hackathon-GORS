@@ -1,10 +1,27 @@
-# Atelier Professional
+# Aleph Hackathon GOR
 
-Independent working clone of Atelier focused on a brand-safe, professional
-workflow: honest evidence, reliable saving, traceable decisions, collection
-planning, materials, review, and outcomes.
+Event repository for **BA Estaciona**, a local-first QVAC Track 2 prototype
+that answers “¿Puedo estacionar acá, ahora?” by chaining visual evidence,
+location, parking rules, and a conservative decision policy.
 
-## Run
+The repository also preserves the existing Atelier Professional surface under
+`app/`, `components/`, and `lib/` as the starting workspace from which the
+hackathon branch was prepared. The event prototype is isolated in
+`ba-estaciona-qvac/`.
+
+## Event prototype
+
+```bash
+cd ba-estaciona-qvac
+npm install
+npm test
+npm run evaluate:mock
+```
+
+See [`ba-estaciona-qvac/README.md`](ba-estaciona-qvac/README.md) for QVAC
+setup, local inference, recording, evaluation, and submission instructions.
+
+## Original Atelier surface
 
 ```bash
 pnpm install
@@ -23,20 +40,9 @@ pnpm test
 pnpm build
 ```
 
-## Hackathon prototype
+## Team and AI-agent context
 
-The QVAC Track 2 prototype lives in [`ba-estaciona-qvac/`](ba-estaciona-qvac/)
-and is intentionally isolated from the Atelier frontend. Work on the
-`hackaton` branch, not `main`.
-
-```bash
-cd ba-estaciona-qvac
-npm install
-npm test
-npm run evaluate:mock
-```
-
-Team and AI-agent context is maintained in [`AGENTS.md`](AGENTS.md),
+Context is maintained in [`AGENTS.md`](AGENTS.md),
 [`docs/hackaton/`](docs/hackaton/), and the project-scoped harness in
 [`ai-harness/`](ai-harness/). Regenerate the shared context with:
 
