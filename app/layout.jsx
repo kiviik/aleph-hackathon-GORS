@@ -5,6 +5,7 @@ import "./atelier-ui.css";
 // The data-control centre (import + connections). Loaded last and namespaced
 // `dc-`, so it adds rules rather than competing with the two above it.
 import "./import.css";
+import "leaflet/dist/leaflet.css";
 
 export const metadata = {
   title: "Atelier — the decision layer for fashion brands",

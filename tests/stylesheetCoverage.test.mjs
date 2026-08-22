@@ -70,7 +70,7 @@ test("no screen ships a class namespace with no stylesheet at all", async () => 
   const sources = [];
   for (const d of DIRS) {
     for await (const rel of walk(d)) {
-      if (/\.(jsx?|mjs|css)$/.test(rel)) {
+      if (/\.(jsx?|tsx?|mjs|css)$/.test(rel)) {
         sources.push({ rel, src: await readFile(join(ROOT, rel), "utf8") });
       }
     }
@@ -81,7 +81,7 @@ test("no screen ships a class namespace with no stylesheet at all", async () => 
 
   const used = new Set();
   for (const f of sources) {
-    if (!/\.(jsx?|mjs)$/.test(f.rel)) continue;
+    if (!/\.(jsx?|tsx?|mjs)$/.test(f.rel)) continue;
     for (const c of classesIn(f.src)) used.add(c);
   }
 
@@ -122,7 +122,7 @@ test("every stylesheet in app/ is imported by something", async () => {
   for (const d of DIRS) for await (const rel of walk(d)) files.push(rel);
 
   const code = (await Promise.all(
-    files.filter((f) => /\.(jsx?|mjs)$/.test(f))
+    files.filter((f) => /\.(jsx?|tsx?|mjs)$/.test(f))
          .map((f) => readFile(join(ROOT, f), "utf8")))).join("\n");
 
   const unimported = files
@@ -130,7 +130,7 @@ test("every stylesheet in app/ is imported by something", async () => {
     .filter((f) => {
       const base = f.split("/").pop();
       // `import "./globals.css"` / `import "@/app/globals.css"` / "../app/x.css"
-      return !new RegExp(`import\\s+["'][^"']*${base.replace(".", "\\.")}["']`).test(code);
+      return !new RegExp(`import(?:\\s+[^"']+\\s+from)?\\s+["'][^"']*${base.replace(".", "\\.")}["']`).test(code);
     });
 
   assert.deepEqual(unimported, [], "these stylesheets are never imported, so no " +
