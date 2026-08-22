@@ -14,6 +14,10 @@ import { createFramePipeline } from '../src/core/frame-pipeline.mjs'
 import { createTensor, createScratch, SIZE } from '../src/core/preprocess.mjs'
 import { decodeRows } from '../src/core/boxes.mjs'
 
+// @qvac/onnx returns a NUMERIC session handle, and the very first session in a worklet is 0.
+// Every check on `session` must therefore compare against null, never test truthiness: `!!0` is
+// false, which made a perfectly loaded session report `loaded: false` and every DETECT fail with
+// 'model not loaded' while getInputInfo/getOutputInfo were happily returning real tensor shapes.
 let session = null
 let modelPath = null
 let inputName = null
@@ -46,13 +50,13 @@ function health () {
     addon: 'loaded',
     providers,
     model: modelPath,
-    loaded: !!session,
+    loaded: session !== null,
     size: SIZE
   }
 }
 
 function load (path) {
-  if (session) return { already: true, ...health() }
+  if (session !== null) return { already: true, ...health() }
   const t0 = Date.now()
   session = onnx.createSession(path, { provider: 'auto_gpu' })
   modelPath = path
@@ -68,12 +72,12 @@ const read = createFrameReader(async (header, payload) => {
     if (type === RPC.HEALTH) return reply(id, health())
     if (type === RPC.LOAD) return reply(id, load(header.modelPath))
     if (type === RPC.UNLOAD) {
-      if (session) { try { onnx.releaseSession?.(session) } catch {} }
+      if (session !== null) { try { onnx.releaseSession?.(session) } catch {} }
       session = null; modelPath = null; inputName = null
       return reply(id, { released: true })
     }
     if (type === RPC.DETECT) {
-      if (!session) return fail(id, 'model not loaded', 'NO_MODEL')
+      if (session === null) return fail(id, 'model not loaded', 'NO_MODEL')
       // onnx.run is synchronous and the worklet is single-threaded, so requests must serialise.
       if (busy) return fail(id, 'inference in progress', 'BUSY')
       busy = true

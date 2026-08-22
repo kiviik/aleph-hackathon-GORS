@@ -74,7 +74,11 @@ export default function ScanScreen(props: Props) {
       setModel(st);
       if (health?.addon === "loaded") {
         const loaded = await detector.loadModel(st.path);
-        setHealth((h) => (h ? { ...h, loaded: true, model: loaded.model } : h));
+        // Trust the worklet's own `loaded` flag. Hardcoding `true` here made a failed
+        // createSession look like a healthy engine, and the failure only resurfaced later as
+        // "Detector: model not loaded" on every frame of a scan.
+        setHealth((h) => (h ? { ...h, loaded: !!loaded.loaded, model: loaded.model } : h));
+        if (!loaded.loaded) setHealthError(`ONNX session did not load: ${JSON.stringify(loaded)}`);
       }
     } catch (e: any) {
       setHealthError(String(e?.message || e));
