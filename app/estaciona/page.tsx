@@ -22,14 +22,14 @@ type ParkingSpot = {
 };
 
 const spots: ParkingSpot[] = [
-  { id: "A-12", street: "Portobello Road", number: "142", neighborhood: "Notting Hill", status: "free", x: 238, y: 170, lat: 51.5169, lng: -0.2059, heading: 90, lastChecked: "hace 18 s", confidence: "94%" },
-  { id: "A-13", street: "Portobello Road", number: "160", neighborhood: "Notting Hill", status: "occupied", x: 282, y: 200, lat: 51.5172, lng: -0.2057, heading: 90, lastChecked: "hace 18 s", confidence: "99%" },
-  { id: "B-07", street: "Kensington High St", number: "220", neighborhood: "Kensington", status: "free", x: 355, y: 286, lat: 51.4994, lng: -0.1915, heading: 0, lastChecked: "hace 42 s", confidence: "91%" },
-  { id: "C-21", street: "Camden High St", number: "89", neighborhood: "Camden", status: "review", x: 492, y: 157, lat: 51.5402, lng: -0.1429, heading: 180, lastChecked: "hace 1 min", confidence: "68%" },
-  { id: "D-04", street: "Baker Street", number: "110", neighborhood: "Marylebone", status: "free", x: 582, y: 255, lat: 51.5216, lng: -0.1570, heading: 90, lastChecked: "hace 26 s", confidence: "96%" },
-  { id: "D-05", street: "Oxford Street", number: "250", neighborhood: "Fitzrovia", status: "occupied", x: 615, y: 291, lat: 51.5152, lng: -0.1450, heading: 90, lastChecked: "hace 26 s", confidence: "98%" },
-  { id: "E-18", street: "Charing Cross Road", number: "70", neighborhood: "Soho", status: "free", x: 751, y: 390, lat: 51.5109, lng: -0.1285, heading: 180, lastChecked: "hace 36 s", confidence: "93%" },
-  { id: "F-03", street: "Borough High Street", number: "30", neighborhood: "Southwark", status: "free", x: 643, y: 489, lat: 51.5024, lng: -0.0940, heading: 0, lastChecked: "hace 51 s", confidence: "89%" },
+  { id: "A-12", street: "Stephen Avenue SW", number: "100", neighborhood: "Downtown Calgary", status: "free", x: 238, y: 170, lat: 51.0447, lng: -114.0689, heading: 90, lastChecked: "hace 18 s", confidence: "94%" },
+  { id: "A-13", street: "Stephen Avenue SW", number: "140", neighborhood: "Downtown Calgary", status: "occupied", x: 282, y: 200, lat: 51.0449, lng: -114.0685, heading: 90, lastChecked: "hace 18 s", confidence: "99%" },
+  { id: "B-07", street: "17 Avenue SW", number: "1200", neighborhood: "Beltline", status: "free", x: 355, y: 286, lat: 51.0374, lng: -114.0906, heading: 0, lastChecked: "hace 42 s", confidence: "91%" },
+  { id: "C-21", street: "Kensington Road NW", number: "1100", neighborhood: "Kensington", status: "review", x: 492, y: 157, lat: 51.0522, lng: -114.0871, heading: 180, lastChecked: "hace 1 min", confidence: "68%" },
+  { id: "D-04", street: "10 Street NW", number: "210", neighborhood: "Kensington", status: "free", x: 582, y: 255, lat: 51.0520, lng: -114.0861, heading: 90, lastChecked: "hace 26 s", confidence: "96%" },
+  { id: "D-05", street: "4 Street SW", number: "500", neighborhood: "Downtown Calgary", status: "occupied", x: 615, y: 291, lat: 51.0476, lng: -114.0712, heading: 90, lastChecked: "hace 26 s", confidence: "98%" },
+  { id: "E-18", street: "1 Street SE", number: "700", neighborhood: "East Village", status: "free", x: 751, y: 390, lat: 51.0472, lng: -114.0615, heading: 180, lastChecked: "hace 36 s", confidence: "93%" },
+  { id: "F-03", street: "17 Avenue SE", number: "900", neighborhood: "Inglewood", status: "free", x: 643, y: 489, lat: 51.0374, lng: -114.0583, heading: 0, lastChecked: "hace 51 s", confidence: "89%" },
 ];
 
 const statusLabel: Record<SpotStatus, string> = {
@@ -49,6 +49,33 @@ function formatToday() {
 }
 
 type GeoPoint = { lat: number; lng: number };
+
+type AskedPlace = { query: string; count: number };
+type PlaceMemory = { favoriteIds: string[]; askedPlaces: AskedPlace[] };
+
+const memoryCookie = "ba-estaciona-place-memory";
+
+function readCookie(name: string) {
+  if (typeof document === "undefined") return "";
+  const item = document.cookie.split("; ").find((entry) => entry.startsWith(`${name}=`));
+  return item ? decodeURIComponent(item.slice(name.length + 1)) : "";
+}
+
+function writeCookie(name: string, value: string) {
+  document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=31536000; Path=/; SameSite=Lax`;
+}
+
+function readPlaceMemory(): PlaceMemory {
+  try {
+    const parsed = JSON.parse(readCookie(memoryCookie)) as Partial<PlaceMemory>;
+    return {
+      favoriteIds: Array.isArray(parsed.favoriteIds) ? parsed.favoriteIds.filter((id): id is string => typeof id === "string") : [],
+      askedPlaces: Array.isArray(parsed.askedPlaces) ? parsed.askedPlaces.filter((place): place is AskedPlace => Boolean(place && typeof place.query === "string" && typeof place.count === "number")) : [],
+    };
+  } catch {
+    return { favoriteIds: [], askedPlaces: [] };
+  }
+}
 
 function distanceKm(a: GeoPoint, b: GeoPoint) {
   const earthRadius = 6371;
@@ -82,7 +109,7 @@ function OpenStreetMapCanvas({ spots: visibleSpots, selectedId, focusPoint, curr
     import("leaflet").then((module) => {
       if (cancelled || !containerRef.current) return;
       const L = (module.default ?? module) as typeof import("leaflet");
-      const map = L.map(containerRef.current, { zoomControl: true, attributionControl: true }).setView([51.5074, -0.1278], 12.8);
+      const map = L.map(containerRef.current, { zoomControl: true, attributionControl: true }).setView([51.0447, -114.0719], 12.8);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>',
@@ -140,6 +167,35 @@ export default function EstacionaPage() {
   const [searchingDestination, setSearchingDestination] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");
+  const [placeMemory, setPlaceMemory] = useState<PlaceMemory>({ favoriteIds: [], askedPlaces: [] });
+
+  useEffect(() => {
+    if (!readCookie("ba-estaciona-user-id")) {
+      const userId = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      writeCookie("ba-estaciona-user-id", userId);
+    }
+    setPlaceMemory(readPlaceMemory());
+  }, []);
+
+  const savePlaceMemory = (next: PlaceMemory) => {
+    setPlaceMemory(next);
+    writeCookie(memoryCookie, JSON.stringify(next));
+  };
+
+  const toggleFavorite = () => {
+    const favoriteIds = placeMemory.favoriteIds.includes(selectedSpot.id)
+      ? placeMemory.favoriteIds.filter((id) => id !== selectedSpot.id)
+      : [...placeMemory.favoriteIds, selectedSpot.id].slice(-12);
+    savePlaceMemory({ ...placeMemory, favoriteIds });
+  };
+
+  const showPlace = (spot: ParkingSpot) => {
+    setSelectedId(spot.id);
+    setDestination(`${spot.street} ${spot.number}`);
+    setQuery("");
+    setDestinationPoint({ lat: spot.lat, lng: spot.lng });
+    setCurrentLocation(null);
+  };
   const openStreetView = () => {
     const url = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${selectedSpot.lat},${selectedSpot.lng}&heading=${selectedSpot.heading}&pitch=0&fov=90`;
     window.open(url, "_blank", "noopener,noreferrer");
@@ -157,14 +213,13 @@ export default function EstacionaPage() {
   }, [query, zoneSpots]);
   const selectedSpot = visibleSpots.find((spot) => spot.id === selectedId) ?? visibleSpots[0] ?? spots[0];
 
-  const searchDestination = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const value = destination.trim();
+  const resolveDestination = async (rawValue: string) => {
+    const value = rawValue.trim();
     if (!value) return;
     setSearchingDestination(true);
     setLocationMessage("");
     try {
-      const endpoint = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=gb&q=${encodeURIComponent(`${value}, London, UK`)}`;
+      const endpoint = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ca&q=${encodeURIComponent(`${value}, Calgary, Alberta, Canada`)}`;
       const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
       const results = response.ok ? await response.json() as Array<{ lat: string; lon: string }> : [];
       const result = results[0];
@@ -172,17 +227,26 @@ export default function EstacionaPage() {
         setDestinationPoint({ lat: Number(result.lat), lng: Number(result.lon) });
         setCurrentLocation(null);
       } else {
-        const normalized = value.toLocaleLowerCase("en-GB");
-        const localMatch = spots.find((spot) => `${spot.street} ${spot.number} ${spot.neighborhood}`.toLocaleLowerCase("en-GB").includes(normalized));
+        const normalized = value.toLocaleLowerCase("en-CA");
+        const localMatch = spots.find((spot) => `${spot.street} ${spot.number} ${spot.neighborhood}`.toLocaleLowerCase("en-CA").includes(normalized));
         if (!localMatch) throw new Error("not-found");
         setDestinationPoint({ lat: localMatch.lat, lng: localMatch.lng });
         setCurrentLocation(null);
       }
+      const normalizedQuery = value.replace(/\s+/g, " ").toLocaleLowerCase("en-CA");
+      const askedPlaces = placeMemory.askedPlaces.filter((place) => place.query !== normalizedQuery);
+      askedPlaces.push({ query: normalizedQuery, count: (placeMemory.askedPlaces.find((place) => place.query === normalizedQuery)?.count ?? 0) + 1 });
+      savePlaceMemory({ ...placeMemory, askedPlaces: askedPlaces.sort((a, b) => b.count - a.count).slice(0, 6) });
     } catch {
-      setLocationMessage("No encontramos ese destino. Probá con una calle o barrio de Londres.");
+      setLocationMessage("No encontramos ese destino. Probá con una calle o barrio de Calgary.");
     } finally {
       setSearchingDestination(false);
     }
+  };
+
+  const searchDestination = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await resolveDestination(destination);
   };
 
   const useCurrentLocation = () => {
@@ -233,7 +297,7 @@ export default function EstacionaPage() {
       <section className={styles.content}>
         <div className={styles.headingRow}>
           <div>
-          <p className={styles.eyebrow}>Mapa en vivo · Londres</p>
+          <p className={styles.eyebrow}>Mapa en vivo · Calgary</p>
             <h1>Encontrá un lugar para estacionar</h1>
             <p className={styles.intro}>Espacios detectados en calles monitoreadas. Cada punto representa evidencia reciente, no una reserva.</p>
           </div>
@@ -253,7 +317,7 @@ export default function EstacionaPage() {
               <div className={styles.destinationBar}>
                 <form className={styles.destinationSearch} onSubmit={searchDestination}>
                   <span aria-hidden="true">⌖</span>
-                  <input value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="¿A dónde vas? (ej. Soho)" aria-label="Buscar destino en Londres" />
+                  <input value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="¿A dónde vas? (ej. Beltline)" aria-label="Buscar destino en Calgary" />
                   <button type="submit" disabled={searchingDestination}>{searchingDestination ? "Buscando…" : "Buscar"}</button>
                 </form>
                 <button className={styles.locationButton} type="button" onClick={useCurrentLocation} disabled={locating}>{locating ? "Ubicando…" : "Usar mi ubicación"}</button>
@@ -272,7 +336,7 @@ export default function EstacionaPage() {
             <div className={styles.mapViewport}>
               <OpenStreetMapCanvas spots={visibleSpots} selectedId={selectedSpot.id} focusPoint={focusPoint} currentLocation={currentLocation} onSelect={setSelectedId} />
               {/* The schematic remains a no-network visual fallback in the source for offline demos. */}
-              {false && <svg className={styles.cityMap} viewBox="0 0 1000 650" role="img" aria-label="Mapa esquemático de Londres con espacios de estacionamiento">
+              {false && <svg className={styles.cityMap} viewBox="0 0 1000 650" role="img" aria-label="Mapa esquemático de Calgary con espacios de estacionamiento">
                 <defs>
                   <pattern id="blocks" width="92" height="76" patternUnits="userSpaceOnUse">
                     <rect width="92" height="76" fill="#f7f5ef" />
@@ -295,8 +359,8 @@ export default function EstacionaPage() {
                   <path d="M130 650 L780 0" stroke="#fffdf8" strokeWidth="19" /><path d="M130 650 L780 0" stroke="#d9d4ca" strokeWidth="1.5" />
                 </g>
                 <g className={styles.mapLabels} aria-hidden="true">
-                  <text x="140" y="95">NOTTING HILL</text><text x="390" y="95">CAMDEN</text><text x="630" y="145">MARYLEBONE</text><text x="744" y="350">SOHO</text><text x="550" y="560">SOUTHWARK</text>
-                  <text x="56" y="610" className={styles.riverLabel}>RIVER THAMES</text>
+                  <text x="140" y="95">KENSINGTON</text><text x="390" y="95">BELTLINE</text><text x="630" y="145">DOWNTOWN</text><text x="744" y="350">EAST VILLAGE</text><text x="550" y="560">INGLEWOOD</text>
+                  <text x="56" y="610" className={styles.riverLabel}>BOW RIVER</text>
                 </g>
                 {visibleSpots.map((spot) => (
                   <g key={spot.id} className={`${styles.spotMarker} ${selectedId === spot.id ? styles.selectedMarker : ""}`} role="button" tabIndex={0} aria-label={`${spot.street} ${spot.number}: ${statusLabel[spot.status]}`} onClick={() => setSelectedId(spot.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") setSelectedId(spot.id); }}>
@@ -318,7 +382,12 @@ export default function EstacionaPage() {
             <dl className={styles.evidenceList}><div><dt>Última lectura</dt><dd>{selectedSpot.lastChecked}</dd></div><div><dt>Acuerdo de detección</dt><dd>{selectedSpot.confidence}</dd></div><div><dt>Fuente</dt><dd><span className={styles.sourceDot} /> QVAC local</dd></div></dl>
             <button className={styles.primaryAction} type="button" onClick={openStreetView}>Ver Street View <span>↗</span></button>
             <p className={styles.apiHint}>El mapa usa OpenStreetMap sin clave. Street View se abre en una pestaña aparte.</p>
+            <button className={styles.favoriteButton} type="button" onClick={toggleFavorite}>{placeMemory.favoriteIds.includes(selectedSpot.id) ? "★ Guardado en favoritos" : "☆ Guardar este lugar"}</button>
             <div className={styles.detailNote}><span>i</span><p>La disponibilidad puede cambiar. Esta pantalla muestra evidencia local y no reserva el lugar.</p></div>
+            {(placeMemory.favoriteIds.length > 0 || placeMemory.askedPlaces.length > 0) && <div className={styles.memorySection}>
+              {placeMemory.favoriteIds.length > 0 && <div><p className={styles.memoryTitle}>Tus favoritos</p><div className={styles.memoryList}>{spots.filter((spot) => placeMemory.favoriteIds.includes(spot.id)).map((spot) => <button key={spot.id} type="button" className={styles.memoryChip} onClick={() => showPlace(spot)}>★ {spot.street} {spot.number}</button>)}</div></div>}
+              {placeMemory.askedPlaces.length > 0 && <div><p className={styles.memoryTitle}>Más buscados</p><div className={styles.memoryList}>{placeMemory.askedPlaces.slice(0, 3).map((place) => <button key={place.query} type="button" className={styles.memoryChip} onClick={() => { setDestination(place.query); void resolveDestination(place.query); }}>⌕ {place.query}</button>)}</div></div>}
+            </div>}
             <div className={styles.nearbyHeader}><h3>Otros espacios cerca</h3><span>{visibleSpots.length} puntos</span></div>
             <div className={styles.nearbyList}>{visibleSpots.filter((spot) => spot.id !== selectedSpot.id).slice(0, 4).map((spot) => <button className={styles.nearbyItem} type="button" key={spot.id} onClick={() => setSelectedId(spot.id)}><span className={`${styles.nearbyDot} ${styles[`dot${spot.status}`]}`} /><span><strong>{spot.street} {spot.number}</strong><small>{spot.neighborhood} · {statusLabel[spot.status]}</small></span><span className={styles.itemArrow}>›</span></button>)}</div>
           </aside>
