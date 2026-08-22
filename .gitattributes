@@ -1,0 +1,29 @@
+# Normalize all text to LF in the repository and in working trees.
+#
+# Why: `main` was originally committed from a CRLF checkout while `hackaton` used
+# LF. With no merge base between the two, every shared file differed on every
+# line and 52 files conflicted purely on line endings. Pinning eol=lf keeps that
+# from happening again regardless of contributor platform or core.autocrlf.
+* text=auto eol=lf
+
+# Shell scripts and the Docker entrypoint must stay LF or they break in-container.
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# Binaries: never touch. `text=auto` usually detects these, but the model and the
+# packed Bare worklet bundles are large and must not be sniffed or rewritten.
+*.jpg  -text
+*.jpeg -text
+*.png  -text
+*.onnx -text
+*.apk  -text
+*.aab  -text
+*.keystore -text
+*.jks  -text
+*.bare -text
+*.bundle -text
+
+# Lockfiles are generated; collapse them in GitHub diffs. Local `git diff` is
+# unaffected, so they stay readable and mergeable as ordinary text.
+package-lock.json linguist-generated
+pnpm-lock.yaml    linguist-generated
