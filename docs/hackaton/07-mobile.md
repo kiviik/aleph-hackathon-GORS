@@ -1,5 +1,21 @@
 # Planning mobile — Expo + QVAC + YOLO/ONNX
 
+## Estado Android actual — 22/08/2026
+
+El primer slice implementado vive sólo en `mobile/` y apunta únicamente a
+Android. Incluye una pantalla de diagnóstico local, solicitud de permiso de
+cámara, pipeline visible, trace persistida en el teléfono, salida `REFUSE` ante
+integración incompleta y un perfil EAS que produce un `.apk` (`preview`).
+
+El push anterior de UI con mapa/Street View no forma parte del runtime objetivo:
+no se usan requests de Google, Calgary ni un servidor propio. La app no va a
+consultar la API de cámaras cada minuto en esta etapa; el boundary del repo exige
+que Calgary se congele como research/snapshot antes de habilitar una ingestión.
+
+El próximo gate es integrar la captura real con una Development Build Android y
+validar el artefacto ONNX exacto. Hasta completar ese gate, no se muestra una
+decisión positiva ni se interpreta la ausencia de boxes como espacio libre.
+
 ## Decisión resumida
 
 La app mobile será una demo local-first para el flujo:

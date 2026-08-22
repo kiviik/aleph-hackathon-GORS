@@ -113,6 +113,12 @@ Un repositorio público, reproducible y offline-first con:
 
 ### P7 — Mobile local-first
 
+**Estado al 22/08/2026:** Android M0 iniciado en `mobile/`. Ya existe una
+superficie Expo Android-only con permiso de cámara, diagnóstico offline, trace
+local y perfil EAS para `.apk`. La captura real, YOLO/ONNX y QVAC siguen detrás
+de gates de validación en un dispositivo físico; mientras tanto el resultado es
+`REFUSE`, nunca un positivo simulado.
+
 - Crear una superficie aislada `mobile/` con Expo, sin modificar `app/` ni
   convertir el frontend Atelier en la app de la demo.
 - Confirmar Expo SDK compatible, `@qvac/sdk`, `@qvac/onnx`,
