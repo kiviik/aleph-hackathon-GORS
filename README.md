@@ -81,6 +81,31 @@ experience.
 > synthetic-free City of Calgary rule data. It is a prototype, not legal parking
 > advice.
 
+## Experimentation harness
+
+The laptop-side tooling that validates the mobile port lives in [`harness/`](harness/). The phone
+cannot answer whether its pure-JS preprocessing and 2-pass detector agree with the reference
+implementation they were ported from; the harness can, without a device:
+
+```bash
+cd harness
+npm install
+npm run download-model            # yolo26s.onnx -> harness/models (not committed)
+npm run detector                  # QVAC ONNX sidecar, in another terminal
+
+npm run verify:preprocess         # letterbox geometry + pixels vs sharp (no sidecar needed)
+npm run verify:detection          # same vehicles from the real weights; rewrites the golden fixture
+npm run verify:pipeline 76 4      # the worklet's own frame-pipeline, end to end
+npm run export:bands              # re-bake mobile/src/data/bands.json from learned state
+```
+
+`verify:detection` is what produces `mobile/test/fixtures/detector-golden.json`, which is why
+`mobile/`'s own test suite can check the whole detector path with no ONNX, no addon and no phone.
+See [`harness/README.md`](harness/README.md) for what each gate proves and what it does not.
+
+Note that `harness/` (experimentation) and [`ai-harness/`](ai-harness/) (agent context) are
+unrelated: the first tests the vision pipeline, the second maintains the shared LLM context.
+
 ## Original Atelier surface
 
 ```bash
@@ -103,8 +128,9 @@ pnpm build
 ## Team and AI-agent context
 
 Context is maintained in [`AGENTS.md`](AGENTS.md),
-[`docs/hackaton/`](docs/hackaton/), and the project-scoped harness in
-[`ai-harness/`](ai-harness/). Regenerate the shared context with:
+[`docs/hackaton/`](docs/hackaton/), and the project-scoped context harness in
+[`ai-harness/`](ai-harness/) — not to be confused with the vision-pipeline
+[`harness/`](harness/) above. Regenerate the shared context with:
 
 ```bash
 node ai-harness/context-builder.mjs

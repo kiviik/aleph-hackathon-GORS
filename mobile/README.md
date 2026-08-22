@@ -66,13 +66,14 @@ the whole decision matrix — by replaying `test/fixtures/detector-golden.json`,
 output recorded from the desktop sidecar. `src/core/frame-pipeline.mjs` is the *same*
 module the worklet runs, so what is verified here is what ships.
 
-Parity against the desktop pipeline is checked from the source repo:
+Parity against the reference pipeline is checked by the harness in [`../harness`](../harness):
 
 ```bash
-# in calgary-free-parking, with `npm run detector` running
-node scripts/verify-mobile-preprocess.mjs    # pure-JS letterbox vs sharp
-node scripts/verify-mobile-detection.mjs     # same boxes from the real weights
-node scripts/verify-mobile-pipeline.mjs 76 4 # full on-device path, live camera
+cd ../harness
+npm run detector                  # QVAC ONNX sidecar, in another terminal
+npm run verify:preprocess         # pure-JS letterbox vs sharp (no sidecar needed)
+npm run verify:detection          # same boxes from the real weights; rewrites the golden fixture
+npm run verify:pipeline 76 4      # full on-device path, live camera
 ```
 
 ## What it does and does not prove

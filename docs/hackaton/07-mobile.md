@@ -328,7 +328,7 @@ Un pill que dijera "LOCAL" mientras el teléfono consulta la ciudad sería una a
 `learnBands` necesita ~20 frames distintos (~30-40 min de historia) **por cámara**. Es imposible
 durante una demo. Se resolvió así:
 
-- el aprendizaje queda en la laptop (`scripts/export-mobile-assets.mjs` en el repo fuente);
+- el aprendizaje queda en la laptop (`harness/scripts/export-mobile-assets.mjs`, `npm run export:bands`);
 - el teléfono consume `mobile/src/data/bands.json`: **15 cámaras, 16 bandas, ~18 KB**, con la
   geometría de banda, el ajuste de escala de perspectiva y la zona de estacionamiento ya resuelta;
 - por eso la cobertura es de 15 cámaras, no de las 208. Una cámara sin banda aprendida no puede
@@ -344,7 +344,7 @@ no detectado deja una franja texturada y el guard de apariencia lo marca *unknow
 
 Medición de paridad contra el pipeline de escritorio (misma imagen, mismos pesos):
 17 vehículos vs 17, todos emparejados con IoU >= 0.979. Ver
-`scripts/verify-mobile-detection.mjs`.
+`harness/scripts/verify-mobile-detection.mjs` (`npm run verify:detection`).
 
 ### Artefacto del modelo — registro exigido por este documento
 

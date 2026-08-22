@@ -1,6 +1,6 @@
 // Validates the mobile detector path with NO ONNX, NO addon and NO phone, by replaying
 // detector-golden.json -- the raw model output captured from the desktop sidecar.
-// Regenerate with: node scripts/verify-mobile-detection.mjs (in the calgary-free-parking repo).
+// Regenerate with: npm run verify:detection (in ../harness, with the sidecar running).
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'

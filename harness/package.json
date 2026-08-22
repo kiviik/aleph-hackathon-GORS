@@ -1,0 +1,30 @@
+{
+  "name": "ba-estaciona-harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Laptop-side experimentation harness for the on-device mobile pipeline: preprocessing and detection parity gates, an end-to-end rehearsal against the real YOLO26s weights, and the band export the app bundles.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "detector": "node node_modules/bare-runtime/bin/bare detector/detector.mjs",
+    "download-model": "node scripts/download-model.mjs",
+    "verify:preprocess": "node scripts/verify-mobile-preprocess.mjs",
+    "verify:detection": "node scripts/verify-mobile-detection.mjs",
+    "verify:pipeline": "node scripts/verify-mobile-pipeline.mjs",
+    "export:bands": "node scripts/export-mobile-assets.mjs"
+  },
+  "dependencies": {
+    "@qvac/onnx": "^0.15.0",
+    "@turf/turf": "^7.2.0",
+    "bare-buffer": "^3.6.1",
+    "bare-http1": "^4.5.7",
+    "bare-runtime": "1.28.5",
+    "sharp": "^0.34.0"
+  },
+  "overrides": {
+    "bare-runtime": "1.28.5"
+  }
+}
