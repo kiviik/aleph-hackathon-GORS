@@ -1,4 +1,4 @@
-# BA Estaciona Mobile / Android
+# Calgary Estaciona Mobile
 
 Superficie Android local-first para el hackathon. Este primer vertical slice
 valida el contrato de ejecución en el teléfono: permiso de cámara, modo offline,
