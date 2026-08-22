@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Calgary Estaciona",
+    "slug": "ba-estaciona-mobile",
+    "version": "1.0.0",
+    "platforms": ["android"],
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "baestaciona",
+    "android": {
+      "package": "com.baestaciona.mobile",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#1f4333"
+      },
+      "permissions": ["android.permission.CAMERA"]
+    }
+  }
+}
