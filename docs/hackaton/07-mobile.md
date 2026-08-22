@@ -57,6 +57,13 @@ tag `mobile-v*` crea/actualiza una Release versionada. El archivo de CI es un
 APK debug instalable para demo; la firma de producción requiere una keystore
 administrada como secret y queda fuera de esta primera iteración.
 
+La publicación necesita que el repositorio permita `contents: write` para el
+token de Actions. En `Settings > Actions > General > Workflow permissions` debe
+estar seleccionado `Read and write permissions`. Si una política de
+organización lo impide, el workflow acepta el secret opcional `RELEASE_TOKEN`,
+un token fine-grained limitado a este repositorio con `Contents: Read and
+write`.
+
 ## Decisión resumida
 
 La app mobile será una demo local-first para el flujo:

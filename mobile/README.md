@@ -65,10 +65,16 @@ git tag mobile-v0.1.0
 git push origin mobile-v0.1.0
 ```
 
-El workflow usa únicamente el `GITHUB_TOKEN` y `contents: write`; no requiere
-Expo token, API key ni servidor propio. El APK de CI es de demo/debug. Para un
-release firmado de producción habrá que agregar una keystore mediante GitHub
-Secrets y una variante de firma explícita.
+El workflow usa `contents: write` para publicar la Release. En GitHub hay que
+revisar `Settings > Actions > General > Workflow permissions` y seleccionar
+`Read and write permissions`. Si la organización impone tokens read-only, crear
+un token fine-grained con permiso `Contents: Read and write`, guardarlo como
+secret del repo llamado `RELEASE_TOKEN` y volver a ejecutar el workflow. El
+workflow usa ese secret si existe y, si no, el `GITHUB_TOKEN` integrado.
+
+No se requiere Expo token, API key ni servidor propio. El APK de CI es de
+demo/debug. Para un release firmado de producción habrá que agregar una
+keystore mediante GitHub Secrets y una variante de firma explícita.
 
 Para abrir el bundler durante el desarrollo:
 
