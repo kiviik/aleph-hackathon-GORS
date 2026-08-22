@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+.DS_Store
+.claude/
+
+# stray build/demo artifacts (not source)
+output/
+
+# generated runs and exports (20M+): the singular `output/` above missed these
+outputs/

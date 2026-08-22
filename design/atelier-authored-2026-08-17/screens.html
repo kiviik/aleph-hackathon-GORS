@@ -1,0 +1,942 @@
+<title>Atelier — Authored, not generated</title>
+<style>
+  :root{
+    --ink:#121110; --ink-2:#3A362E; --ink-3:#77705F;
+    --paper:#F4F0E8; --card:#FFFDF9; --panel:#FAF6EE;
+    --hair:#E2DCCF; --hair-2:#EFEAE0;
+    --ox:#6E1E28; --ox-soft:#F3E7E6;
+    --sand:#C9B9A0; --clay:#B98159;
+    --ok:#4A7A55; --caution:#A8762A; --refuse:#9B2C2C;
+    --ok-bg:#EAF1E9; --caution-bg:#F7EFDF; --refuse-bg:#F6E7E4;
+    --rail:#121110; --rail-ink:#EDE8DC; --rail-dim:#8B8375;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --r:3px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ink:#EDE8DC; --ink-2:#C3BCAB; --ink-3:#8B8375;
+      --paper:#100F0D; --card:#1A1815; --panel:#161411;
+      --hair:#2C2822; --hair-2:#221F1A;
+      --ox:#C4606B; --ox-soft:#2A1A1C;
+      --ok:#7FA97F; --caution:#C79A4E; --refuse:#C97066;
+      --ok-bg:#1A2019; --caution-bg:#241D12; --refuse-bg:#251715;
+      --rail:#0A0908; --rail-ink:#EDE8DC; --rail-dim:#6E675B;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#EDE8DC; --ink-2:#C3BCAB; --ink-3:#8B8375;
+    --paper:#100F0D; --card:#1A1815; --panel:#161411;
+    --hair:#2C2822; --hair-2:#221F1A;
+    --ox:#C4606B; --ox-soft:#2A1A1C;
+    --ok:#7FA97F; --caution:#C79A4E; --refuse:#C97066;
+    --ok-bg:#1A2019; --caution-bg:#241D12; --refuse-bg:#251715;
+    --rail:#0A0908; --rail-ink:#EDE8DC; --rail-dim:#6E675B;
+  }
+  :root[data-theme="light"]{
+    --ink:#121110; --ink-2:#3A362E; --ink-3:#77705F;
+    --paper:#F4F0E8; --card:#FFFDF9; --panel:#FAF6EE;
+    --hair:#E2DCCF; --hair-2:#EFEAE0;
+    --ox:#6E1E28; --ox-soft:#F3E7E6;
+    --ok:#4A7A55; --caution:#A8762A; --refuse:#9B2C2C;
+    --ok-bg:#EAF1E9; --caution-bg:#F7EFDF; --refuse-bg:#F6E7E4;
+    --rail:#121110; --rail-ink:#EDE8DC; --rail-dim:#8B8375;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+       font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{margin:0;font-weight:600;text-wrap:balance}
+  button{font:inherit;color:inherit;cursor:pointer}
+  :focus-visible{outline:2px solid var(--ox);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+  /* ---------- intro ---------- */
+  .intro{max-width:820px;margin:0 auto;padding:56px 28px 40px}
+  .kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+          color:var(--ox);margin-bottom:18px}
+  .intro h1{font-family:var(--serif);font-size:clamp(30px,4.4vw,46px);line-height:1.08;letter-spacing:-.01em}
+  .intro .lede{font-family:var(--serif);font-size:17px;line-height:1.6;color:var(--ink-2);
+               margin-top:18px;max-width:62ch}
+  .creed{margin-top:26px;padding:18px 20px;border-left:2px solid var(--ox);background:var(--card)}
+  .creed p{margin:0;font-family:var(--serif);font-size:16px;line-height:1.55}
+  .creed span{color:var(--ink-3);font-family:var(--sans);font-size:12px;display:block;margin-top:8px}
+
+  /* ---------- screen switcher ---------- */
+  .switch{position:sticky;top:0;z-index:40;background:var(--paper);
+          border-bottom:1px solid var(--hair);padding:0 28px}
+  .switch-in{max-width:1420px;margin:0 auto;display:flex;gap:2px;align-items:stretch;overflow-x:auto}
+  .switch button{background:none;border:0;padding:14px 14px 12px;font-size:11px;letter-spacing:.1em;
+     text-transform:uppercase;color:var(--ink-3);border-bottom:2px solid transparent;white-space:nowrap}
+  .switch button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ox)}
+  .switch button b{display:block;font-family:var(--mono);font-size:9px;color:var(--ink-3);
+                   letter-spacing:.08em;font-weight:400;margin-bottom:3px}
+
+  /* ---------- app shell ---------- */
+  .stage{max-width:1420px;margin:0 auto;padding:26px 28px 64px}
+  .app{display:grid;grid-template-columns:132px 1fr;border:1px solid var(--hair);
+       background:var(--card);overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+  .rail{background:var(--rail);color:var(--rail-ink);padding:16px 0 12px;display:flex;flex-direction:column;min-height:660px}
+  .wordmark{font-family:var(--serif);font-size:19px;letter-spacing:.06em;padding:0 14px 22px}
+  .rail nav{display:flex;flex-direction:column;gap:1px}
+  .rail a{display:flex;gap:9px;align-items:center;padding:9px 14px;color:var(--rail-dim);
+          text-decoration:none;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+  .rail a i{width:11px;height:11px;border:1px solid currentColor;display:inline-block;flex:none}
+  .rail a.on{color:var(--rail-ink);box-shadow:inset 2px 0 0 var(--ox)}
+  .rail .who{margin-top:auto;padding:14px;border-top:1px solid rgba(255,255,255,.08);
+             display:flex;gap:9px;align-items:center}
+  .rail .who span{width:26px;height:26px;border-radius:50%;background:var(--clay);flex:none}
+  .rail .who div{font-size:11px;line-height:1.3}
+  .rail .who small{color:var(--rail-dim);font-size:9.5px}
+
+  .head{display:flex;align-items:center;gap:18px;padding:14px 18px;border-bottom:1px solid var(--hair);
+        background:var(--card);flex-wrap:wrap}
+  .head h2{font-family:var(--serif);font-size:20px;letter-spacing:.03em;text-transform:uppercase}
+  .crumb{font-size:12px;color:var(--ink-3)}
+  .crumb b{color:var(--ink);font-weight:500}
+  .head .acts{margin-left:auto;display:flex;gap:8px}
+  .btn{padding:8px 13px;border:1px solid var(--hair);background:var(--card);border-radius:var(--r);font-size:12px}
+  .btn:hover{border-color:var(--ink-3)}
+  .btn-p{background:var(--ox);border-color:var(--ox);color:#fff;font-weight:500}
+  .btn-p:hover{filter:brightness(1.08)}
+
+  /* ---------- generic panel furniture ---------- */
+  .cols{display:grid}
+  .col{padding:16px;min-width:0}
+  .col + .col{border-left:1px solid var(--hair)}
+  .sec{padding:14px 0;border-bottom:1px solid var(--hair-2)}
+  .sec:first-child{padding-top:0}
+  .sec:last-child{border-bottom:0}
+  .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+       display:flex;align-items:center;gap:6px}
+  .lbl .r{margin-left:auto;font-size:10px;letter-spacing:.04em;text-transform:none;color:var(--ox)}
+  .h4{font-size:12.5px;font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+  .h4 .r{margin-left:auto;font-weight:400;font-size:11px;color:var(--ink-3)}
+
+  .field{border:1px solid var(--hair);background:var(--panel);border-radius:var(--r);padding:7px 9px;
+         display:flex;align-items:center;gap:8px;font-size:12px}
+  .field b{font-weight:500}
+  .field .cv{margin-left:auto;color:var(--ink-3);font-family:var(--mono);font-size:11px}
+  .lock{width:13px;height:13px;flex:none;border:1px solid var(--ink-3);border-radius:2px;
+        background:none;padding:0;position:relative}
+  .lock[aria-pressed="true"]{background:var(--ink);border-color:var(--ink)}
+  .lock[aria-pressed="true"]::after{content:"";position:absolute;inset:3px;background:var(--card)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;gap:8px;align-items:center}
+
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid var(--hair);
+        border-radius:100px;font-size:10.5px;background:var(--panel);white-space:nowrap}
+  .chip.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 35%,var(--hair));background:var(--ok-bg)}
+  .chip.caution{color:var(--caution);border-color:color-mix(in srgb,var(--caution) 35%,var(--hair));background:var(--caution-bg)}
+  .chip.refuse{color:var(--refuse);border-color:color-mix(in srgb,var(--refuse) 35%,var(--hair));background:var(--refuse-bg)}
+  .chip.ox{color:var(--ox);border-color:color-mix(in srgb,var(--ox) 35%,var(--hair));background:var(--ox-soft)}
+  .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .muted{color:var(--ink-3)}
+  .tiny{font-size:11px}
+  .note{font-size:11.5px;color:var(--ink-3);line-height:1.5}
+
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+     font-weight:500;padding:0 8px 7px;border-bottom:1px solid var(--hair)}
+  td{padding:8px;border-bottom:1px solid var(--hair-2);vertical-align:top}
+  .tw{overflow-x:auto}
+  tr.sel td{background:var(--ox-soft)}
+
+  .slider{display:flex;align-items:center;gap:9px}
+  .slider .bar{flex:1;height:2px;background:var(--hair);position:relative}
+  .slider .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink-2)}
+  .slider .bar em{position:absolute;top:50%;width:9px;height:9px;margin-top:-4.5px;margin-left:-4.5px;
+                  background:var(--card);border:1.5px solid var(--ink);border-radius:50%}
+  .slider .v{font-family:var(--mono);font-size:11px;width:34px;text-align:right}
+
+  .prov{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+        padding:1px 5px;border-radius:2px;white-space:nowrap}
+  .prov.imported{background:var(--panel);color:var(--ink-3);border:1px solid var(--hair)}
+  .prov.human{background:var(--ok-bg);color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent)}
+  .prov.ai{background:var(--caution-bg);color:var(--caution);border:1px dashed color-mix(in srgb,var(--caution) 45%,transparent)}
+  .prov.calc{background:var(--panel);color:var(--ink-3);border:1px solid var(--hair)}
+  .prov.missing{background:var(--refuse-bg);color:var(--refuse);border:1px solid color-mix(in srgb,var(--refuse) 30%,transparent)}
+
+  .foot{border-top:1px solid var(--hair);padding:9px 18px;font-size:11.5px;color:var(--ink-3);
+        display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel)}
+  .foot b{color:var(--ink);font-weight:500}
+  .sep{color:var(--hair)}
+
+  /* swatches, thumbs, canvas bits */
+  .sw{width:34px;height:34px;border:1px solid var(--hair);border-radius:2px}
+  .thumb{aspect-ratio:3/4;border:1px solid var(--hair);border-radius:2px;background:var(--panel);
+         position:relative;overflow:hidden}
+  .thumb.on{border-color:var(--ox);box-shadow:0 0 0 1px var(--ox)}
+  .thumb b{position:absolute;left:5px;bottom:4px;font-size:9px;color:var(--ink-3);font-family:var(--mono)}
+
+  .evbar{height:5px;background:var(--hair);display:flex;overflow:hidden;border-radius:2px}
+  .evbar i{display:block;height:100%}
+
+  .commit{border:1px solid var(--hair);border-radius:var(--r);background:var(--panel);padding:11px 12px}
+  .commit .t{font-size:11.5px;font-weight:600;margin-bottom:6px;display:flex;gap:7px;align-items:center}
+  .commit ul{margin:0;padding-left:16px;font-size:11.5px;color:var(--ink-2);line-height:1.65}
+
+  .ann{border:1px solid var(--hair);border-left:2px solid var(--ox);background:var(--panel);
+       padding:10px 12px;font-size:11.5px;line-height:1.55;color:var(--ink-2)}
+  .ann b{color:var(--ink)}
+
+  .caption{max-width:1420px;margin:0 auto;padding:14px 28px 0;font-size:12px;color:var(--ink-3);
+           display:flex;gap:10px;align-items:baseline}
+  .caption b{color:var(--ink);font-weight:600;font-family:var(--serif);font-size:14px}
+
+  .hidden{display:none}
+  @media(max-width:1100px){
+    .cols{grid-template-columns:1fr!important}
+    .col + .col{border-left:0;border-top:1px solid var(--hair)}
+    .app{grid-template-columns:1fr}
+    .rail{flex-direction:row;min-height:0;align-items:center;gap:4px;overflow-x:auto;padding:8px}
+    .rail nav{flex-direction:row}
+    .wordmark{padding:0 12px 0 4px}
+    .rail .who{margin-top:0;border-top:0;padding:0 8px}
+  }
+</style>
+
+<div class="intro">
+  <div class="kicker">Atelier · design direction · 2026-08-17</div>
+  <h1>The designer decides. Atelier explains, and keeps the receipt.</h1>
+  <p class="lede">
+    The Dreamland screen got the principle right: a free prompt, sketches, references with
+    <em>roles</em> and dialled influence, garment anatomy set by hand, locks that survive a
+    regeneration, a seed you can keep, and <em>Reset to my input</em> always within reach.
+    What follows carries that same authorship into the four screens where Atelier has so far
+    been happy to decide on its own.
+  </p>
+  <div class="creed">
+    <p>Atelier can suggest, explain and accelerate — but it never silently makes the designer's decisions.</p>
+    <span>Every control below is set by a person. Every number says where it came from. Every refusal names what is missing.</span>
+  </div>
+</div>
+
+<div class="switch">
+  <div class="switch-in" role="tablist">
+    <button role="tab" aria-selected="true" data-s="intel"><b>01</b>Intelligence</button>
+    <button role="tab" aria-selected="false" data-s="develop"><b>02</b>Develop this</button>
+    <button role="tab" aria-selected="false" data-s="pack"><b>03</b>Tech pack</button>
+    <button role="tab" aria-selected="false" data-s="supply"><b>04</b>Suppliers &amp; quotes</button>
+    <button role="tab" aria-selected="false" data-s="lib"><b>05</b>Reference library</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ 01 INTELLIGENCE ══════════════════════════════ -->
+<section class="stage" id="s-intel">
+  <div class="caption"><b>Intelligence</b>
+    <span>The designer chooses the markets, the horizon, the competitors, the evidence and the assumptions. Atelier reads what it was pointed at — and says what it could not see.</span></div>
+  <div class="app">
+    <div class="rail">
+      <div class="wordmark">Atelier</div>
+      <nav>
+        <a href="#s-intel"><i></i>Dreamland</a>
+        <a class="on" href="#s-intel"><i></i>Intelligence</a>
+        <a href="#s-pack"><i></i>Projects</a>
+        <a href="#s-supply"><i></i>Suppliers</a>
+        <a href="#s-lib"><i></i>Library</a>
+        <a href="#s-intel"><i></i>Brand</a>
+        <a href="#s-intel"><i></i>Market</a>
+      </nav>
+      <div class="who"><span></span><div>Isabella Rossi<br><small>Atelier House</small></div></div>
+    </div>
+
+    <div>
+      <div class="head">
+        <h2>Intelligence</h2>
+        <div class="crumb">Reading · <b>SS25 / Look 12</b> · draped midi dress</div>
+        <div class="acts">
+          <button class="btn">Reset to my input</button>
+          <button class="btn">Save reading</button>
+          <button class="btn btn-p">Develop this →</button>
+        </div>
+      </div>
+
+      <div class="cols" style="grid-template-columns:290px 1fr 320px">
+        <!-- author's inputs -->
+        <div class="col">
+          <div class="sec">
+            <div class="h4">What Atelier may read<span class="r">yours to set</span></div>
+            <div class="stack">
+              <div class="field"><b>Markets</b><span class="cv">AR · CL · UY</span><button class="lock" aria-pressed="true" aria-label="Lock markets"></button></div>
+              <div class="field"><b>Horizon</b><span class="cv">2 seasons</span><button class="lock" aria-pressed="false" aria-label="Lock horizon"></button></div>
+              <div class="field"><b>Channel</b><span class="cv">Retail + own e-com</span><button class="lock" aria-pressed="false" aria-label="Lock channel"></button></div>
+              <div class="field"><b>Customer</b><span class="cv">Returning · 28–40</span><button class="lock" aria-pressed="false" aria-label="Lock customer"></button></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Evidence sources<span class="r" id="ev-count">4 of 6 on</span></div>
+            <div class="stack" id="ev-list">
+              <label class="field"><input type="checkbox" checked data-w="34" data-k="Own sales"><b>Own sales</b><span class="cv">18 mo</span></label>
+              <label class="field"><input type="checkbox" checked data-w="21" data-k="Archive"><b>Brand archive</b><span class="cv">6 collections</span></label>
+              <label class="field"><input type="checkbox" checked data-w="18" data-k="Runway"><b>Runway + editorial</b><span class="cv">SS25</span></label>
+              <label class="field"><input type="checkbox" checked data-w="12" data-k="Competitors"><b>Competitor set</b><span class="cv">7 chosen</span></label>
+              <label class="field"><input type="checkbox" data-w="9" data-k="Search"><b>Search &amp; social</b><span class="cv">not connected</span></label>
+              <label class="field"><input type="checkbox" data-w="6" data-k="Returns"><b>Returns &amp; fit</b><span class="cv">not connected</span></label>
+            </div>
+            <p class="note" style="margin:9px 0 0">Turning a source off removes it from the reading — it does not reweight what remains to look more certain.</p>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Your assumptions</div>
+            <div class="stack">
+              <div class="field"><b>Test depth</b><span class="cv num">120 u</span></div>
+              <div class="field"><b>Price band</b><span class="cv num">$285–320</span></div>
+              <div class="field"><b>Landing</b><span class="cv">Nov 2026</span></div>
+            </div>
+            <p class="note" style="margin:9px 0 0">Assumptions are labelled as yours everywhere they appear. Atelier never quietly substitutes its own.</p>
+          </div>
+        </div>
+
+        <!-- the reading -->
+        <div class="col">
+          <div class="sec">
+            <div class="h4">The reading<span class="r">recomputed when you change an input</span></div>
+            <div class="ann">
+              <b>Strong match with the brand's proportion language.</b> The asymmetric drape and the
+              lowered waist appear in <b>AW24 Look 07</b> and <b>SS24 Look 03</b>, both of which sold
+              through above plan. A similar colour treatment appeared in two previous collections —
+              this reads as continuation, not novelty.
+            </div>
+            <div class="ann" style="margin-top:9px;border-left-color:var(--caution)">
+              <b>The material is available from Taller Norte, but its MOQ exceeds your test depth.</b>
+              Silk jersey at 300 units minimum against the 120 you set. Either the test grows, the
+              material changes, or the supplier does — Atelier does not pick.
+            </div>
+            <div class="ann" style="margin-top:9px;border-left-color:var(--ink-3)">
+              <b>Market evidence is promising but incomplete in Argentina.</b> Runway and competitor
+              signals are legible; own-market search and returns data are not connected, so nothing
+              here describes demand.
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Read against, one at a time</div>
+            <div class="tw"><table>
+              <thead><tr><th>Dimension</th><th>What it says</th><th style="width:118px">Evidence</th><th style="width:96px">Basis</th></tr></thead>
+              <tbody>
+                <tr><td>Brand alignment</td><td>Continues the drape language of AW24</td>
+                    <td><div class="evbar"><i style="width:78%;background:var(--ok)"></i><i style="width:22%;background:var(--hair)"></i></div></td>
+                    <td class="tiny muted">archive · 6 coll.</td></tr>
+                <tr><td>Novelty vs archive</td><td>Low — third drape this year</td>
+                    <td><div class="evbar"><i style="width:66%;background:var(--ok)"></i><i style="width:34%;background:var(--hair)"></i></div></td>
+                    <td class="tiny muted">archive</td></tr>
+                <tr><td>Assortment whitespace</td><td>Midi eveningwear thin in the range</td>
+                    <td><div class="evbar"><i style="width:52%;background:var(--caution)"></i><i style="width:48%;background:var(--hair)"></i></div></td>
+                    <td class="tiny muted">your plan</td></tr>
+                <tr><td>Material availability</td><td>Silk jersey · Taller Norte · 300 MOQ</td>
+                    <td><div class="evbar"><i style="width:90%;background:var(--ok)"></i><i style="width:10%;background:var(--hair)"></i></div></td>
+                    <td class="tiny muted">supplier sheet</td></tr>
+                <tr><td>Cost &amp; margin</td><td>Landed $118 → 61% at your band</td>
+                    <td><div class="evbar"><i style="width:44%;background:var(--caution)"></i><i style="width:56%;background:var(--hair)"></i></div></td>
+                    <td class="tiny muted">quote pending</td></tr>
+                <tr><td>Demand trajectory</td><td class="chip refuse" style="display:inline-flex"><span class="dot"></span>Not enough evidence</td>
+                    <td><div class="evbar"><i style="width:8%;background:var(--refuse)"></i><i style="width:92%;background:var(--hair)"></i></div></td>
+                    <td class="tiny muted">no sales feed</td></tr>
+              </tbody>
+            </table></div>
+            <p class="note" style="margin:10px 0 0">
+              No combined score. Six readings that disagree are six things to decide, and averaging
+              them into one number is the fastest way to hide the disagreement.
+            </p>
+          </div>
+        </div>
+
+        <!-- coverage + scenarios -->
+        <div class="col">
+          <div class="sec">
+            <div class="h4">Coverage</div>
+            <div class="stack">
+              <div class="row"><span class="tiny" style="width:96px">Evidence weight</span>
+                <div class="evbar" style="flex:1"><i id="cov-bar" style="width:85%;background:var(--ink-2)"></i></div>
+                <span class="num tiny" id="cov-pct">85%</span></div>
+              <p class="note" id="cov-note">Reading on 4 of 6 sources. Search &amp; social and returns &amp; fit are off, so nothing here speaks about demand or fit failure.</p>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Contradicting evidence<span class="r">kept, never dropped</span></div>
+            <div class="stack tiny">
+              <div class="field" style="align-items:flex-start"><span class="dot" style="background:var(--caution);margin-top:6px"></span>
+                <div>Two competitors retired asymmetric drape after SS24.<br><span class="muted">Runway set · you chose these 7</span></div></div>
+              <div class="field" style="align-items:flex-start"><span class="dot" style="background:var(--caution);margin-top:6px"></span>
+                <div>AW24 Look 07 sold well at $340 — above your band.<br><span class="muted">Own sales · 18 months</span></div></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Your scenarios</div>
+            <div class="stack">
+              <div class="commit">
+                <div class="t"><span class="dot" style="background:var(--ink)"></span>A · Test at your depth</div>
+                <ul><li>120 u · $285 · margin 61%</li><li>MOQ short by 180 u</li><li>Needs supplier waiver</li></ul>
+              </div>
+              <div class="commit">
+                <div class="t"><span class="dot" style="background:var(--ink)"></span>B · Meet the MOQ</div>
+                <ul><li>300 u · $285 · margin 64%</li><li>Inventory you did not plan</li></ul>
+              </div>
+              <div class="commit">
+                <div class="t"><span class="dot" style="background:var(--ink)"></span>C · Change the cloth</div>
+                <ul><li>Viscose jersey · 80 u MOQ</li><li>Drape reads heavier</li><li>Quote not requested</li></ul>
+              </div>
+              <button class="btn" style="width:100%">+ Add scenario</button>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">This reading expires</div>
+            <p class="note">On <b>2026-11-30</b>, or when own sales connect. A reading that outlives its evidence is a rumour with a date on it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <b>Reading on:</b> <span id="foot-src">own sales · archive · runway · competitors</span>
+        <span class="sep">·</span> 2 seasons <span class="sep">·</span> AR/CL/UY
+        <span class="sep">·</span> your assumptions: 120 u, $285–320
+        <span class="sep">·</span> <span class="chip refuse" style="padding:1px 7px"><span class="dot"></span>no demand claim</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 02 DEVELOP THIS ══════════════════════════════ -->
+<section class="stage hidden" id="s-develop">
+  <div class="caption"><b>Develop this</b>
+    <span>The one moment exploration becomes a commitment. It is a screen, not a side effect — and it shows exactly what is about to become permanent.</span></div>
+  <div class="app">
+    <div class="rail">
+      <div class="wordmark">Atelier</div>
+      <nav>
+        <a href="#s-develop"><i></i>Dreamland</a>
+        <a href="#s-intel"><i></i>Intelligence</a>
+        <a class="on" href="#s-develop"><i></i>Projects</a>
+        <a href="#s-supply"><i></i>Suppliers</a>
+        <a href="#s-lib"><i></i>Library</a>
+      </nav>
+      <div class="who"><span></span><div>Isabella Rossi<br><small>Atelier House</small></div></div>
+    </div>
+
+    <div>
+      <div class="head">
+        <h2>Develop this</h2>
+        <div class="crumb">From <b>Dreamland</b> · branch <b>Knot adjusted</b> · variation 1 of 4</div>
+        <div class="acts">
+          <button class="btn">Keep exploring</button>
+          <button class="btn btn-p">Create the Style →</button>
+        </div>
+      </div>
+
+      <div class="cols" style="grid-template-columns:1fr 380px">
+        <div class="col">
+          <div class="sec">
+            <div class="h4">What stays exploratory</div>
+            <div class="row" style="gap:9px;flex-wrap:wrap">
+              <div class="thumb" style="width:86px"><b>v1</b></div>
+              <div class="thumb" style="width:86px"><b>v2</b></div>
+              <div class="thumb on" style="width:86px"><b>v3 ✓</b></div>
+              <div class="thumb" style="width:86px"><b>v4</b></div>
+              <div style="flex:1;min-width:200px">
+                <p class="note" style="margin:0">
+                  <b style="color:var(--ink)">143 images in this branch stay exploratory.</b> They keep
+                  their prompt, references, seed and parentage — and they make no commercial claim,
+                  appear in no range, and count toward no readiness. Only the one you are promoting
+                  crosses over.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">What becomes permanent<span class="r">append-only from here</span></div>
+            <div class="tw"><table>
+              <thead><tr><th style="width:180px">Becomes</th><th>From</th><th style="width:150px">Changes later by</th></tr></thead>
+              <tbody>
+                <tr><td><b>Concept version</b></td><td>Asset <span class="num">a7f3…21c</span> · seed <span class="num">84217</span></td><td class="tiny muted">a new version, never an edit</td></tr>
+                <tr><td><b>Style</b> <span class="chip ox" style="padding:1px 7px">code you assign</span></td><td>Range slot SS25 / Look 12</td><td class="tiny muted">the code never changes</td></tr>
+                <tr><td><b>Reference rights</b></td><td>6 references · 2 licensed</td><td class="tiny muted">frozen at promotion</td></tr>
+                <tr><td><b>Generation record</b></td><td>Prompt · your words + added context</td><td class="tiny muted">immutable</td></tr>
+                <tr><td><b>Cost incurred</b></td><td><span class="num">$0.38</span> across 147 generations</td><td class="tiny muted">already spent</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Assign the permanent code<span class="r">yours, and it never changes</span></div>
+            <div class="row" style="gap:9px">
+              <div class="field" style="flex:1"><b>Style code</b><span class="cv num">AH-DRS-014</span></div>
+              <div class="field" style="flex:1"><b>Name</b><span class="cv">Draped midi · knot</span></div>
+            </div>
+            <p class="note" style="margin:9px 0 0">Atelier proposes <span class="num">AH-DRS-014</span> from your convention. Overwrite it — the sequence is a suggestion, the identity is your decision.</p>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="sec">
+            <div class="h4">Before it can be made</div>
+            <div class="stack">
+              <div class="field"><span class="dot" style="background:var(--ok)"></span><b>Approved concept version</b><span class="cv">ready</span></div>
+              <div class="field"><span class="dot" style="background:var(--ok)"></span><b>Range position</b><span class="cv">Look 12</span></div>
+              <div class="field"><span class="dot" style="background:var(--caution)"></span><b>Rights on 2 references</b><span class="cv">licensed</span></div>
+              <div class="field"><span class="dot" style="background:var(--refuse)"></span><b>Technical flat</b><span class="cv">none yet</span></div>
+              <div class="field"><span class="dot" style="background:var(--refuse)"></span><b>Measurements</b><span class="cv">no block</span></div>
+              <div class="field"><span class="dot" style="background:var(--refuse)"></span><b>Supplier quote</b><span class="cv">not requested</span></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="ann" style="border-left-color:var(--refuse)">
+              <b>A render is not a technical flat.</b> This image carries visual intent. It does not
+              define orthographic front and back, seams, measurement points, tolerances, trim
+              positions or verified scale — so Atelier will not promote it into a tech pack, today
+              or after any amount of refinement. The flat is drawn next, and a person signs it.
+            </div>
+          </div>
+          <div class="sec">
+            <div class="h4">Who did this</div>
+            <p class="note">Promoted by <b>Isabella Rossi</b> · 2026-08-17 14:22 · recorded with the branch, the seed and the six references that conditioned it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <b>You are committing:</b> 1 concept version <span class="sep">·</span> 1 Style
+        <span class="sep">·</span> 6 reference rights <span class="sep">·</span> 0 production claims
+        <span class="sep">·</span> <b>143 images stay in Dreamland</b>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 03 TECH PACK ══════════════════════════════ -->
+<section class="stage hidden" id="s-pack">
+  <div class="caption"><b>Tech pack</b>
+    <span>Every field editable, every field saying how it is known. A model may propose; it may not be the last word on anything that reaches a factory.</span></div>
+  <div class="app">
+    <div class="rail">
+      <div class="wordmark">Atelier</div>
+      <nav>
+        <a href="#s-develop"><i></i>Dreamland</a>
+        <a href="#s-intel"><i></i>Intelligence</a>
+        <a class="on" href="#s-pack"><i></i>Projects</a>
+        <a href="#s-supply"><i></i>Suppliers</a>
+        <a href="#s-lib"><i></i>Library</a>
+      </nav>
+      <div class="who"><span></span><div>Isabella Rossi<br><small>Atelier House</small></div></div>
+    </div>
+
+    <div>
+      <div class="head">
+        <h2>Ficha técnica</h2>
+        <div class="crumb"><b>AH-DRS-014</b> · v2 draft · supersedes v1 released</div>
+        <div class="acts">
+          <button class="btn">Propose construction ✨</button>
+          <button class="btn">Compare v1 → v2</button>
+          <button class="btn btn-p">Release v2</button>
+        </div>
+      </div>
+
+      <div class="cols" style="grid-template-columns:1fr 330px">
+        <div class="col">
+          <div class="sec">
+            <div class="h4">Bill of materials<span class="r">every row editable · every row sourced</span></div>
+            <div class="tw"><table>
+              <thead><tr><th>Component</th><th>Specification</th><th style="width:74px">Qty</th><th style="width:110px">Supplier ref</th><th style="width:118px">Known by</th></tr></thead>
+              <tbody>
+                <tr><td>Shell</td><td>Silk jersey 19mm · 92 g/m²</td><td class="num">2.4 m</td><td class="num">TN-SJ-19</td><td><span class="prov imported">imported</span></td></tr>
+                <tr><td>Lining</td><td>Cupro · bemberg</td><td class="num">1.6 m</td><td class="num">TN-CU-04</td><td><span class="prov human">verified</span></td></tr>
+                <tr><td>Thread</td><td>Polyester 120 · tone on tone</td><td class="num">1 cone</td><td class="num">—</td><td><span class="prov ai">proposed</span></td></tr>
+                <tr><td>Interlining</td><td>Fusible · waistband only</td><td class="num">0.2 m</td><td class="num">—</td><td><span class="prov ai">proposed</span></td></tr>
+                <tr><td>Brand label</td><td>Woven · centre back</td><td class="num">1</td><td class="num">AH-LB-01</td><td><span class="prov imported">imported</span></td></tr>
+                <tr><td>Care label</td><td>Satin · left side seam</td><td class="num">1</td><td class="num">AH-LC-02</td><td><span class="prov human">verified</span></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Points of measure <span class="r">base size 38 · cm</span></div>
+            <div class="tw"><table>
+              <thead><tr><th>Point</th><th style="width:64px">36</th><th style="width:64px">38</th><th style="width:64px">40</th><th style="width:64px">42</th><th style="width:88px">Tolerance</th><th style="width:118px">Known by</th></tr></thead>
+              <tbody>
+                <tr><td>Shoulder drop</td><td class="num">5.4</td><td class="num">6.0</td><td class="num">6.6</td><td class="num">7.2</td><td class="num">±0.5</td><td><span class="prov imported">block v3</span></td></tr>
+                <tr><td>Waist position</td><td class="num">59</td><td class="num">61</td><td class="num">63</td><td class="num">65</td><td class="num">±1.0</td><td><span class="prov imported">block v3</span></td></tr>
+                <tr><td>Knot from L. waist</td><td class="num">2.5</td><td class="num">2.5</td><td class="num">2.5</td><td class="num">2.5</td><td class="num">±0.3</td><td><span class="prov human">verified</span></td></tr>
+                <tr><td>Hem diff. F→B</td><td class="num">17.0</td><td class="num">18.0</td><td class="num">19.0</td><td class="num">20.0</td><td class="num">±1.0</td><td><span class="prov human">verified</span></td></tr>
+                <tr><td>Sweep</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="prov missing">missing</span></td></tr>
+              </tbody>
+            </table></div>
+            <p class="note" style="margin:9px 0 0">Sweep is blank because nobody measured it. Atelier will not fill a measurement — a plausible number here is a sample round lost.</p>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Construction callouts</div>
+            <div class="stack">
+              <div class="field" style="align-items:flex-start"><span class="prov ai" style="margin-top:2px">proposed</span>
+                <div style="flex:1">French seam at side seams · 4-thread overlock inside<br>
+                  <span class="muted tiny">Model proposal · unreviewed. Edit or accept with your name.</span></div>
+                <button class="btn tiny">Accept</button></div>
+              <div class="field" style="align-items:flex-start"><span class="prov human" style="margin-top:2px">verified</span>
+                <div style="flex:1">Knot formed on the bias, tacked at three points<br>
+                  <span class="muted tiny">Isabella Rossi · 2026-08-17</span></div>
+                <button class="btn tiny">Edit</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="sec">
+            <div class="h4">Release refuses while</div>
+            <div class="stack">
+              <div class="field"><span class="dot" style="background:var(--refuse)"></span><b>Sweep unmeasured</b></div>
+              <div class="field"><span class="dot" style="background:var(--refuse)"></span><b>2 fields still proposed</b><span class="cv tiny">thread · interlining</span></div>
+              <div class="field"><span class="dot" style="background:var(--ok)"></span><b>Fabric composition</b></div>
+              <div class="field"><span class="dot" style="background:var(--ok)"></span><b>Size ratio</b></div>
+            </div>
+            <p class="note" style="margin:9px 0 0">Eleven required fields have values; two have not been looked at by a person. Populated and verified are different states.</p>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Signatures</div>
+            <div class="stack">
+              <div class="field"><span class="dot" style="background:var(--ok)"></span><b>Creative</b><span class="cv tiny">I. Rossi · 08-17</span></div>
+              <div class="field"><span class="dot" style="background:var(--caution)"></span><b>Technical</b><span class="cv tiny">requested</span></div>
+              <div class="field"><span class="dot" style="background:var(--ink-3)"></span><b>Commercial</b><span class="cv tiny">not required</span></div>
+            </div>
+            <p class="note" style="margin:9px 0 0">Your brand requires creative and technical for a tech pack. Commercial is off because <b>you turned it off</b> — a one-person brand signing three times proves nothing.</p>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Design in sync</div>
+            <div class="ann" style="border-left-color:var(--caution)">
+              This pack describes concept <b>v2</b>. The Style's approved design is now <b>v4</b>.
+              Atelier will not repoint it — a released document is what a factory cut from.
+              <span class="muted">Open v4 · revise this pack · or keep the pin.</span>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Version thread</div>
+            <div class="stack tiny">
+              <div class="field"><b>v2</b><span class="cv">draft · you</span></div>
+              <div class="field"><b>v1</b><span class="cv">released · sent to 1 factory</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <b>Cannot release yet:</b> 1 measurement missing <span class="sep">·</span> 2 proposals unverified
+        <span class="sep">·</span> technical signature pending
+        <span class="sep">·</span> <span class="muted">nothing here was filled in for you</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 04 SUPPLIERS ══════════════════════════════ -->
+<section class="stage hidden" id="s-supply">
+  <div class="caption"><b>Suppliers &amp; quotes</b>
+    <span>Compare on what it actually costs to use, across every season this garment has been quoted. The cheapest is a fact; the best is your call.</span></div>
+  <div class="app">
+    <div class="rail">
+      <div class="wordmark">Atelier</div>
+      <nav>
+        <a href="#s-develop"><i></i>Dreamland</a>
+        <a href="#s-intel"><i></i>Intelligence</a>
+        <a href="#s-pack"><i></i>Projects</a>
+        <a class="on" href="#s-supply"><i></i>Suppliers</a>
+        <a href="#s-lib"><i></i>Library</a>
+      </nav>
+      <div class="who"><span></span><div>Isabella Rossi<br><small>Atelier House</small></div></div>
+    </div>
+
+    <div>
+      <div class="head">
+        <h2>Quotes</h2>
+        <div class="crumb">Garment <b>AH-DRS-014</b> · 4 quotes · 2 seasons</div>
+        <div class="acts">
+          <button class="btn">Request a quote</button>
+          <button class="btn">Compare capability</button>
+          <button class="btn btn-p">Award this season</button>
+        </div>
+      </div>
+
+      <div class="cols" style="grid-template-columns:1fr 340px">
+        <div class="col">
+          <div class="sec">
+            <div class="h4">Every quote for this garment<span class="r">across revisions and seasons</span></div>
+            <div class="tw"><table>
+              <thead><tr><th>Factory</th><th style="width:88px">Unit</th><th style="width:70px">MOQ</th><th style="width:78px">Lead</th><th style="width:96px">Valid to</th><th style="width:120px">Season</th></tr></thead>
+              <tbody>
+                <tr class="sel"><td><b>Taller Norte</b><br><span class="tiny muted">Buenos Aires · silk, jersey</span></td>
+                    <td class="num">$118.00</td><td class="num">300</td><td class="num">45 d</td><td class="num">2026-10-30</td>
+                    <td><span class="chip">SS25 · v2</span></td></tr>
+                <tr><td><b>Tejidos Sur</b><br><span class="tiny muted">Mendoza · knitwear</span></td>
+                    <td class="num">$104.50</td><td class="num">500</td><td class="num">60 d</td><td class="num">2026-09-15</td>
+                    <td><span class="chip">SS25 · v2</span></td></tr>
+                <tr><td><b>Taller Norte</b><br><span class="tiny muted">same garment, last season</span></td>
+                    <td class="num">$112.00</td><td class="num">300</td><td class="num">45 d</td><td class="num muted">2026-03-01</td>
+                    <td><span class="chip caution"><span class="dot"></span>AW24 · expired</span></td></tr>
+                <tr><td><b>Atelier Cinco</b><br><span class="tiny muted">Lima · eveningwear</span></td>
+                    <td class="num">$131.00</td><td class="num">80</td><td class="num">38 d</td><td class="num">2026-11-20</td>
+                    <td><span class="chip">SS25 · v2</span></td></tr>
+              </tbody>
+            </table></div>
+            <div class="stack" style="margin-top:11px">
+              <div class="ann"><b>Tejidos Sur is $13.50 cheaper per unit and its MOQ is 200 higher.</b>
+                At your test depth that difference is inventory you did not plan to buy —
+                the trade-off is stated, not resolved.</div>
+              <div class="ann" style="border-left-color:var(--caution)"><b>Atelier Cinco meets your 120-unit test</b> at the
+                highest unit price and the shortest lead time. Never used for jersey.</div>
+              <div class="ann" style="border-left-color:var(--ink-3)"><b>One quote is from AW24 and has expired.</b>
+                It is shown because it is this garment's history — an expired quote is a price you
+                had, not a price you have.</div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Your award<span class="r">seasonal · the garment is not</span></div>
+            <div class="row" style="gap:9px;flex-wrap:wrap">
+              <div class="field" style="flex:1;min-width:190px"><b>SS25</b><span class="cv">Taller Norte</span></div>
+              <div class="field" style="flex:1;min-width:190px"><b>Reason</b><span class="cv">MOQ waived to 150</span></div>
+            </div>
+            <p class="note" style="margin:9px 0 0">
+              You are not awarding the cheapest, and Atelier records why in your words. Next season
+              this garment may be made somewhere else without becoming a different garment.
+            </p>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="sec">
+            <div class="h4">Taller Norte<span class="r">on time · 12 deliveries</span></div>
+            <div class="stack">
+              <div class="row"><span class="tiny" style="width:104px">On time</span>
+                <div class="evbar" style="flex:1"><i style="width:83%;background:var(--ok)"></i></div><span class="num tiny">83%</span></div>
+              <div class="row"><span class="tiny" style="width:104px">Mean variance</span>
+                <div class="evbar" style="flex:1"><i style="width:24%;background:var(--caution)"></i></div><span class="num tiny">+3 d</span></div>
+              <p class="note">From your own critical path — 12 attributed ex-factory dates. Nobody types this number, so it cannot be flattered.</p>
+              <div class="field"><span class="dot" style="background:var(--caution)"></span><b>4 deliveries unattributed</b><span class="cv tiny">excluded</span></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Capability</div>
+            <div class="row" style="flex-wrap:wrap;gap:6px">
+              <span class="chip ok"><span class="dot"></span>Silk jersey</span>
+              <span class="chip ok"><span class="dot"></span>Bias construction</span>
+              <span class="chip ok"><span class="dot"></span>GOTS</span>
+              <span class="chip"><span class="dot" style="background:var(--ink-3)"></span>Pleating — unknown</span>
+              <span class="chip refuse"><span class="dot"></span>No printing</span>
+            </div>
+            <p class="note" style="margin:9px 0 0">Unknown is shown as unknown. It is not the same as "no", and guessing here books a sample round.</p>
+          </div>
+
+          <div class="sec">
+            <div class="h4">What they were sent</div>
+            <div class="stack tiny">
+              <div class="field"><b>v1 released</b><span class="cv">sent 08-02 · email</span></div>
+              <div class="field"><span class="dot" style="background:var(--caution)"></span><b>Acknowledged</b><span class="cv">08-03 · relayed</span></div>
+              <div class="field"><span class="dot" style="background:var(--refuse)"></span><b>Holds a superseded pack</b><span class="cv">v2 pending</span></div>
+            </div>
+            <p class="note" style="margin:9px 0 0">The acknowledgement is a claim your team relayed, not a receipt Atelier observed. Suppliers do not sign in here yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <b>4 quotes</b> <span class="sep">·</span> 1 expired <span class="sep">·</span> all in USD
+        <span class="sep">·</span> cheapest is <b>Tejidos Sur</b>
+        <span class="sep">·</span> <span class="chip ox" style="padding:1px 7px">your award: Taller Norte</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 05 LIBRARY ══════════════════════════════ -->
+<section class="stage hidden" id="s-lib">
+  <div class="caption"><b>Reference library</b>
+    <span>References are a first-class object, not a few URLs inside a prompt: what they teach, what you may do with them, and every garment that inherited them.</span></div>
+  <div class="app">
+    <div class="rail">
+      <div class="wordmark">Atelier</div>
+      <nav>
+        <a href="#s-develop"><i></i>Dreamland</a>
+        <a href="#s-intel"><i></i>Intelligence</a>
+        <a href="#s-pack"><i></i>Projects</a>
+        <a href="#s-supply"><i></i>Suppliers</a>
+        <a class="on" href="#s-lib"><i></i>Library</a>
+      </nav>
+      <div class="who"><span></span><div>Isabella Rossi<br><small>Atelier House</small></div></div>
+    </div>
+
+    <div>
+      <div class="head">
+        <h2>Library</h2>
+        <div class="crumb"><b>1,284</b> references · 6 worlds · 41 used this season</div>
+        <div class="acts">
+          <button class="btn">New world</button>
+          <button class="btn">Import archive</button>
+          <button class="btn btn-p">+ Add reference</button>
+        </div>
+      </div>
+
+      <div class="cols" style="grid-template-columns:216px 1fr 320px">
+        <div class="col">
+          <div class="sec">
+            <div class="h4">Worlds</div>
+            <div class="stack tiny">
+              <div class="field"><b>Brand archive</b><span class="cv num">612</span></div>
+              <div class="field"><b>This collection</b><span class="cv num">88</span></div>
+              <div class="field"><b>Previous collections</b><span class="cv num">240</span></div>
+              <div class="field"><b>Personal inspiration</b><span class="cv num">173</span></div>
+              <div class="field"><b>Runway &amp; editorial</b><span class="cv num">96</span></div>
+              <div class="field"><b>Supplier materials</b><span class="cv num">75</span></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="h4">Filter by rights</div>
+            <div class="stack tiny">
+              <div class="field"><span class="dot" style="background:var(--ok)"></span><b>Owned</b><span class="cv num">687</span></div>
+              <div class="field"><span class="dot" style="background:var(--ok)"></span><b>Licensed</b><span class="cv num">142</span></div>
+              <div class="field"><span class="dot" style="background:var(--caution)"></span><b>Supplier-provided</b><span class="cv num">75</span></div>
+              <div class="field"><span class="dot" style="background:var(--refuse)"></span><b>Public reference</b><span class="cv num">288</span></div>
+              <div class="field"><span class="dot" style="background:var(--refuse)"></span><b>Unknown</b><span class="cv num">92</span></div>
+            </div>
+            <p class="note" style="margin:9px 0 0">Public and unknown stay on your boards and never condition a client-facing render. Unknown is a real answer, not a gap to fill.</p>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="sec">
+            <div class="h4">Silk drape · Taller Norte swatch<span class="r">used in 23 generations</span></div>
+            <div class="row" style="gap:12px;align-items:flex-start;flex-wrap:wrap">
+              <div class="thumb" style="width:150px"></div>
+              <div class="stack" style="flex:1;min-width:230px">
+                <div class="field"><b>Teaches</b><span class="cv">Material · drape weight</span></div>
+                <div class="field"><b>Rights</b><span class="cv" style="color:var(--ok)">Owned · supplier swatch</span></div>
+                <div class="field"><b>Source</b><span class="cv">Photographed in studio</span></div>
+                <div class="field"><b>Added by</b><span class="cv">I. Rossi · 2026-06-04</span></div>
+                <div class="field"><b>May condition generation</b><span class="cv" style="color:var(--ok)">Yes</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="h4">What it produced<span class="r">lineage runs both ways</span></div>
+            <div class="row" style="gap:8px;flex-wrap:wrap">
+              <div class="thumb" style="width:74px"><b>a7f3</b></div>
+              <div class="thumb" style="width:74px"><b>b104</b></div>
+              <div class="thumb" style="width:74px"><b>c552</b></div>
+              <div class="thumb" style="width:74px"><b>c561</b></div>
+              <div class="thumb" style="width:74px"><b>d013</b></div>
+              <div class="thumb" style="width:74px"><b>+18</b></div>
+            </div>
+            <p class="note" style="margin:10px 0 0">
+              Two of these became Styles — <b>AH-DRS-014</b> and <b>AH-TOP-006</b>. If this swatch's
+              rights ever change, Atelier can name every garment that inherited it, which is the
+              question a licence audit actually asks.
+            </p>
+          </div>
+
+          <div class="sec">
+            <div class="h4">Role in the current generation</div>
+            <div class="row" style="gap:10px;flex-wrap:wrap">
+              <div class="field" style="flex:1;min-width:150px"><b>Material</b><span class="cv">90%</span></div>
+              <div class="field" style="flex:1;min-width:150px"><b>Not surface pattern</b><span class="cv muted">excluded</span></div>
+            </div>
+            <p class="note" style="margin:9px 0 0">You said: take the material feeling, not the surface treatment. That exclusion travels with the generation record.</p>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="sec">
+            <div class="h4">Recently added</div>
+            <div class="row" style="gap:8px;flex-wrap:wrap">
+              <div class="thumb" style="width:60px"></div>
+              <div class="thumb" style="width:60px"></div>
+              <div class="thumb" style="width:60px"></div>
+              <div class="thumb" style="width:60px"></div>
+              <div class="thumb" style="width:60px"></div>
+              <div class="thumb" style="width:60px"></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="h4">Rights needing attention</div>
+            <div class="stack tiny">
+              <div class="field" style="align-items:flex-start"><span class="dot" style="background:var(--refuse);margin-top:6px"></span>
+                <div>92 references have unknown rights<br><span class="muted">They stay on boards. None has conditioned a render.</span></div></div>
+              <div class="field" style="align-items:flex-start"><span class="dot" style="background:var(--caution);margin-top:6px"></span>
+                <div>2 licences expire in November<br><span class="muted">Used by 6 concepts, 1 released pack.</span></div></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="h4">Saved discoveries</div>
+            <p class="note">Images Atelier generated that you kept as references rather than garments — 47 of them. They carry the same rights record as anything else: <b>owned, generated here</b>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <b>Selected:</b> 1 reference <span class="sep">·</span> teaches material
+        <span class="sep">·</span> owned <span class="sep">·</span> 23 generations
+        <span class="sep">·</span> 2 Styles <span class="sep">·</span> may condition renders
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="intro" style="padding-top:8px">
+  <div class="kicker">What these five screens agree on</div>
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;border:0">
+    <div><h3 style="font-family:var(--serif);font-size:16px;margin-bottom:6px">Nothing is filled in for you</h3>
+      <p class="note">A missing measurement stays blank. Unknown rights stay unknown. An absent budget is not zero. The blank is the honest state and the product's whole argument.</p></div>
+    <div><h3 style="font-family:var(--serif);font-size:16px;margin-bottom:6px">Every number says how it is known</h3>
+      <p class="note">Imported, calculated, proposed, verified — carried per field, not per document, because that is where the rule can actually be enforced.</p></div>
+    <div><h3 style="font-family:var(--serif);font-size:16px;margin-bottom:6px">Disagreement is shown, not resolved</h3>
+      <p class="note">Contradicting evidence, an expired quote, a pack pinned to an older design. Six readings that disagree are six decisions, not one score.</p></div>
+    <div><h3 style="font-family:var(--serif);font-size:16px;margin-bottom:6px">Exploring costs you nothing</h3>
+      <p class="note">143 images stay in Dreamland with their seeds and parentage. One crosses over, deliberately, with your name on it.</p></div>
+  </div>
+</div>
+
+<script>
+  const tabs = [...document.querySelectorAll('.switch button')];
+  const show = (id) => {
+    tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.s === id)));
+    ['intel','develop','pack','supply','lib'].forEach(s =>
+      document.getElementById('s-' + s).classList.toggle('hidden', s !== id));
+    window.scrollTo({ top: document.querySelector('.switch').offsetTop, behavior: 'smooth' });
+  };
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.s)));
+
+  // Locks are real: they hold an attribute across a regeneration.
+  document.querySelectorAll('.lock').forEach(b =>
+    b.addEventListener('click', () =>
+      b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true')));
+
+  // Evidence sources: turning one off REMOVES it. Nothing is reweighted to look more certain.
+  const boxes = [...document.querySelectorAll('#ev-list input')];
+  const recompute = () => {
+    const on = boxes.filter(b => b.checked);
+    const pct = on.reduce((s, b) => s + Number(b.dataset.w), 0);
+    document.getElementById('cov-bar').style.width = pct + '%';
+    document.getElementById('cov-pct').textContent = pct + '%';
+    document.getElementById('ev-count').textContent = on.length + ' of 6 on';
+    document.getElementById('foot-src').textContent =
+      on.length ? on.map(b => b.dataset.k.toLowerCase()).join(' · ') : 'nothing selected';
+    const off = boxes.filter(b => !b.checked).map(b => b.dataset.k.toLowerCase());
+    document.getElementById('cov-note').innerHTML = on.length
+      ? `Reading on ${on.length} of 6 sources.` + (off.length
+          ? ` ${off.join(' and ')} ${off.length > 1 ? 'are' : 'is'} off, so nothing here speaks about what they cover.`
+          : ' Every source you have is on.')
+      : 'No sources selected. There is no reading to give, and Atelier will not invent one.';
+  };
+  boxes.forEach(b => b.addEventListener('change', recompute));
+  recompute();
+</script>
