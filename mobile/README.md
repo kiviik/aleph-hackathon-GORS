@@ -56,9 +56,14 @@ guardan keystores ni passwords en el repo.
 ## CI y GitHub Releases
 
 El workflow [android-apk-release.yml](../.github/workflows/android-apk-release.yml)
-se ejecuta manualmente o con cada push a `hackaton`. Compila el APK con el
-Dockerfile, lo deja como artifact de Actions y actualiza la Release permanente
-`mobile-latest`. Para una Release versionada, pushear un tag `mobile-v*`:
+se ejecuta manualmente o con cada push a `main` o `hackaton`. Compila dos APK
+con el Dockerfile, los deja como artifact de Actions y actualiza la Release
+permanente `mobile-latest`:
+
+- `ba-estaciona-android-debug.apk`: build de desarrollo, requiere Metro.
+- `ba-estaciona-android-release.apk`: build autónoma, incluye el bundle JS.
+
+Para una Release versionada, pushear un tag `mobile-v*`:
 
 ```bash
 git tag mobile-v0.1.0
@@ -72,9 +77,10 @@ un token fine-grained con permiso `Contents: Read and write`, guardarlo como
 secret del repo llamado `RELEASE_TOKEN` y volver a ejecutar el workflow. El
 workflow usa ese secret si existe y, si no, el `GITHUB_TOKEN` integrado.
 
-No se requiere Expo token, API key ni servidor propio. El APK de CI es de
-demo/debug. Para un release firmado de producción habrá que agregar una
-keystore mediante GitHub Secrets y una variante de firma explícita.
+No se requiere Expo token, API key ni servidor propio. El APK `release` de CI
+es instalable para la demo, pero no está firmado con una keystore de
+distribución. Para publicar en Play Store habrá que agregar una keystore
+mediante GitHub Secrets y una variante de firma explícita.
 
 Para abrir el bundler durante el desarrollo:
 

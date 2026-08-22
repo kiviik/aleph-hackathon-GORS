@@ -44,18 +44,20 @@ remota incompatible con el boundary offline-first del hackathon.
 ## Build y distribución
 
 `mobile/Dockerfile` contiene el builder Android local con Node, JDK 17, Android
-SDK y Gradle. Su entrada ejecuta `expo prebuild` y `:app:assembleDebug`,
-dejando el APK en `/output`. El mismo Dockerfile se usa en
+SDK y Gradle. Su entrada ejecuta `expo prebuild` y puede ejecutar
+`:app:assembleDebug` o `:app:assembleRelease`, dejando el APK en `/output`.
+El mismo Dockerfile se usa en
 `.github/workflows/android-apk-release.yml`.
 
 La build iOS usa el mismo `App.tsx`, configuración Expo y contratos, pero
 requiere macOS/Xcode o EAS para compilar el binario nativo.
 
-Cada push a `hackaton` actualiza la Release `mobile-latest` y adjunta el APK.
-También se puede ejecutar manualmente para obtener un artifact de Actions. Un
-tag `mobile-v*` crea/actualiza una Release versionada. El archivo de CI es un
-APK debug instalable para demo; la firma de producción requiere una keystore
-administrada como secret y queda fuera de esta primera iteración.
+Cada push a `main` o `hackaton` actualiza la Release `mobile-latest` y adjunta
+los APK `debug` y `release`. También se puede ejecutar manualmente para obtener
+ambos como artifact de Actions. Un tag `mobile-v*` crea/actualiza una Release
+versionada. El APK debug requiere Metro; el release incluye el bundle JS y no
+requiere Metro. La firma de producción requiere una keystore administrada como
+secret y queda fuera de esta primera iteración.
 
 La publicación necesita que el repositorio permita `contents: write` para el
 token de Actions. En `Settings > Actions > General > Workflow permissions` debe

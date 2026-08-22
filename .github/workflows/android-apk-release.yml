@@ -3,6 +3,7 @@ name: Android APK
 on:
   push:
     branches:
+      - main
       - hackaton
     tags:
       - "mobile-v*"
@@ -34,7 +35,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build demo APK
+      - name: Build debug APK
         run: |
           mkdir -p mobile/artifacts
           docker run --rm \
@@ -42,11 +43,20 @@ jobs:
             -v "${GITHUB_WORKSPACE}/mobile/artifacts:/output" \
             ba-estaciona-android-builder:ci
 
-      - name: Upload workflow artifact
+      - name: Build release APK
+        run: |
+          docker run --rm \
+            -e BUILD_VARIANT=release \
+            -v "${GITHUB_WORKSPACE}/mobile/artifacts:/output" \
+            ba-estaciona-android-builder:ci
+
+      - name: Upload debug and release APKs
         uses: actions/upload-artifact@v4
         with:
-          name: ba-estaciona-android-apk
-          path: mobile/artifacts/ba-estaciona-android-debug.apk
+          name: ba-estaciona-android-apks
+          path: |
+            mobile/artifacts/ba-estaciona-android-debug.apk
+            mobile/artifacts/ba-estaciona-android-release.apk
           if-no-files-found: error
           retention-days: 14
 
@@ -75,5 +85,6 @@ jobs:
           fi
           gh release upload "${RELEASE_TAG}" \
             mobile/artifacts/ba-estaciona-android-debug.apk \
+            mobile/artifacts/ba-estaciona-android-release.apk \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber
