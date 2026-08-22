@@ -63,6 +63,46 @@ ejecutarse localmente mediante QVAC. La decisión de seguridad queda además
 limitada por código determinístico. El fallback se consulta sólo después de
 una negativa o abstención, y no puede transformar `REFUSE` en `PARK`.
 
+## Decisión mobile
+
+La aplicación mobile será una superficie separada para demostrar el caso de
+uso: una persona apunta el teléfono a un sector y recibe una decisión local.
+No será un cliente de una API cloud ni una pantalla que delega el análisis en
+el servidor.
+
+La arquitectura propuesta es:
+
+```text
+Expo camera
+    ↓ frame local
+YOLO/ONNX detector → boxes + confidence
+    ↓ ROI del sector de estacionamiento
+evidence normalizer → FREE/OCCUPIED/UNCERTAIN
+    ↓
+QVAC local text model → tool calls + explanation
+    ↓
+deterministic policy → PARK/DO_NOT_PARK/REFUSE
+```
+
+YOLO es el detector visual principal. El LLM no debe reemplazar la detección
+geométrica ni recibir una imagen para adivinar si hay un hueco. `YOLO26s` queda
+como candidato inicial del equipo, sujeto a verificar artefacto ONNX, labels,
+postprocesado, licencia, tamaño y rendimiento. El ejemplo oficial de QVAC usa
+`@qvac/onnx` con YOLOv10; no se debe presentar YOLO26s como compatible hasta
+probarlo.
+
+Para la primera versión, el modelo QVAC de texto parte del baseline ya usado en
+el prototipo (`QWEN3_1_7B_INST_Q4`) y se valida en un dispositivo físico. Si no
+entra en memoria o latencia, se evalúa una variante QVAC más pequeña del
+catálogo permitido. No se usa una API remota, un modelo cloud ni VisionPsy para
+ocultar un fallo del detector.
+
+Expo requiere un Development Build/prebuild y un teléfono físico: el SDK de
+QVAC documenta Expo como runtime soportado, pero aclara que actualmente no
+corre en emuladores por limitaciones de `llamacpp`. La versión exacta de Expo,
+el modelo, el dispositivo y las métricas deben quedar registrados antes de
+afirmar que la demo es reproducible.
+
 ## Política de datos
 
 Durante el MVP actual, Calgary queda documentado como target de integración y
@@ -85,6 +125,9 @@ descarga imágenes automáticamente. Una futura importación controlada deberá:
 - No tratamos las reglas sintéticas del fixture como normativa real.
 - No incorporamos un fallback cloud que oculte el rendimiento de QVAC.
 - No presentamos capacidad estimada de una zona como disponibilidad actual.
+- No hacemos una app de producción, reservas, pagos ni navegación turn-by-turn.
+- No usamos Expo Go como evidencia de inferencia QVAC si requiere el plugin
+  nativo; la demo mobile debe correr como Development Build.
 
 ## Demo mínima
 

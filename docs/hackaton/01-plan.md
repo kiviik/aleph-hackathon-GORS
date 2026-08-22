@@ -111,6 +111,56 @@ Un repositorio público, reproducible y offline-first con:
 - Mostrar un tool call rechazado y su retry.
 - Completar `SUBMISSION.md` con resultados reales, no mock.
 
+### P7 — Mobile local-first
+
+- Crear una superficie aislada `mobile/` con Expo, sin modificar `app/` ni
+  convertir el frontend Atelier en la app de la demo.
+- Confirmar Expo SDK compatible, `@qvac/sdk`, `@qvac/onnx`,
+  `react-native-bare-kit`, `bare-pack`, `expo-file-system`,
+  `expo-build-properties` y el plugin `@qvac/sdk/expo-plugin`.
+- Usar `qvac.config.json`; Expo no soporta la variante `qvac.config.js`.
+- Ejecutar `expo prebuild` y compilar un Development Build en un dispositivo
+  físico Android/iOS. No usar emulador para validar QVAC.
+- Implementar primero una pantalla de diagnóstico: estado de modelos, memoria,
+  permisos de cámara, temperatura/latencia y estado offline.
+- Implementar la captura de un frame, preview y recorte/ROI del sector sin
+  subir la imagen a ningún servicio.
+- Integrar YOLO/ONNX como detector de vehículos y normalizar sus boxes a un
+  contrato estable. El candidato `YOLO26s` debe pasar el gate de artefacto,
+  labels, license, input size, NMS y benchmark antes de integrarse.
+- No inferir `FREE` sólo porque YOLO no detectó un vehículo: exigir ROI válida,
+  cobertura suficiente, confianza y estabilidad temporal; si no, `UNCERTAIN`.
+- Reutilizar los contratos de `PARK`, `DO_NOT_PARK` y `REFUSE`, y agregar una
+  traza mobile con modelo, versión, dispositivo, latencia y errores.
+- Conectar el detector al flujo local: `evidence → lookup_sector →
+  lookup_rules → decide`. El LLM usa resultados estructurados, no raw pixels,
+  para elegir herramientas y explicar.
+- Mantener datos de Calgary y reglas como snapshots locales. La mobile demo no
+  consulta `camera_url`, ParkPlus ni una API pública durante el recorrido.
+- Agregar una vista de resultado que muestre decisión, confianza, evidencia,
+  regla activa, frescura y el motivo de `REFUSE`.
+- Agregar una vista de alternativa paga sólo cuando no se puede estacionar con
+  seguridad. Mostrar `availability: UNKNOWN` y derivar a ParkPlus para la
+  acción; no automatizar cuenta, pago ni matrícula.
+- Medir en al menos un Android y un iPhone si están disponibles: cold start,
+  carga de YOLO, carga de LLM, latencia por frame, memoria, batería y tasa de
+  rechazo correcto.
+- Probar sin red después del primer download y documentar cualquier diferencia
+  entre Android e iOS.
+
+#### Mobile acceptance gate
+
+La mobile surface no entra en la demo final hasta cumplir todos estos puntos:
+
+- una captura llega al detector sin salir del dispositivo;
+- el detector entrega boxes y confidence reproducibles;
+- un frame sin evidencia suficiente produce `REFUSE`;
+- el LLM recibe datos estructurados y encadena las tools locales;
+- la policy bloquea un `PARK` inseguro aunque el modelo lo sugiera;
+- la app funciona offline con modelos ya descargados;
+- el equipo puede mostrar el modelo, versión, dispositivo, latencia y trace;
+- no hay rostros, patentes legibles, credenciales, logs sensibles ni uploads.
+
 ## Contrato mínimo de alternativa
 
 ```json

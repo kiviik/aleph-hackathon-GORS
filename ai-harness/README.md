@@ -19,6 +19,7 @@ controles de seguridad y no autoriza acciones fuera del workspace.
   accidentales de secretos.
 - `context/CONTEXT.md`: salida generada para pegar en otros LLMs.
 - `docs/hackaton/06-calgary.md`: research y contrato del primer target de datos.
+- `docs/hackaton/07-mobile.md`: planning de Expo, YOLO/ONNX y QVAC local.
 
 ## Uso
 

@@ -19,6 +19,9 @@ tránsito terminado.
 - Calgary: `k7p9-kppz` describe ubicaciones de cámaras de tránsito; `rhkg-vwwp`
   describe zonas on-street; `45az-7kh9` relaciona zonas de precio y tarifas.
   Ninguna fuente garantiza ocupación actual.
+- Mobile: la futura superficie será `mobile/`, aislada de `app/` y del runtime
+  Node. Expo Development Build ejecutará YOLO/ONNX para detección y QVAC local
+  para tool-calling; no habrá backend de inferencia.
 - Salida: decisión demostrativa, traza y métricas; no multas, reservas ni
   asesoramiento legal.
 
@@ -31,6 +34,8 @@ request → QVAC tool-calling model
        → lookup_rules → local fixture
        → decide → deterministic safety policy + QVAC explanation
        ↘ paid alternative → local paid-zone snapshot, availability UNKNOWN
+
+mobile camera → YOLO/ONNX → structured evidence → local QVAC tools → policy
 ```
 
 ## Invariantes
@@ -47,6 +52,8 @@ request → QVAC tool-calling model
 6. Todo retry, error y decisión debe quedar en la traza.
 7. La antigüedad, fuente y estado de schema de datos públicos quedan en la
    traza; un snapshot vencido o incompatible no se presenta como actual.
+8. Un detector sin boxes no prueba `FREE`; ROI, calidad y policy pueden producir
+   `UNCERTAIN`/`REFUSE`.
 
 ## Source of truth
 
@@ -58,6 +65,7 @@ Leer primero:
 4. `docs/hackaton/02-arquitectura.md`
 5. `ba-estaciona-qvac/src/contracts.js`, `orchestrator.js` y `policy.js`
 6. `docs/hackaton/06-calgary.md` para el contrato de fuentes públicas
+7. `docs/hackaton/07-mobile.md` para la superficie Expo y el pipeline local
 
 ## Vocabulary
 
@@ -70,3 +78,5 @@ Leer primero:
 - `ALTERNATIVE_PAID_PARKING`: opción de zona/tarifa, no disponibilidad ni
   autorización.
 - `availability: UNKNOWN`: la fuente no informa ocupación actual.
+- `mobile`: app Expo separada, validada en dispositivo físico, no en emulador.
+- `YOLO/ONNX`: detector visual; sus boxes son evidencia, no autoridad legal.

@@ -26,6 +26,9 @@ tránsito terminado.
 - Calgary: `k7p9-kppz` describe ubicaciones de cámaras de tránsito; `rhkg-vwwp`
   describe zonas on-street; `45az-7kh9` relaciona zonas de precio y tarifas.
   Ninguna fuente garantiza ocupación actual.
+- Mobile: la futura superficie será `mobile/`, aislada de `app/` y del runtime
+  Node. Expo Development Build ejecutará YOLO/ONNX para detección y QVAC local
+  para tool-calling; no habrá backend de inferencia.
 - Salida: decisión demostrativa, traza y métricas; no multas, reservas ni
   asesoramiento legal.
 
@@ -38,6 +41,8 @@ request → QVAC tool-calling model
        → lookup_rules → local fixture
        → decide → deterministic safety policy + QVAC explanation
        ↘ paid alternative → local paid-zone snapshot, availability UNKNOWN
+
+mobile camera → YOLO/ONNX → structured evidence → local QVAC tools → policy
 ```
 
 ## Invariantes
@@ -54,6 +59,8 @@ request → QVAC tool-calling model
 6. Todo retry, error y decisión debe quedar en la traza.
 7. La antigüedad, fuente y estado de schema de datos públicos quedan en la
    traza; un snapshot vencido o incompatible no se presenta como actual.
+8. Un detector sin boxes no prueba `FREE`; ROI, calidad y policy pueden producir
+   `UNCERTAIN`/`REFUSE`.
 
 ## Source of truth
 
@@ -65,6 +72,7 @@ Leer primero:
 4. `docs/hackaton/02-arquitectura.md`
 5. `ba-estaciona-qvac/src/contracts.js`, `orchestrator.js` y `policy.js`
 6. `docs/hackaton/06-calgary.md` para el contrato de fuentes públicas
+7. `docs/hackaton/07-mobile.md` para la superficie Expo y el pipeline local
 
 ## Vocabulary
 
@@ -77,6 +85,8 @@ Leer primero:
 - `ALTERNATIVE_PAID_PARKING`: opción de zona/tarifa, no disponibilidad ni
   autorización.
 - `availability: UNKNOWN`: la fuente no informa ocupación actual.
+- `mobile`: app Expo separada, validada en dispositivo físico, no en emulador.
+- `YOLO/ONNX`: detector visual; sus boxes son evidencia, no autoridad legal.
 
 ---
 
@@ -97,6 +107,8 @@ desactivar permisos o controles.
   `ba-estaciona-qvac/`.
 - Si toca Calgary, leer `docs/hackaton/06-calgary.md` y etiquetar el cambio como
   research, snapshot/ingestión o runtime.
+- Si toca mobile, leer `docs/hackaton/07-mobile.md` y mantenerlo aislado en
+  `mobile/`; no editar Atelier salvo pedido explícito.
 
 ## Durante la implementación
 
@@ -112,6 +124,10 @@ desactivar permisos o controles.
 - No inferir disponibilidad desde una cámara, `zone_cap`, `seg_cap` o una URL
   accesible. La alternativa paga debe usar `availability: UNKNOWN` salvo que
   exista una fuente de ocupación explícita y validada.
+- No tratar la ausencia de una detección YOLO como espacio libre. Validar ROI,
+  calidad, confianza y estabilidad temporal; ante duda, `REFUSE`.
+- No afirmar que `YOLO26s` está soportado por QVAC hasta fijar el ONNX, labels,
+  postprocesado, licencia y benchmark en un dispositivo físico.
 - No tratar reglas sintéticas como normativa oficial.
 - No imprimir ni commitear secretos, tokens, cookies, claves, dumps de cámara,
   caras, patentes legibles ni caches de modelos.
@@ -163,12 +179,14 @@ TARGET: workspace local, fixtures y snapshots explícitamente incluidos en este
 repo; Calgary es sólo target de research/contrato hasta aprobar una ingestión;
 no cámaras públicas en runtime ni datos personales.
 OBJETIVO: implementar o validar la tarea solicitada manteniendo el flujo
-read_frame → lookup_sector → lookup_rules → decide; las alternativas pagas son
-una salida secundaria con availability UNKNOWN.
+read_frame → lookup_sector → lookup_rules → decide; en mobile, YOLO/ONNX
+produce evidencia estructurada y las alternativas pagas son una salida
+secundaria con availability UNKNOWN.
 REGLAS: leer AGENTS.md y el plan antes de editar; preservar cambios existentes;
 no inventar APIs; separar research, ingestión y runtime; no agregar cloud
-fallback; no presentar capacidad como disponibilidad; no presentar fixtures
-mock como precisión del modelo; no exponer secretos ni frames sensibles.
+fallback; no presentar capacidad como disponibilidad; no presentar boxes vacíos
+como evidencia de FREE; no presentar fixtures mock como precisión del modelo;
+no exponer secretos ni frames sensibles.
 CALIDAD: validar tool calls y JSON, conservar rechazo ante incertidumbre,
 ejecutar tests proporcionales al cambio y reportar fallos residuales.
 HANDOFF: informar archivos, comandos, resultados, supuestos y pendientes.

@@ -13,6 +13,8 @@ desactivar permisos o controles.
   `ba-estaciona-qvac/`.
 - Si toca Calgary, leer `docs/hackaton/06-calgary.md` y etiquetar el cambio como
   research, snapshot/ingestión o runtime.
+- Si toca mobile, leer `docs/hackaton/07-mobile.md` y mantenerlo aislado en
+  `mobile/`; no editar Atelier salvo pedido explícito.
 
 ## Durante la implementación
 
@@ -28,6 +30,10 @@ desactivar permisos o controles.
 - No inferir disponibilidad desde una cámara, `zone_cap`, `seg_cap` o una URL
   accesible. La alternativa paga debe usar `availability: UNKNOWN` salvo que
   exista una fuente de ocupación explícita y validada.
+- No tratar la ausencia de una detección YOLO como espacio libre. Validar ROI,
+  calidad, confianza y estabilidad temporal; ante duda, `REFUSE`.
+- No afirmar que `YOLO26s` está soportado por QVAC hasta fijar el ONNX, labels,
+  postprocesado, licencia y benchmark en un dispositivo físico.
 - No tratar reglas sintéticas como normativa oficial.
 - No imprimir ni commitear secretos, tokens, cookies, claves, dumps de cámara,
   caras, patentes legibles ni caches de modelos.

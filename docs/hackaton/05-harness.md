@@ -40,7 +40,8 @@ capas:
 
 1. research/documentación de fuentes públicas;
 2. importación controlada a snapshots locales;
-3. inferencia QVAC offline sobre datos ya disponibles localmente.
+3. inferencia QVAC offline sobre datos ya disponibles localmente;
+4. superficie mobile Expo que sólo consume modelos y datos locales.
 
 La capa 1 está habilitada para documentar. La capa 2 requiere revisar schema,
 licencia, privacidad, frescura y el boundary del hackathon. La capa 3 no debe
@@ -51,3 +52,9 @@ Una cámara de tránsito no demuestra una plaza libre. Una zona de parking o su
 capacidad tampoco demuestra disponibilidad. Si falta esa evidencia, el agente
 debe conservar `REFUSE` y puede ofrecer una alternativa paga con
 `availability: UNKNOWN`.
+
+Para tareas mobile, leer [`07-mobile.md`](07-mobile.md). El harness debe
+mantener separado el detector YOLO/ONNX del LLM QVAC, exigir un dispositivo
+físico para validar la integración y registrar modelo, versión, memoria,
+latencia y errores. No considerar una pantalla Expo conectada a un backend
+como evidencia de inferencia local.
