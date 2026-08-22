@@ -20,6 +20,8 @@ npm run evaluate:mock
 
 See [`ba-estaciona-qvac/README.md`](ba-estaciona-qvac/README.md) for QVAC
 setup, local inference, recording, evaluation, and submission instructions.
+The Calgary data research and integration plan lives in
+[`docs/hackaton/06-calgary.md`](docs/hackaton/06-calgary.md).
 
 ## Original Atelier surface
 

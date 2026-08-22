@@ -11,6 +11,8 @@ desactivar permisos o controles.
 - Inspeccionar cambios existentes y preservarlos.
 - Identificar si el cambio afecta Atelier Professional o solamente el prototipo
   `ba-estaciona-qvac/`.
+- Si toca Calgary, leer `docs/hackaton/06-calgary.md` y etiquetar el cambio como
+  research, snapshot/ingestión o runtime.
 
 ## Durante la implementación
 
@@ -20,6 +22,12 @@ desactivar permisos o controles.
   el SDK instalado.
 - No sumar cloud fallback, cámaras reales, reconocimiento facial, lectura de
   patentes, multas ni acceso a credenciales.
+- No consultar `camera_url`, ParkPlus o APIs públicas desde el runtime de la
+  demo. Una futura ingestión debe quedar separada, ser explícita y conservar
+  fuente, timestamp, schema, licencia y estado de frescura.
+- No inferir disponibilidad desde una cámara, `zone_cap`, `seg_cap` o una URL
+  accesible. La alternativa paga debe usar `availability: UNKNOWN` salvo que
+  exista una fuente de ocupación explícita y validada.
 - No tratar reglas sintéticas como normativa oficial.
 - No imprimir ni commitear secretos, tokens, cookies, claves, dumps de cámara,
   caras, patentes legibles ni caches de modelos.

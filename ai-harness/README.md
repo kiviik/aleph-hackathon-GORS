@@ -18,6 +18,7 @@ controles de seguridad y no autoriza acciones fuera del workspace.
 - `verify-context.mjs`: valida que el contexto esté completo y sin patrones
   accidentales de secretos.
 - `context/CONTEXT.md`: salida generada para pegar en otros LLMs.
+- `docs/hackaton/06-calgary.md`: research y contrato del primer target de datos.
 
 ## Uso
 
@@ -29,6 +30,7 @@ node ai-harness/verify-context.mjs
 ```
 
 Regenerá el contexto cada vez que cambien el plan, los contratos o la frontera
-del proyecto. El archivo generado es deliberadamente legible: no incluye
-variables de entorno, tokens, rutas privadas de la máquina ni contenido de
-frames.
+del proyecto. Si cambia el research de Calgary, actualizá también el plan y el
+contexto fuente antes de regenerar. El archivo generado es deliberadamente
+legible: no incluye variables de entorno, tokens, rutas privadas de la máquina
+ni contenido de frames.

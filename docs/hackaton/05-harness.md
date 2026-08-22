@@ -13,6 +13,8 @@ para esta adaptación al commit `eea1fa32e543f66d15ceeee5ef5269ff5182a259`.
 - Un checklist de handoff reproducible.
 - Verificación de que los archivos fuente del contexto existen y no contienen
   secretos comunes.
+- Un boundary explícito para research e ingestión futura de datos públicos de
+  Calgary, sin convertir el runtime local en un cliente online.
 
 ## Qué se excluyó deliberadamente
 
@@ -30,3 +32,22 @@ node ai-harness/verify-context.mjs
 
 El contexto generado se guarda en `ai-harness/context/CONTEXT.md`. Cada LLM del
 equipo puede pegar ese archivo como contexto inicial o leerlo desde el repo.
+
+## Antes de trabajar en Calgary
+
+El agente debe leer también [`06-calgary.md`](06-calgary.md) y distinguir tres
+capas:
+
+1. research/documentación de fuentes públicas;
+2. importación controlada a snapshots locales;
+3. inferencia QVAC offline sobre datos ya disponibles localmente.
+
+La capa 1 está habilitada para documentar. La capa 2 requiere revisar schema,
+licencia, privacidad, frescura y el boundary del hackathon. La capa 3 no debe
+consultar `camera_url`, ParkPlus, cuentas, pagos ni servicios cloud en tiempo de
+ejecución.
+
+Una cámara de tránsito no demuestra una plaza libre. Una zona de parking o su
+capacidad tampoco demuestra disponibilidad. Si falta esa evidencia, el agente
+debe conservar `REFUSE` y puede ofrecer una alternativa paga con
+`availability: UNKNOWN`.

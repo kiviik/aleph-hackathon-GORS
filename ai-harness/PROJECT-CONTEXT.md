@@ -13,8 +13,12 @@ tránsito terminado.
 - Rama de hackathon: `hackaton`.
 - Datos: fixtures sintéticos y frames propios, sanitizados y locales.
 - Red: no necesaria después del primer download de modelos.
-- Externo: no se accede a cámaras del GCBA, servicios de terceros, cuentas,
-  infraestructura pública o datos personales.
+- Externo: el runtime no accede a cámaras públicas, servicios de terceros,
+  cuentas, infraestructura pública o datos personales. Calgary es el primer
+  target de research y contrato de ingestión, no una conexión online habilitada.
+- Calgary: `k7p9-kppz` describe ubicaciones de cámaras de tránsito; `rhkg-vwwp`
+  describe zonas on-street; `45az-7kh9` relaciona zonas de precio y tarifas.
+  Ninguna fuente garantiza ocupación actual.
 - Salida: decisión demostrativa, traza y métricas; no multas, reservas ni
   asesoramiento legal.
 
@@ -26,6 +30,7 @@ request → QVAC tool-calling model
        → lookup_sector → local fixture
        → lookup_rules → local fixture
        → decide → deterministic safety policy + QVAC explanation
+       ↘ paid alternative → local paid-zone snapshot, availability UNKNOWN
 ```
 
 ## Invariantes
@@ -40,6 +45,8 @@ request → QVAC tool-calling model
 5. La política determinística puede rechazar una sugerencia del modelo, nunca
    al revés.
 6. Todo retry, error y decisión debe quedar en la traza.
+7. La antigüedad, fuente y estado de schema de datos públicos quedan en la
+   traza; un snapshot vencido o incompatible no se presenta como actual.
 
 ## Source of truth
 
@@ -50,6 +57,7 @@ Leer primero:
 3. `docs/hackaton/01-plan.md`
 4. `docs/hackaton/02-arquitectura.md`
 5. `ba-estaciona-qvac/src/contracts.js`, `orchestrator.js` y `policy.js`
+6. `docs/hackaton/06-calgary.md` para el contrato de fuentes públicas
 
 ## Vocabulary
 
@@ -59,3 +67,6 @@ Leer primero:
   respuesta.
 - `mock`: prueba de orquestación y policy; no es evidencia de modelo.
 - `qvac`: inferencia local real mediante `@qvac/sdk`.
+- `ALTERNATIVE_PAID_PARKING`: opción de zona/tarifa, no disponibilidad ni
+  autorización.
+- `availability: UNKNOWN`: la fuente no informa ocupación actual.
