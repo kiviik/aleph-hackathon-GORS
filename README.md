@@ -25,6 +25,41 @@ The Calgary data research and integration plan lives in
 The mobile execution plan lives in
 [`docs/hackaton/07-mobile.md`](docs/hackaton/07-mobile.md).
 
+## Desktop app (Electron)
+
+The public web surface is only a Vercel landing page for downloading the app.
+Electron starts the local Next UI on `127.0.0.1:3210` and loads `/estaciona` inside a
+native window; the map is not exposed as a public web route on Vercel:
+
+```bash
+npm install
+npm run electron:dev
+```
+
+For a production build, run `npm run build` first and then `npm run electron`.
+The map still uses OpenStreetMap tiles and Nominatim for the destination search
+when network access is available; the desktop shell and UI remain local. The
+current public target is the Expo app described below.
+
+Deploy the landing with `vercel --prod`. Vercel serves `/` only; the
+`middleware.ts` guard redirects `/estaciona` back to the landing when running
+on Vercel. Publish the Electron installer separately (for example as a GitHub
+Release) only if the desktop fallback is needed; otherwise set the mobile Expo
+deep link described below in the Vercel project environment variables.
+
+## Mobile demo (Expo)
+
+The current demo target is iOS. The mobile app lives in [`mobile/`](mobile/)
+and includes the map, an embedded Street View tab, and device-local favorites.
+Install Expo Go, then run `cd mobile && npm install && npx expo start` and scan
+the QR code. Use `npx expo start --tunnel` when the phone cannot reach the
+computer over Wi-Fi.
+
+For the landing, set `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` in Vercel to the Expo
+Go link or to the published demo deep link. The primary target is iOS; the
+Electron shell remains available as a local fallback but is not the public
+experience.
+
 ## Original Atelier surface
 
 ```bash

@@ -2,9 +2,15 @@
   "name": "atelier-professional",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "next dev",
+    "electron": "electron .",
+    "electron:dev": "electron .",
     "build": "next build",
+    "electron:build": "npm run build",
+    "mobile:start": "npm --prefix mobile start",
+    "mobile:ios": "npm --prefix mobile run ios",
     "start": "next start",
     "lint": "next lint",
     "test": "node --import ./tests/harness/register.mjs --test tests/*.test.mjs",
@@ -23,6 +29,7 @@
     "@types/react-dom": "^19.2.4",
     "esbuild": "^0.28.1",
     "eslint": "^8.57.1",
+    "electron": "^43.4.1",
     "eslint-config-next": "14.2.35",
     "jsdom": "^29.1.1",
     "typescript": "^6.0.3"

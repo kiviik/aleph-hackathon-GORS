@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "BA Estaciona",
+    "slug": "ba-estaciona-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "baestaciona",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.baestaciona.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Usamos tu ubicación para mostrar lugares libres cerca de vos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1f4333"
+      }
+    },
+    "plugins": ["expo-location"]
+  }
+}

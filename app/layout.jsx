@@ -1,8 +1,8 @@
 import "leaflet/dist/leaflet.css";
 
 export const metadata = {
-  title: "Atelier — the decision layer for fashion brands",
-  description: "Collection planning and decision layer for fashion teams"
+  title: "BA Estaciona — demo móvil para iPhone",
+  description: "Probá BA Estaciona Mobile: mapas, Street View y memoria local para encontrar estacionamiento."
 };
 
 export default function RootLayout({ children }) {
