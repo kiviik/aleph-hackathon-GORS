@@ -1,0 +1,126 @@
+Git commit history - 2026-08-22
+Repository: kiviik/aleph-hackaton-GOR
+Generated from the local repository after fetching origin/hackaton.
+
+IMPORTANT
+---------
+The local branch and origin/hackaton currently have unrelated histories.
+The local branch preserves the development history from this day, while the
+remote branch was rewritten as a new root commit. They are listed separately.
+
+LOCAL BRANCH: hackaton
+----------------------
+
+commit 477a2c8710f284f3f04b2b64d142aa9e0edd71d9
+Author: Gaspar <52015401+G4sp4rCS@users.noreply.github.com>
+Date: 2026-08-22T20:59:56+00:00
+Message: fix: keep release view command valid in shell
+
+commit 3650063ff9911e88476fc215b1865a926ef65e2f
+Author: Gaspar <52015401+G4sp4rCS@users.noreply.github.com>
+Date: 2026-08-22T20:59:11+00:00
+Message: fix: allow release token fallback for apk publish
+
+commit 3e2b69efbfda33ddbd079d6e222852270b13c503
+Merge: 6be3b31 b61bdbd
+Author: Gaspar <52015401+G4sp4rCS@users.noreply.github.com>
+Date: 2026-08-22T20:44:08+00:00
+Message: merge: sync mobile UI updates
+
+commit 6be3b310ec9c260e887e3354c2b6205dd29526d2
+Merge: cd4e4cf d4f52e3
+Author: Gaspar <52015401+G4sp4rCS@users.noreply.github.com>
+Date: 2026-08-22T20:41:05+00:00
+Message: fix: align mobile UI across Android and iOS
+
+commit b61bdbd9a6eede61b0035460e5b5a72f93e2656a
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T17:24:10-03:00
+Message: feat: add Calgary street suggestions and keep status filters local
+
+commit cd4e4cffe24918eef68f3dceb8384595b338aa94
+Author: Gaspar <52015401+G4sp4rCS@users.noreply.github.com>
+Date: 2026-08-22T17:15:28-03:00
+Message: chore: android buildeable en gh
+
+commit d4f52e311e06b59cf098725a70882a9214579a84
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T17:12:50-03:00
+Message: feat: translate mobile app and link status cards to Street View
+
+commit 2365f4bf511dfb2b9b4e46973eaa87154ba5fa77
+Merge: a6845cf 8e48c60
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T17:05:13-03:00
+Message: merge: sync Android mobile prototype and dark UI
+
+commit a6845cf6542d6411426a3fa5cbcc9133f0b72921
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T17:02:30-03:00
+Message: feat: add mobile dark mode and readable location chips
+
+commit 8e48c60dd43f7891c480732ded38400e7bb60998
+Author: Gaspar <52015401+G4sp4rCS@users.noreply.github.com>
+Date: 2026-08-22T16:57:51-03:00
+Message: primer slice Android local-first
+
+commit 26c2ba5ad388aa613aaddd3488a1b04b8a942b52
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T16:17:02-03:00
+Message: feat: add Expo mobile parking demo
+
+commit d7ecc32c8c842032803868f6b79c8ffa0f929687
+Author: Gaspar <52015401+G4sp4rCS@users.noreply.github.com>
+Date: 2026-08-22T16:00:06-03:00
+Message: agrego parte mobile
+
+commit 571f44f18e7214597ce960ad8167fe60708835a1
+Merge: d4fe7c5 6b3f69e
+Author: Gaspar <52015401+G4sp4rCS@users.noreply.github.com>
+Date: 2026-08-22T15:16:50-03:00
+Message: Merge branch 'hackaton' of https://github.com/kiviik/aleph-hackaton-GOR into hackaton
+
+commit d4fe7c59ae1e0dee7fe91a98a6cab900605daeb7
+Author: Gaspar <52015401+G4sp4rCS@users.noreply.github.com>
+Date: 2026-08-22T15:16:47-03:00
+Message: Agrego research sobre calgary
+
+commit 6b3f69e1e73b2dac0e9d94066aee358a0d4ff980
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T15:04:47-03:00
+Message: feat: default parking map to Calgary
+
+commit ff37ba346f5c270fdfa9e71cf72dfc1ceb52e4ff
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T14:52:20-03:00
+Message: fix: keep stripped app buildable
+
+commit e9ca5973e1a6a2b4d2a0fb524a80e6fb631a179b
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T14:49:18-03:00
+Message: feat: ship London OpenStreetMap parking demo
+
+commit 62f10dd5db8eb003b175d540a7590da209d22be7
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T12:06:33-03:00
+Message: docs: brand repository for Aleph hackathon
+
+commit 65f161a3858d01a1d1e48fb9d094f8da01aeb1ca
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T12:00:35-03:00
+Message: scaffold: add QVAC hackathon project and AI context
+
+REMOTE BRANCH: origin/hackaton
+------------------------------
+
+commit 0b1b9c513c0e545a8c628a30dbd2f3593a6a883f
+Author: kiviik <vickyrauch@gmail.com>
+Date: 2026-08-22T21:00:43+00:00
+Message: Update Calgary Estaciona mobile app
+
+SUMMARY
+-------
+Local commits found for 2026-08-22: 19
+Remote commits found for 2026-08-22: 1
+Local HEAD: 477a2c8710f284f3f04b2b64d142aa9e0edd71d9
+Remote HEAD: 0b1b9c513c0e545a8c628a30dbd2f3593a6a883f

@@ -1,0 +1,11 @@
+{
+  "cam-day-free": { "file": "day-free.jpg", "captured_at": "2026-08-22T15:00:00Z" },
+  "cam-day-occupied": { "file": "day-occupied.jpg", "captured_at": "2026-08-22T15:00:00Z" },
+  "cam-dark": { "file": "dark.jpg", "captured_at": "2026-08-23T01:00:00Z" },
+  "cam-occluded": { "file": "occluded.jpg", "captured_at": "2026-08-22T15:00:00Z" },
+  "cam-blurry": { "file": "rain-blurry.jpg", "captured_at": "2026-08-22T15:00:00Z" },
+  "cam-carga": { "file": "day-free.jpg", "captured_at": "2026-08-22T15:00:00Z" },
+  "cam-school": { "file": "day-free.jpg", "captured_at": "2026-08-22T15:00:00Z" },
+  "cam-no-park": { "file": "day-free.jpg", "captured_at": "2026-08-22T15:00:00Z" },
+  "cam-no-rules": { "file": "day-free.jpg", "captured_at": "2026-08-22T15:00:00Z" }
+}

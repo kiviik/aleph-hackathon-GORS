@@ -1,0 +1,79 @@
+name: Android APK
+
+on:
+  push:
+    branches:
+      - hackaton
+    tags:
+      - "mobile-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Android builder image
+        uses: docker/build-push-action@v6
+        with:
+          context: mobile
+          file: mobile/Dockerfile
+          tags: ba-estaciona-android-builder:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build demo APK
+        run: |
+          mkdir -p mobile/artifacts
+          docker run --rm \
+            -e BUILD_VARIANT=debug \
+            -v "${GITHUB_WORKSPACE}/mobile/artifacts:/output" \
+            ba-estaciona-android-builder:ci
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ba-estaciona-android-apk
+          path: mobile/artifacts/ba-estaciona-android-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish APK to GitHub Release
+        env:
+          # RELEASE_TOKEN is useful when repository/org policy downgrades
+          # GITHUB_TOKEN to read-only. Otherwise the built-in token is enough.
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            RELEASE_TAG="${GITHUB_REF_NAME}"
+            RELEASE_TITLE="BA Estaciona Android ${RELEASE_TAG}"
+          else
+            RELEASE_TAG="mobile-latest"
+            RELEASE_TITLE="BA Estaciona Android latest"
+          fi
+
+          if ! gh release view "${RELEASE_TAG}" \
+            --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release create "${RELEASE_TAG}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --target "${COMMIT_SHA}" \
+              --title "${RELEASE_TITLE}" \
+              --generate-notes
+          fi
+          gh release upload "${RELEASE_TAG}" \
+            mobile/artifacts/ba-estaciona-android-debug.apk \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber

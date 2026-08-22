@@ -1,0 +1,2717 @@
+{
+  "generatedAt": "2026-08-22T14:40:57.757Z",
+  "mode": "mock",
+  "evidenceClass": "MOCK_ORCHESTRATION_ONLY_NOT_MODEL_EVIDENCE",
+  "scenarios": 30,
+  "repetitions": 5,
+  "totalRuns": 150,
+  "passed": 150,
+  "successRate": 1,
+  "completeChainRate": 1,
+  "medianLatencyMs": 0,
+  "p95LatencyMs": 0,
+  "byScenario": [
+    {
+      "id": "S01",
+      "expected": "PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S02",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S03",
+      "expected": "REFUSE",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "REFUSE": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S04",
+      "expected": "REFUSE",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "REFUSE": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S05",
+      "expected": "REFUSE",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "REFUSE": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S06",
+      "expected": "REFUSE",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "REFUSE": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S07",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S08",
+      "expected": "PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S09",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S10",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S11",
+      "expected": "PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S12",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S13",
+      "expected": "PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S14",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S15",
+      "expected": "REFUSE",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "REFUSE": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S16",
+      "expected": "REFUSE",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "REFUSE": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S17",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S18",
+      "expected": "PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S19",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S20",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S21",
+      "expected": "PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S22",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S23",
+      "expected": "PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S24",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S25",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S26",
+      "expected": "REFUSE",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "REFUSE": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S27",
+      "expected": "REFUSE",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "REFUSE": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S28",
+      "expected": "REFUSE",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "REFUSE": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S29",
+      "expected": "PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "PARK": 5
+      },
+      "failures": []
+    },
+    {
+      "id": "S30",
+      "expected": "DO_NOT_PARK",
+      "passed": 5,
+      "runs": 5,
+      "decisions": {
+        "DO_NOT_PARK": 5
+      },
+      "failures": []
+    }
+  ],
+  "runs": [
+    {
+      "scenario": "S01",
+      "run": 1,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 1,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S01",
+      "run": 2,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S01",
+      "run": 3,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S01",
+      "run": 4,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S01",
+      "run": 5,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S02",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S02",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S02",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S02",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S02",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S03",
+      "run": 1,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S03",
+      "run": 2,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S03",
+      "run": 3,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S03",
+      "run": 4,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S03",
+      "run": 5,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S04",
+      "run": 1,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S04",
+      "run": 2,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S04",
+      "run": 3,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S04",
+      "run": 4,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S04",
+      "run": 5,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S05",
+      "run": 1,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S05",
+      "run": 2,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S05",
+      "run": 3,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S05",
+      "run": 4,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S05",
+      "run": 5,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S06",
+      "run": 1,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S06",
+      "run": 2,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S06",
+      "run": 3,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S06",
+      "run": 4,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S06",
+      "run": 5,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S07",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S07",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S07",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S07",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S07",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S08",
+      "run": 1,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S08",
+      "run": 2,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S08",
+      "run": 3,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S08",
+      "run": 4,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S08",
+      "run": 5,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S09",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S09",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S09",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S09",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S09",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S10",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S10",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S10",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S10",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S10",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S11",
+      "run": 1,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S11",
+      "run": 2,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S11",
+      "run": 3,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S11",
+      "run": 4,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S11",
+      "run": 5,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S12",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S12",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S12",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S12",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S12",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S13",
+      "run": 1,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S13",
+      "run": 2,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S13",
+      "run": 3,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S13",
+      "run": 4,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S13",
+      "run": 5,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S14",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S14",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S14",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S14",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S14",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S15",
+      "run": 1,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "RULES_UNAVAILABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S15",
+      "run": 2,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "RULES_UNAVAILABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S15",
+      "run": 3,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "RULES_UNAVAILABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S15",
+      "run": 4,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "RULES_UNAVAILABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S15",
+      "run": 5,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "RULES_UNAVAILABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S16",
+      "run": 1,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S16",
+      "run": 2,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S16",
+      "run": 3,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S16",
+      "run": 4,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S16",
+      "run": 5,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "LOW_CONFIDENCE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S17",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S17",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S17",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S17",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S17",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S18",
+      "run": 1,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S18",
+      "run": 2,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S18",
+      "run": 3,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S18",
+      "run": 4,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S18",
+      "run": 5,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S19",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S19",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S19",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S19",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S19",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S20",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S20",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S20",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S20",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S20",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S21",
+      "run": 1,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S21",
+      "run": 2,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S21",
+      "run": 3,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S21",
+      "run": 4,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S21",
+      "run": 5,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S22",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S22",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S22",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S22",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S22",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "RULE_PROHIBITS",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S23",
+      "run": 1,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S23",
+      "run": 2,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S23",
+      "run": 3,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S23",
+      "run": 4,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S23",
+      "run": 5,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S24",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S24",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S24",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S24",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S24",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S25",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S25",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S25",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S25",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S25",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S26",
+      "run": 1,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S26",
+      "run": 2,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S26",
+      "run": 3,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S26",
+      "run": 4,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S26",
+      "run": 5,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S27",
+      "run": 1,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S27",
+      "run": 2,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S27",
+      "run": 3,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S27",
+      "run": 4,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S27",
+      "run": 5,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S28",
+      "run": 1,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S28",
+      "run": 2,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S28",
+      "run": 3,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S28",
+      "run": 4,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S28",
+      "run": 5,
+      "expected": "REFUSE",
+      "actual": "REFUSE",
+      "passed": true,
+      "code": "FRAME_UNUSABLE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S29",
+      "run": 1,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S29",
+      "run": 2,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S29",
+      "run": 3,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S29",
+      "run": 4,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S29",
+      "run": 5,
+      "expected": "PARK",
+      "actual": "PARK",
+      "passed": true,
+      "code": "FREE_AND_ALLOWED",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S30",
+      "run": 1,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S30",
+      "run": 2,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S30",
+      "run": 3,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S30",
+      "run": 4,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    },
+    {
+      "scenario": "S30",
+      "run": 5,
+      "expected": "DO_NOT_PARK",
+      "actual": "DO_NOT_PARK",
+      "passed": true,
+      "code": "NO_FREE_SPACE",
+      "latencyMs": 0,
+      "completedTools": [
+        "read_frame",
+        "lookup_sector",
+        "lookup_rules",
+        "decide"
+      ],
+      "rejectedCalls": 0
+    }
+  ]
+}

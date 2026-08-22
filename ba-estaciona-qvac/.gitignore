@@ -1,0 +1,6 @@
+node_modules/
+data/frames/*.jpg
+data/frames/*.jpeg
+data/frames/*.png
+reports/qvac-local.json
+reports/qvac-local.md

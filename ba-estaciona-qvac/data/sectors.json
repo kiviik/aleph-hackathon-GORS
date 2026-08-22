@@ -1,0 +1,37 @@
+[
+  {
+    "sector_id": "S-REGULAR",
+    "location_id": "loc-regular",
+    "label": "Curb demo — unrestricted",
+    "capacity": 3,
+    "camera_ids": ["cam-day-free", "cam-day-occupied", "cam-dark", "cam-occluded", "cam-blurry"]
+  },
+  {
+    "sector_id": "S-CARGA",
+    "location_id": "loc-carga",
+    "label": "Curb demo — loading window",
+    "capacity": 2,
+    "camera_ids": ["cam-carga"]
+  },
+  {
+    "sector_id": "S-SCHOOL",
+    "location_id": "loc-school",
+    "label": "Curb demo — school window",
+    "capacity": 2,
+    "camera_ids": ["cam-school"]
+  },
+  {
+    "sector_id": "S-NO-PARK",
+    "location_id": "loc-no-park",
+    "label": "Curb demo — always restricted",
+    "capacity": 2,
+    "camera_ids": ["cam-no-park"]
+  },
+  {
+    "sector_id": "S-UNKNOWN",
+    "location_id": "loc-no-rules",
+    "label": "Curb demo — missing rule source",
+    "capacity": 2,
+    "camera_ids": ["cam-no-rules"]
+  }
+]

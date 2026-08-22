@@ -1,0 +1,19 @@
+{
+  "name": "ba-estaciona-qvac",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.17"
+  },
+  "scripts": {
+    "ask": "node src/cli.js",
+    "evaluate:mock": "node src/evaluate.js --mode mock --runs 5",
+    "evaluate:qvac": "node src/evaluate.js --mode qvac --runs 5",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@qvac/sdk": "0.17.1",
+    "zod": "3.25.76"
+  }
+}
