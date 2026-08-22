@@ -1,312 +1,208 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  PermissionsAndroid,
+  Dimensions,
+  FlatList,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
+import MapView, { Callout, Marker, type Region } from "react-native-maps";
+import { WebView } from "react-native-webview";
 
-import {
-  createBlockedAnalysisTrace,
-  type CameraPermission,
-  type MobileTrace,
-  type PipelineStage,
-} from "./src/contracts";
-
-const traceStorageKey = "ba-estaciona-android-last-trace";
-
-const stageLabels: Record<PipelineStage, string> = {
-  capture: "Captura local",
-  detector: "YOLO / ONNX",
-  evidence: "Evidencia del ROI",
-  tools: "Tools locales",
-  policy: "Policy deterministica",
+type Status = "free" | "occupied" | "review";
+type Tab = "map" | "street" | "saved";
+type Spot = {
+  id: string;
+  street: string;
+  number: string;
+  neighborhood: string;
+  status: Status;
+  latitude: number;
+  longitude: number;
+  confidence: string;
+  checked: string;
+  heading: number;
 };
 
-const stageOrder: PipelineStage[] = ["capture", "detector", "evidence", "tools", "policy"];
+const SPOTS: Spot[] = [
+  { id: "A-12", street: "Stephen Avenue SW", number: "100", neighborhood: "Downtown Calgary", status: "free", latitude: 51.0447, longitude: -114.0689, confidence: "94%", checked: "18 s", heading: 90 },
+  { id: "A-13", street: "Stephen Avenue SW", number: "140", neighborhood: "Downtown Calgary", status: "occupied", latitude: 51.0449, longitude: -114.0685, confidence: "99%", checked: "18 s", heading: 90 },
+  { id: "B-07", street: "17 Avenue SW", number: "1200", neighborhood: "Beltline", status: "free", latitude: 51.0374, longitude: -114.0906, confidence: "91%", checked: "42 s", heading: 0 },
+  { id: "C-21", street: "Kensington Road NW", number: "1100", neighborhood: "Kensington", status: "review", latitude: 51.0522, longitude: -114.0871, confidence: "68%", checked: "1 min", heading: 180 },
+  { id: "D-04", street: "10 Street NW", number: "210", neighborhood: "Kensington", status: "free", latitude: 51.0520, longitude: -114.0861, confidence: "96%", checked: "26 s", heading: 90 },
+  { id: "E-18", street: "1 Street SE", number: "700", neighborhood: "East Village", status: "free", latitude: 51.0472, longitude: -114.0615, confidence: "93%", checked: "36 s", heading: 180 },
+  { id: "F-03", street: "17 Avenue SE", number: "900", neighborhood: "Inglewood", status: "free", latitude: 51.0374, longitude: -114.0583, confidence: "89%", checked: "51 s", heading: 0 },
+];
 
-function permissionLabel(permission: CameraPermission): string {
-  if (permission === "granted") return "Autorizada";
-  if (permission === "denied") return "Denegada";
-  if (permission === "blocked") return "Bloqueada en Ajustes";
-  return "Sin verificar";
+const statusText: Record<Status, string> = { free: "Free", occupied: "Occupied", review: "Review" };
+const statusColor: Record<Status, string> = { free: "#247b52", occupied: "#b6543b", review: "#ae7c27" };
+const storageKey = "ba-estaciona-mobile-memory";
+const themeStorageKey = "ba-estaciona-mobile-theme";
+const initialRegion: Region = { latitude: 51.0447, longitude: -114.0719, latitudeDelta: 0.085, longitudeDelta: 0.085 };
+
+type Memory = { favoriteIds: string[]; asked: string[] };
+
+function ThemeToggle({ darkMode, onPress }: { darkMode: boolean; onPress: () => void }) {
+  return <Pressable accessibilityRole="button" accessibilityLabel={darkMode ? "Enable light mode" : "Enable dark mode"} onPress={onPress} style={[styles.themeButton, darkMode && styles.themeButtonDark]}><Text style={[styles.themeIcon, darkMode && styles.textDark]}>{darkMode ? "☀" : "☾"}</Text></Pressable>;
 }
 
-function stageColor(status: MobileTrace["events"][number]["status"]): string {
-  if (status === "blocked") return colors.amber;
-  if (status === "ready") return colors.green;
-  return colors.muted;
-}
-
-function StatusPill({ label, tone = "neutral" }: { label: string; tone?: "green" | "amber" | "neutral" }) {
+function StreetView({ spot, onSelect, darkMode, onToggleTheme }: { spot: Spot; onSelect: (spot: Spot) => void; darkMode: boolean; onToggleTheme: () => void }) {
+  const source = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${spot.latitude},${spot.longitude}&heading=${spot.heading}&pitch=0&fov=90`;
   return (
-    <View style={[styles.pill, tone === "green" && styles.pillGreen, tone === "amber" && styles.pillAmber]}>
-      <View style={[styles.pillDot, tone === "green" && styles.pillDotGreen, tone === "amber" && styles.pillDotAmber]} />
-      <Text style={styles.pillText}>{label}</Text>
-    </View>
-  );
-}
-
-function StageRow({ trace, stage }: { trace: MobileTrace | null; stage: PipelineStage }) {
-  const event = trace?.events.find((candidate) => candidate.stage === stage);
-  const status = event?.status ?? "pending";
-  return (
-    <View style={styles.stageRow}>
-      <View style={[styles.stageMarker, { backgroundColor: stageColor(status) }]} />
-      <View style={styles.stageCopy}>
-        <Text style={styles.stageTitle}>{stageLabels[stage]}</Text>
-        <Text style={styles.stageDetail}>{event?.detail ?? "Pendiente del spike Android"}</Text>
+    <View style={[styles.streetScreen, darkMode && styles.screenDark]}>
+      <View style={styles.streetTopBar}>
+        <View><Text style={[styles.kicker, darkMode && styles.textMutedDark]}>EXPLORE THE BLOCK</Text><Text style={[styles.streetPageTitle, darkMode && styles.textDark]}>Street View</Text></View>
+        <View style={styles.headerActions}><ThemeToggle darkMode={darkMode} onPress={onToggleTheme} /><View style={styles.livePill}><View style={styles.liveDot} /><Text style={styles.liveText}>CONNECTED</Text></View></View>
       </View>
-      <Text style={[styles.stageStatus, { color: stageColor(status) }]}>
-        {status === "blocked" ? "BLOQUEADO" : status === "ready" ? "LISTO" : "PENDIENTE"}
-      </Text>
+      <View style={[styles.streetHeroCard, darkMode && styles.darkCard]}>
+        <View style={[styles.streetViewerHeader, darkMode && styles.darkCard]}>
+          <View><Text style={[styles.streetViewerLabel, darkMode && styles.textMutedDark]}>SELECTED LOCATION</Text><Text style={[styles.streetViewerTitle, darkMode && styles.textDark]}>{spot.street} {spot.number}</Text></View>
+          <View style={[styles.streetStatus, { backgroundColor: `${statusColor[spot.status]}18` }]}><View style={[styles.chipDot, { backgroundColor: statusColor[spot.status] }]} /><Text style={[styles.streetStatusText, { color: statusColor[spot.status] }]}>{statusText[spot.status]}</Text></View>
+        </View>
+        <View style={styles.streetFrame}>
+          <WebView source={{ uri: source }} style={styles.webView} startInLoadingState renderLoading={() => <View style={styles.webLoading}><ActivityIndicator color="#247b52" /><Text style={styles.muted}>Loading Street View…</Text></View>} onError={() => Alert.alert("Street View unavailable", "You can keep using the map with local evidence.")} />
+          <View style={styles.streetCompass}><Text style={styles.streetCompassArrow}>↑</Text><Text style={styles.streetCompassText}>N</Text></View>
+          <View style={styles.streetSource}><Text style={styles.streetSourceText}>Google Street View</Text></View>
+        </View>
+      </View>
+      <View style={[styles.streetInfoCard, darkMode && styles.darkCard]}>
+        <View style={styles.streetInfoIcon}><Text>⌖</Text></View>
+        <View style={styles.streetInfoCopy}><Text style={[styles.streetInfoTitle, darkMode && styles.textDark]}>{spot.neighborhood}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Last local reading · {spot.checked} ago · agreement {spot.confidence}</Text></View>
+        <Pressable onPress={() => onSelect(spot)} style={styles.streetRefresh}><Text style={styles.streetRefreshText}>↻</Text></Pressable>
+      </View>
+      <Text style={[styles.streetSectionLabel, darkMode && styles.textMutedDark]}>CHANGE LOCATION</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.spotPicker}>
+        {SPOTS.filter((candidate) => candidate.status === "free").map((candidate) => <Pressable key={candidate.id} onPress={() => onSelect(candidate)} style={[styles.streetAvailableButton, darkMode && styles.darkCard, candidate.id === spot.id && styles.streetAvailableSelected]}><View style={styles.streetAvailableDot} /><Text numberOfLines={1} ellipsizeMode="tail" style={[styles.streetAvailableStreet, darkMode && styles.textDark, candidate.id === spot.id && styles.streetAvailableTextSelected]}>{candidate.street} {candidate.number}</Text><Text style={[styles.streetAvailableArrow, darkMode && styles.textMutedDark, candidate.id === spot.id && styles.streetAvailableTextSelected]}>›</Text></Pressable>)}
+      </ScrollView>
     </View>
   );
+}
+
+function TabButton({ icon, label, active, onPress }: { icon: string; label: string; active: boolean; onPress: () => void }) {
+  return <Pressable accessibilityRole="tab" accessibilityState={{ selected: active }} onPress={onPress} style={styles.tabButton}><Text style={[styles.tabIcon, active && styles.tabActive]}>{icon}</Text><Text style={[styles.tabLabel, active && styles.tabActive]}>{label}</Text></Pressable>;
 }
 
 export default function App() {
-  const [cameraPermission, setCameraPermission] = useState<CameraPermission>("unknown");
-  const [checkingCamera, setCheckingCamera] = useState(false);
-  const [lastTrace, setLastTrace] = useState<MobileTrace | null>(null);
-  const [showTrace, setShowTrace] = useState(false);
+  const [tab, setTab] = useState<Tab>("map");
+  const [selectedId, setSelectedId] = useState("A-12");
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
+  const [memory, setMemory] = useState<Memory>({ favoriteIds: [], asked: [] });
+  const [darkMode, setDarkMode] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
-    void loadLocalTrace();
-    void checkCameraPermission();
+    AsyncStorage.getItem(storageKey).then((value) => { if (value) setMemory(JSON.parse(value) as Memory); }).catch(() => undefined);
+    AsyncStorage.getItem(themeStorageKey).then((value) => { if (value === "dark") setDarkMode(true); }).catch(() => undefined);
   }, []);
 
-  const checkCameraPermission = async () => {
-    if (Platform.OS !== "android") return;
-    try {
-      const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
-      setCameraPermission(granted ? "granted" : "unknown");
-    } catch {
-      setCameraPermission("unknown");
-    }
+  const searchedSpots = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase();
+    if (!normalized) return SPOTS;
+    return SPOTS.filter((spot) => `${spot.street} ${spot.number} ${spot.neighborhood}`.toLocaleLowerCase().includes(normalized));
+  }, [query]);
+  const visibleSpots = useMemo(() => statusFilter === "all" ? searchedSpots : searchedSpots.filter((spot) => spot.status === statusFilter), [searchedSpots, statusFilter]);
+  const selected = visibleSpots.find((spot) => spot.id === selectedId) ?? visibleSpots[0] ?? SPOTS[0];
+  const counts = useMemo(() => ({
+    all: searchedSpots.length,
+    free: searchedSpots.filter((spot) => spot.status === "free").length,
+    occupied: searchedSpots.filter((spot) => spot.status === "occupied").length,
+    review: searchedSpots.filter((spot) => spot.status === "review").length,
+  }), [searchedSpots]);
+  const filterCards: Array<{ key: Status | "all"; label: string; value: number; color: string }> = [
+    { key: "all", label: "detected", value: counts.all, color: "#65776a" },
+    { key: "free", label: "free nearby", value: counts.free, color: statusColor.free },
+    { key: "occupied", label: "occupied", value: counts.occupied, color: statusColor.occupied },
+    { key: "review", label: "review", value: counts.review, color: statusColor.review },
+  ];
+
+  const saveMemory = (next: Memory) => {
+    setMemory(next);
+    void AsyncStorage.setItem(storageKey, JSON.stringify(next));
   };
 
-  const requestCameraPermission = async (): Promise<boolean> => {
-    if (Platform.OS !== "android") {
-      Alert.alert("Target Android", "Esta superficie está preparada únicamente para Android.");
-      return false;
-    }
+  const toggleTheme = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    void AsyncStorage.setItem(themeStorageKey, next ? "dark" : "light");
+  };
 
-    setCheckingCamera(true);
+  const rememberQuery = () => {
+    const normalized = query.trim();
+    if (!normalized) return;
+    saveMemory({ ...memory, asked: [normalized, ...memory.asked.filter((place) => place.toLocaleLowerCase() !== normalized.toLocaleLowerCase())].slice(0, 6) });
+  };
+
+  const toggleFavorite = () => {
+    const favoriteIds = memory.favoriteIds.includes(selected.id) ? memory.favoriteIds.filter((id) => id !== selected.id) : [...memory.favoriteIds, selected.id].slice(-12);
+    saveMemory({ ...memory, favoriteIds });
+  };
+
+  const locate = async () => {
+    setLocating(true);
     try {
-      const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, {
-        title: "Cámara para detectar estacionamiento",
-        message: "La imagen se procesa localmente y no se sube a ningún servidor.",
-        buttonPositive: "Continuar",
-        buttonNegative: "Ahora no",
-      });
-      const permission: CameraPermission = result === PermissionsAndroid.RESULTS.GRANTED
-        ? "granted"
-        : result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
-          ? "blocked"
-          : "denied";
-      setCameraPermission(permission);
-      return permission === "granted";
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== "granted") {
+        Alert.alert("Location disabled", "Enable location access in Settings to see nearby spots.");
+        return;
+      }
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setUserLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude });
     } catch {
-      setCameraPermission("denied");
-      return false;
+      Alert.alert("Could not locate you", "Keep using the Calgary map or try again.");
     } finally {
-      setCheckingCamera(false);
+      setLocating(false);
     }
   };
 
-  const loadLocalTrace = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(traceStorageKey);
-      if (stored) setLastTrace(JSON.parse(stored) as MobileTrace);
-    } catch {
-      // A missing local trace must not prevent the diagnostic screen from opening.
-    }
-  };
-
-  const startAnalysis = async () => {
-    const granted = cameraPermission === "granted" || await requestCameraPermission();
-    if (!granted) {
-      Alert.alert("No se puede iniciar", "Sin permiso de cámara el sistema debe abstenerse.");
-      return;
-    }
-
-    const trace = createBlockedAnalysisTrace(String(Platform.Version));
-    setLastTrace(trace);
-    setShowTrace(true);
-    await AsyncStorage.setItem(traceStorageKey, JSON.stringify(trace));
-  };
-
-  const clearTrace = async () => {
-    setLastTrace(null);
-    setShowTrace(false);
-    await AsyncStorage.removeItem(traceStorageKey);
+  const openStreetTab = () => setTab("street");
+  const openStatusInStreetView = (status: Status) => {
+    const nextSpot = searchedSpots.find((spot) => spot.status === status);
+    if (!nextSpot) return;
+    setSelectedId(nextSpot.id);
+    setStatusFilter(status);
+    setTab("street");
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar style="light" />
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.eyebrow}>BA ESTACIONA / ANDROID</Text>
-            <Text style={styles.title}>¿Puedo estacionar acá?</Text>
-            <Text style={styles.subtitle}>Un flujo local, auditable y honesto sobre lo que el teléfono todavía puede detectar.</Text>
-          </View>
-          <StatusPill label="SIN SERVIDOR" tone="green" />
-        </View>
-
-        <View style={styles.heroCard}>
-          <View style={styles.heroAccent} />
-          <Text style={styles.heroKicker}>SPIKE M0 · DISPOSITIVO FÍSICO</Text>
-          <Text style={styles.heroTitle}>La inferencia vive en tu Android.</Text>
-          <Text style={styles.heroCopy}>La cámara, YOLO/ONNX, QVAC y la policy van a correr en el teléfono. Esta primera pantalla prueba el límite local sin fingir un resultado visual.</Text>
-          <Pressable accessibilityRole="button" onPress={startAnalysis} disabled={checkingCamera} style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}>
-            {checkingCamera ? <ActivityIndicator color={colors.ink} /> : <Text style={styles.primaryButtonText}>Pedir cámara y probar flujo</Text>}
-          </Pressable>
-          <Text style={styles.disclaimer}>No se guardan frames. No se consulta Calgary. No hay inferencia remota.</Text>
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Estado del teléfono</Text>
-          <Text style={styles.sectionMeta}>Android API {String(Platform.Version)}</Text>
-        </View>
-        <View style={styles.statusGrid}>
-          <View style={styles.statusCard}>
-            <Text style={styles.statusLabel}>CÁMARA</Text>
-            <Text style={styles.statusValue}>{permissionLabel(cameraPermission)}</Text>
-            <Text style={styles.statusHint}>Permiso foreground</Text>
-          </View>
-          <View style={styles.statusCard}>
-            <Text style={styles.statusLabel}>RED</Text>
-            <Text style={styles.statusValue}>No requerida</Text>
-            <Text style={styles.statusHint}>Runtime offline</Text>
-          </View>
-          <View style={styles.statusCard}>
-            <Text style={styles.statusLabel}>YOLO / ONNX</Text>
-            <Text style={styles.statusValue}>Pendiente</Text>
-            <Text style={styles.statusHint}>Artefacto por fijar</Text>
-          </View>
-          <View style={styles.statusCard}>
-            <Text style={styles.statusLabel}>QVAC LOCAL</Text>
-            <Text style={styles.statusValue}>Pendiente</Text>
-            <Text style={styles.statusHint}>Development Build</Text>
-          </View>
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Pipeline de confianza</Text>
-          <StatusPill label={lastTrace?.decision ?? "SIN EJECUTAR"} tone={lastTrace ? "amber" : "neutral"} />
-        </View>
-        <View style={styles.pipelineCard}>
-          {stageOrder.map((stage) => <StageRow key={stage} trace={lastTrace} stage={stage} />)}
-        </View>
-
-        {lastTrace && (
-          <View style={styles.resultCard}>
-            <Text style={styles.resultKicker}>ÚLTIMO ANÁLISIS LOCAL</Text>
-            <Text style={styles.resultTitle}>REFUSE · integración incompleta</Text>
-            <Text style={styles.resultCopy}>{lastTrace.reason}</Text>
-            <View style={styles.resultFacts}>
-              <Text style={styles.factText}>session {lastTrace.sessionId}</Text>
-              <Text style={styles.factText}>red {lastTrace.network}</Text>
-            </View>
-            <View style={styles.resultActions}>
-              <Pressable accessibilityRole="button" onPress={() => setShowTrace((visible) => !visible)} style={styles.secondaryButton}>
-                <Text style={styles.secondaryButtonText}>{showTrace ? "Ocultar trace" : "Ver trace"}</Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" onPress={clearTrace} style={styles.clearButton}>
-                <Text style={styles.clearButtonText}>Limpiar</Text>
-              </Pressable>
-            </View>
-            {showTrace && <View style={styles.traceBox}>{lastTrace.events.map((event) => <Text key={event.stage} style={styles.traceLine}>{event.stage}: {event.status} · {event.detail}</Text>)}</View>}
-          </View>
-        )}
-
-        <View style={styles.nextCard}>
-          <Text style={styles.nextKicker}>SIGUIENTE GATE</Text>
-          <Text style={styles.nextTitle}>Captura real + YOLO26s fijado</Text>
-          <Text style={styles.nextCopy}>Antes de mostrar PARK, hay que integrar la cámara nativa, fijar hash/labels/input/NMS del ONNX y medirlo en un Android físico. Sin eso, la ausencia de boxes no significa espacio libre.</Text>
-        </View>
-      </ScrollView>
+    <SafeAreaView style={[styles.safe, darkMode && styles.safeDark]}>
+      <StatusBar style={darkMode ? "light" : "dark"} />
+      <KeyboardAvoidingView style={styles.app} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        {tab === "map" && <View style={[styles.mapScreen, darkMode && styles.screenDark]}>
+          <View style={styles.header}><View><Text style={[styles.kicker, darkMode && styles.textMutedDark]}>BA ESTACIONA</Text><Text style={[styles.screenTitle, darkMode && styles.textDark]}>Calgary Estaciona</Text></View><View style={styles.headerActions}><ThemeToggle darkMode={darkMode} onPress={toggleTheme} /><View style={styles.localPill}><View style={styles.liveDot} /><Text style={styles.liveText}>LOCAL</Text></View></View></View>
+          <View style={[styles.searchBox, darkMode && styles.darkInput]}><Text style={[styles.searchIcon, darkMode && styles.textMutedDark]}>⌕</Text><TextInput value={query} onChangeText={setQuery} onSubmitEditing={rememberQuery} placeholder="Destination, street or neighborhood" placeholderTextColor={darkMode ? "#9aaa9e" : "#88958b"} style={[styles.searchInput, darkMode && styles.textDark]} returnKeyType="search" /><Pressable onPress={locate} style={styles.locateButton} disabled={locating}><Text style={styles.locateText}>{locating ? "…" : "⌖"}</Text></Pressable></View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsScroller}>{filterCards.map((filter) => <Pressable key={filter.key} accessibilityRole="button" accessibilityLabel={filter.key === "all" ? "Show all detected spots" : `Open ${filter.label} in Street View`} onPress={() => filter.key === "all" ? setStatusFilter("all") : openStatusInStreetView(filter.key)} style={[styles.statFilterCard, darkMode && styles.darkCard, statusFilter === filter.key && styles.statFilterCardActive]}><View style={[styles.statFilterDot, { backgroundColor: filter.color }]} /><Text style={styles.statNumber}>{filter.value}</Text><Text style={[styles.statLabel, darkMode && styles.textMutedDark]}>{filter.label}</Text></Pressable>)}<Text style={[styles.updated, darkMode && styles.textMutedDark]}>18 s ago</Text></ScrollView>
+          <MapView style={styles.map} initialRegion={initialRegion} showsUserLocation={Boolean(userLocation)} showsMyLocationButton={false} mapType="standard">
+            {visibleSpots.map((spot) => <Marker key={spot.id} coordinate={{ latitude: spot.latitude, longitude: spot.longitude }} pinColor={statusColor[spot.status]} onPress={() => setSelectedId(spot.id)}><Callout onPress={() => { setSelectedId(spot.id); setTab("street"); }}><View style={styles.callout}><Text style={styles.calloutStreet}>{spot.street} {spot.number}</Text><Text style={[styles.calloutStatus, { color: statusColor[spot.status] }]}>{statusText[spot.status]} · {spot.confidence}</Text><Text style={styles.calloutHint}>Tap to open Street View</Text></View></Callout></Marker>)}
+            {userLocation && <Marker coordinate={userLocation} pinColor="#2979ff" title="Your location" />}
+          </MapView>
+          <View style={[styles.mapLegend, darkMode && styles.darkCard]}><View><View style={[styles.legendDot, { backgroundColor: statusColor.free }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Free</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.occupied }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Occupied</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.review }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Review</Text></View></View>
+          <View style={[styles.selectedCard, darkMode && styles.darkCard]}><View style={[styles.selectedDot, { backgroundColor: statusColor[selected.status] }]} /><View style={styles.selectedCopy}><Text style={[styles.selectedStreet, darkMode && styles.textDark]}>{selected.street} {selected.number}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{selected.neighborhood} · read {selected.checked} ago</Text></View><Pressable onPress={toggleFavorite} style={styles.starButton}><Text style={styles.star}>{memory.favoriteIds.includes(selected.id) ? "★" : "☆"}</Text></Pressable><Pressable onPress={openStreetTab} style={styles.streetButton}><Text style={styles.streetButtonText}>Street View</Text></Pressable></View>
+        </View>}
+        {tab === "street" && <StreetView spot={selected} darkMode={darkMode} onToggleTheme={toggleTheme} onSelect={(spot) => setSelectedId(spot.id)} />}
+        {tab === "saved" && <View style={[styles.savedScreen, darkMode && styles.screenDark]}><View style={styles.header}><View><Text style={[styles.kicker, darkMode && styles.textMutedDark]}>YOUR MEMORY</Text><Text style={[styles.screenTitle, darkMode && styles.textDark]}>Saved places</Text></View><View style={styles.headerActions}><ThemeToggle darkMode={darkMode} onPress={toggleTheme} /><Text style={styles.savedCount}>{memory.favoriteIds.length}</Text></View></View><Text style={[styles.sectionLabel, darkMode && styles.textMutedDark]}>FAVORITES</Text>{memory.favoriteIds.length === 0 ? <View style={styles.empty}><Text style={styles.emptyIcon}>☆</Text><Text style={[styles.emptyTitle, darkMode && styles.textDark]}>You have no saved places yet</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Tap ☆ on any map point to save it here.</Text></View> : <FlatList data={SPOTS.filter((spot) => memory.favoriteIds.includes(spot.id))} keyExtractor={(spot) => spot.id} contentContainerStyle={styles.savedList} renderItem={({ item }) => <Pressable style={[styles.savedRow, darkMode && styles.darkCard]} onPress={() => { setSelectedId(item.id); setTab("map"); }}><View style={[styles.savedDot, { backgroundColor: statusColor[item.status] }]} /><View style={styles.savedCopy}><Text style={[styles.savedStreet, darkMode && styles.textDark]}>{item.street} {item.number}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{item.neighborhood} · {statusText[item.status]}</Text></View><Text style={[styles.rowArrow, darkMode && styles.textMutedDark]}>›</Text></Pressable>} />}
+          <Text style={[styles.sectionLabel, darkMode && styles.textMutedDark]}>MOST SEARCHED ON THIS PHONE</Text>{memory.asked.length === 0 ? <Text style={[styles.muted, darkMode && styles.textMutedDark]}>Your frequent searches will appear here.</Text> : <View style={styles.askedWrap}>{memory.asked.map((place) => <Pressable key={place} style={[styles.askedChip, darkMode && styles.darkPill]} onPress={() => { setQuery(place); setTab("map"); }}><Text style={[styles.askedText, darkMode && styles.textDark]}>⌕ {place}</Text></Pressable>)}</View>}
+          <Pressable style={styles.clearButton} onPress={() => saveMemory({ favoriteIds: [], asked: [] })}><Text style={styles.clearText}>Clear local memory</Text></Pressable>
+        </View>}
+        <View style={[styles.tabBar, darkMode && styles.darkTabBar]}><TabButton icon="⌖" label="Map" active={tab === "map"} onPress={() => setTab("map")} /><TabButton icon="◉" label="Street View" active={tab === "street"} onPress={openStreetTab} /><TabButton icon="★" label="Saved" active={tab === "saved"} onPress={() => setTab("saved")} /></View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const colors = {
-  background: "#101a17",
-  panel: "#182620",
-  panelRaised: "#20342b",
-  ink: "#102019",
-  white: "#f6f3ea",
-  soft: "#cbd8cc",
-  muted: "#8da293",
-  green: "#8ad79b",
-  amber: "#efb56e",
-  line: "#30463a",
-};
-
+const { width } = Dimensions.get("window");
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 20, paddingBottom: 40, gap: 18 },
-  header: { gap: 14, paddingTop: 12 },
-  eyebrow: { color: colors.green, fontSize: 11, fontWeight: "800", letterSpacing: 1.5 },
-  title: { color: colors.white, fontSize: 31, fontWeight: "800", letterSpacing: -1, marginTop: 8 },
-  subtitle: { color: colors.soft, fontSize: 14, lineHeight: 21, marginTop: 8, maxWidth: 360 },
-  pill: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20, backgroundColor: colors.panelRaised },
-  pillGreen: { backgroundColor: "#244a36" },
-  pillAmber: { backgroundColor: "#4a3826" },
-  pillDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.muted },
-  pillDotGreen: { backgroundColor: colors.green },
-  pillDotAmber: { backgroundColor: colors.amber },
-  pillText: { color: colors.white, fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
-  heroCard: { overflow: "hidden", padding: 20, borderRadius: 24, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line },
-  heroAccent: { width: 60, height: 4, borderRadius: 4, backgroundColor: colors.green, marginBottom: 18 },
-  heroKicker: { color: colors.muted, fontSize: 10, fontWeight: "800", letterSpacing: 1.4 },
-  heroTitle: { color: colors.white, fontSize: 24, fontWeight: "800", lineHeight: 29, marginTop: 8 },
-  heroCopy: { color: colors.soft, fontSize: 14, lineHeight: 21, marginTop: 9 },
-  primaryButton: { alignItems: "center", justifyContent: "center", minHeight: 50, marginTop: 20, paddingHorizontal: 16, borderRadius: 14, backgroundColor: colors.green },
-  primaryButtonPressed: { opacity: 0.8 },
-  primaryButtonText: { color: colors.ink, fontSize: 14, fontWeight: "800" },
-  disclaimer: { color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 11, textAlign: "center" },
-  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 2 },
-  sectionTitle: { color: colors.white, fontSize: 17, fontWeight: "800" },
-  sectionMeta: { color: colors.muted, fontSize: 11 },
-  statusGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  statusCard: { width: "48%", minHeight: 92, padding: 13, borderRadius: 16, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line },
-  statusLabel: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 1 },
-  statusValue: { color: colors.white, fontSize: 15, fontWeight: "800", marginTop: 8 },
-  statusHint: { color: colors.muted, fontSize: 10, marginTop: 5 },
-  pipelineCard: { padding: 14, borderRadius: 18, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line },
-  stageRow: { flexDirection: "row", alignItems: "center", gap: 11, minHeight: 57, borderBottomWidth: 1, borderBottomColor: colors.line },
-  stageMarker: { width: 9, height: 9, borderRadius: 5 },
-  stageCopy: { flex: 1 },
-  stageTitle: { color: colors.white, fontSize: 13, fontWeight: "800" },
-  stageDetail: { color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 3 },
-  stageStatus: { fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },
-  resultCard: { padding: 18, borderRadius: 20, backgroundColor: "#332a20", borderWidth: 1, borderColor: "#6b4d30" },
-  resultKicker: { color: colors.amber, fontSize: 10, fontWeight: "800", letterSpacing: 1.3 },
-  resultTitle: { color: colors.white, fontSize: 20, fontWeight: "800", marginTop: 7 },
-  resultCopy: { color: "#ead9c4", fontSize: 13, lineHeight: 20, marginTop: 7 },
-  resultFacts: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 },
-  factText: { color: colors.amber, fontSize: 10, fontWeight: "700" },
-  resultActions: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 17 },
-  secondaryButton: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 11, backgroundColor: colors.amber },
-  secondaryButtonText: { color: colors.ink, fontSize: 12, fontWeight: "800" },
-  clearButton: { paddingHorizontal: 10, paddingVertical: 10 },
-  clearButtonText: { color: "#ead9c4", fontSize: 12, fontWeight: "700" },
-  traceBox: { padding: 12, marginTop: 14, borderRadius: 12, backgroundColor: "#211c17" },
-  traceLine: { color: "#d8c8b5", fontSize: 10, lineHeight: 17 },
-  nextCard: { padding: 18, borderRadius: 20, backgroundColor: colors.panelRaised },
-  nextKicker: { color: colors.green, fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
-  nextTitle: { color: colors.white, fontSize: 17, fontWeight: "800", marginTop: 7 },
-  nextCopy: { color: colors.soft, fontSize: 13, lineHeight: 20, marginTop: 7 },
+  safe: { flex: 1, backgroundColor: "#f6f3ec" }, app: { flex: 1 }, mapScreen: { flex: 1, paddingHorizontal: 18 }, header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 14, paddingBottom: 16 }, kicker: { color: "#718075", fontSize: 10, fontWeight: "700", letterSpacing: 1.4 }, screenTitle: { color: "#1f2d25", fontSize: 26, fontWeight: "800", letterSpacing: -0.8, marginTop: 6 }, localPill: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20, backgroundColor: "#e6f1e5" }, livePill: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 16, backgroundColor: "#edf4eb" }, liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#2f9861" }, liveText: { color: "#37704c", fontSize: 9, fontWeight: "800", letterSpacing: 1 }, searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#d6ddd1", borderRadius: 12, paddingHorizontal: 10, height: 44, shadowColor: "#354c3b", shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2 }, searchIcon: { fontSize: 22, color: "#617467", marginRight: 8 }, searchInput: { flex: 1, color: "#26352c", fontSize: 15 }, locateButton: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#edf4eb" }, locateText: { color: "#247b52", fontSize: 21 }, statsRow: { flexDirection: "row", alignItems: "center", paddingVertical: 14 }, statsScroller: { alignItems: "center", gap: 6, paddingVertical: 4 }, statFilterCard: { minWidth: 86, flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 10, backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#e0e2da" }, statFilterCardActive: { borderColor: "#247b52", backgroundColor: "#edf4eb" }, statFilterDot: { width: 7, height: 7, borderRadius: 4 }, statNumber: { color: "#247b52", fontSize: 18, fontWeight: "800" }, statLabel: { color: "#718075", fontSize: 10, marginTop: 1 }, statDivider: { width: 1, height: 27, backgroundColor: "#d9ded5", marginHorizontal: 19 }, updated: { marginLeft: "auto", color: "#869188", fontSize: 10 }, map: { flex: 1, minHeight: 350, width: width - 36, borderRadius: 18, overflow: "hidden" }, callout: { width: 190, padding: 3 }, calloutStreet: { color: "#203128", fontWeight: "800", fontSize: 13 }, calloutStatus: { fontWeight: "700", fontSize: 12, marginTop: 4 }, calloutHint: { color: "#7d897f", fontSize: 10, marginTop: 7 }, mapLegend: { position: "absolute", bottom: 144, left: 28, flexDirection: "row", gap: 11, paddingHorizontal: 11, paddingVertical: 8, borderRadius: 10, backgroundColor: "rgba(255,253,248,.94)" }, legendDot: { width: 7, height: 7, borderRadius: 4, alignSelf: "center", marginBottom: 3 }, legendText: { color: "#68766c", fontSize: 9 }, selectedCard: { flexDirection: "row", alignItems: "center", gap: 9, marginVertical: 12, padding: 13, borderRadius: 16, backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#e0e2da", shadowColor: "#354c3b", shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2 }, selectedDot: { width: 11, height: 11, borderRadius: 6 }, selectedCopy: { flex: 1 }, selectedStreet: { color: "#26352c", fontWeight: "800", fontSize: 13 }, muted: { color: "#7a887e", fontSize: 11, marginTop: 3 }, starButton: { width: 31, height: 31, justifyContent: "center", alignItems: "center" }, star: { color: "#247b52", fontSize: 23 }, streetButton: { paddingHorizontal: 10, paddingVertical: 9, borderRadius: 10, backgroundColor: "#1f4333" }, streetButtonText: { color: "#fff", fontSize: 10, fontWeight: "800" }, streetScreen: { flex: 1, paddingHorizontal: 18 }, streetTopBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 14, paddingBottom: 14 }, streetPageTitle: { color: "#1f2d25", fontSize: 25, fontWeight: "800", letterSpacing: -0.9, marginTop: 3 }, streetHeroCard: { flex: 1, width: "100%", alignSelf: "center", minHeight: 320, overflow: "hidden", borderRadius: 22, backgroundColor: "#dfe7de", borderWidth: 1, borderColor: "#d9e1d6", shadowColor: "#354c3b", shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: 7 }, elevation: 3 }, streetViewerHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 13, paddingVertical: 11, backgroundColor: "#fffdf8" }, streetViewerLabel: { color: "#859287", fontSize: 9, fontWeight: "800", letterSpacing: 1.1 }, streetViewerTitle: { color: "#26352c", fontSize: 16, fontWeight: "800", marginTop: 3 }, streetStatus: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 18 }, streetStatusText: { fontSize: 10, fontWeight: "800" }, streetFrame: { flex: 1, width: "100%", alignItems: "center", justifyContent: "center", overflow: "hidden", backgroundColor: "#dfe7de" }, webView: { flex: 1, width: "100%" }, webLoading: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "#edf2ea" }, streetCompass: { position: "absolute", top: 13, right: 13, width: 35, height: 35, alignItems: "center", justifyContent: "center", borderRadius: 18, backgroundColor: "rgba(255,253,248,.92)" }, streetCompassArrow: { color: "#247b52", fontSize: 16, lineHeight: 17, fontWeight: "800" }, streetCompassText: { color: "#5f7065", fontSize: 8, fontWeight: "800" }, streetSource: { position: "absolute", left: 12, bottom: 12, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, backgroundColor: "rgba(31,67,51,.88)" }, streetSourceText: { color: "#fff", fontSize: 9, fontWeight: "700" }, streetInfoCard: { flexDirection: "row", alignItems: "center", marginTop: 8, padding: 9, borderRadius: 12, borderWidth: 1, borderColor: "#e0e2da", backgroundColor: "#fffdf8" }, streetInfoIcon: { width: 28, height: 28, alignItems: "center", justifyContent: "center", marginRight: 8, borderRadius: 9, backgroundColor: "#e6f1e5" }, streetInfoIconText: { color: "#247b52", fontSize: 15 }, streetInfoCopy: { flex: 1 }, streetInfoTitle: { color: "#30473a", fontSize: 11, fontWeight: "800" }, streetRefresh: { width: 27, height: 27, alignItems: "center", justifyContent: "center", borderRadius: 8, backgroundColor: "#f1f5ef" }, streetRefreshText: { color: "#247b52", fontSize: 15, fontWeight: "700" }, streetSectionLabel: { color: "#7d8a7f", fontSize: 9, fontWeight: "800", letterSpacing: 1, marginTop: 12, marginBottom: 3 }, streetAvailableButton: { width: 108, height: 34, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 9, backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#dfe3da" }, streetAvailableSelected: { backgroundColor: "#1f4333", borderColor: "#1f4333" }, streetAvailableDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#247b52" }, streetAvailableCopy: { flex: 1 }, streetAvailableStreet: { flex: 1, color: "#30473a", fontSize: 11, fontWeight: "800" }, streetAvailableMeta: { color: "#7b897d", fontSize: 7, marginTop: 1 }, streetAvailableArrow: { color: "#8b998e", fontSize: 15, lineHeight: 15 }, streetAvailableTextSelected: { color: "#fff" }, streetChip: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 14, backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#dfe3da" }, streetChipSelected: { backgroundColor: "#1f4333", borderColor: "#1f4333" }, chipDot: { width: 7, height: 7, borderRadius: 4 }, streetChipText: { color: "#536257", fontSize: 9, fontWeight: "600" }, streetChipTextSelected: { color: "#fff" }, spotPicker: { gap: 7, paddingTop: 7, paddingBottom: 7 }, savedScreen: { flex: 1, paddingHorizontal: 18 }, savedCount: { color: "#247b52", fontSize: 32, fontWeight: "800" }, sectionLabel: { color: "#79857b", fontSize: 10, fontWeight: "800", letterSpacing: 1.2, marginTop: 20, marginBottom: 10 }, savedList: { gap: 8 }, savedRow: { flexDirection: "row", alignItems: "center", padding: 14, borderRadius: 14, backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#e0e2da" }, savedDot: { width: 10, height: 10, borderRadius: 5, marginRight: 11 }, savedCopy: { flex: 1 }, savedStreet: { color: "#26352c", fontSize: 14, fontWeight: "800" }, rowArrow: { color: "#97a198", fontSize: 24 }, empty: { alignItems: "center", paddingVertical: 50, paddingHorizontal: 24 }, emptyIcon: { color: "#9db49a", fontSize: 48 }, emptyTitle: { color: "#34483a", fontSize: 16, fontWeight: "800", marginTop: 12 }, askedWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, askedChip: { paddingHorizontal: 11, paddingVertical: 9, borderRadius: 18, backgroundColor: "#edf4eb" }, askedText: { color: "#49664f", fontSize: 11, fontWeight: "700" }, clearButton: { alignSelf: "flex-start", marginTop: 30, paddingVertical: 10 }, clearText: { color: "#9c4935", fontSize: 11, fontWeight: "700" }, tabBar: { flexDirection: "row", justifyContent: "space-around", paddingTop: 8, paddingBottom: Platform.OS === "ios" ? 5 : 10, borderTopWidth: 1, borderTopColor: "#e1e2da", backgroundColor: "#fffdf8" }, tabButton: { alignItems: "center", justifyContent: "center", minWidth: 90, gap: 2 }, tabIcon: { color: "#91a096", fontSize: 21 }, tabLabel: { color: "#879289", fontSize: 10, fontWeight: "700" }, tabActive: { color: "#247b52" }, safeDark: { backgroundColor: "#101713" }, screenDark: { backgroundColor: "#101713" }, textDark: { color: "#f4f7f1" }, textMutedDark: { color: "#a7b4aa" }, darkCard: { backgroundColor: "#1a251f", borderColor: "#34473b" }, darkInput: { backgroundColor: "#1a251f", borderColor: "#425447" }, darkPill: { backgroundColor: "#2c4032", borderColor: "#3d5845" }, themeButton: { width: 34, height: 34, alignItems: "center", justifyContent: "center", borderRadius: 11, borderWidth: 1, borderColor: "#d8e0d5", backgroundColor: "#fffdf8" }, themeButtonDark: { borderColor: "#405548", backgroundColor: "#26372c" }, themeIcon: { color: "#46614d", fontSize: 18, fontWeight: "700" }, headerActions: { flexDirection: "row", alignItems: "center", gap: 12 }, darkTabBar: { backgroundColor: "#17211b", borderTopColor: "#304239" },
 });
-
