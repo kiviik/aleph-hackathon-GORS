@@ -9,6 +9,12 @@ case "${variant}" in
 esac
 
 rm -rf android
+
+# Release bundles JavaScript with Metro. The Bare worklet bundle is generated
+# from source and intentionally ignored, so CI must create it before Gradle.
+npm run bundle:worklet
+test -s worklet/bundle.js
+
 npx expo prebuild --platform android --non-interactive --clean
 
 pushd android >/dev/null

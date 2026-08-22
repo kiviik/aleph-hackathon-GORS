@@ -46,6 +46,8 @@ remota incompatible con el boundary offline-first del hackathon.
 `mobile/Dockerfile` contiene el builder Android local con Node, JDK 17, Android
 SDK y Gradle. Su entrada ejecuta `expo prebuild` y puede ejecutar
 `:app:assembleDebug` o `:app:assembleRelease`, dejando el APK en `/output`.
+Antes de Gradle genera el bundle de Bare ignorado (`worklet/bundle.js`), que es
+necesario para que Metro empaquete la variante release.
 El mismo Dockerfile se usa en
 `.github/workflows/android-apk-release.yml`.
 

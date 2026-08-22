@@ -35,6 +35,10 @@ A containerised Android build is also available and needs no local SDK:
 npm run build:android:docker   # APK into artifacts/
 ```
 
+The builder generates `worklet/bundle.js` before Gradle. That file is ignored
+because it is derived from `worklet/detector.worklet.mjs`, but it is required
+when the release variant bundles JavaScript with Metro.
+
 Open the **Scan** tab first. It is the status surface: it shows the ONNX provider list,
 the Bare version, whether the model is downloaded, and whether the runtime really has
 `America/Edmonton` timezone data. Nothing on the map should be trusted until the engine
