@@ -65,7 +65,8 @@ jobs:
             RELEASE_TITLE="BA Estaciona Android latest"
           fi
 
-          if ! gh release view "${RELEASE_TAG}" +            --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+          if ! gh release view "${RELEASE_TAG}" \
+            --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             gh release create "${RELEASE_TAG}" \
               --repo "${GITHUB_REPOSITORY}" \
               --target "${COMMIT_SHA}" \
