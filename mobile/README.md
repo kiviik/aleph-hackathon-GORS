@@ -1,7 +1,7 @@
-# BA Estaciona Mobile / Android
+# BA Estaciona Mobile / Android + iOS
 
-Superficie Android local-first para el hackathon. La navegación y el lenguaje
-visual calcan la app mobile anterior: `Mapa`, `Street View` y `Guardados`.
+Superficie mobile local-first para el hackathon. Android e iOS usan el mismo
+árbol de UI y el mismo lenguaje visual: `Mapa`, `Street View` y `Guardados`.
 Este primer slice valida el contrato de ejecución en el teléfono: permiso de
 cámara, modo offline, evidencia local, `REFUSE` fail-closed y trace persistida.
 
@@ -23,6 +23,15 @@ npm run build:android:preview
 El perfil `preview` genera un `.apk` instalable para la demo. El perfil
 `production` genera un `.aab` para Play Store. EAS puede pedir login o una
 cuenta/proyecto configurado; eso no cambia el runtime local de la app.
+
+Para validar la misma app en iOS:
+
+```bash
+npm run build:ios:preview
+```
+
+La build iOS requiere macOS/Xcode o EAS y un `bundleIdentifier` válido. No
+existe una segunda implementación de UI para iOS.
 
 ## Build local con Docker
 
@@ -72,11 +81,13 @@ gate necesita un Development Build y un Android físico.
 
 ## Estado actual
 
-- Android-only: configurado en `app.json` con package y permiso de cámara.
+- Android + iOS: configurados en `app.json` con permisos nativos de cámara y
+  ubicación mediante Expo.
 - APK: perfil EAS `preview` listo.
 - UI: paridad visual con la app anterior; mapa/vista de calle son locales y no
   prometen disponibilidad real.
-- Cámara: permiso Android y flujo de evidencia listos; preview/captura nativa pendiente.
+- Cámara: permisos cross-platform y flujo de evidencia listos;
+  preview/captura nativa pendiente.
 - YOLO26s: candidato, todavía no aceptado hasta fijar ONNX, labels, NMS, licencia
   y benchmark.
 - QVAC: integración local pendiente de validar en Development Build.
@@ -85,8 +96,9 @@ gate necesita un Development Build y un Android físico.
 
 ## Orden de integración
 
-1. Validar el APK en un Android físico y registrar API, memoria y cold start.
-2. Agregar `expo-camera` y capturar un frame sin persistirlo ni subirlo.
+1. Validar el APK en un Android físico y la build iOS en un dispositivo físico,
+   registrando API, memoria y cold start.
+2. Conectar `expo-camera` a la captura sin persistir ni subir frames.
 3. Integrar el ONNX exacto de YOLO y normalizar boxes, ROI, calidad y confianza.
 4. Conectar `evidence -> lookup_sector -> lookup_rules -> decide` con fixtures
    locales y policy determinística.

@@ -1,11 +1,11 @@
 # Planning mobile — Expo + QVAC + YOLO/ONNX
 
-## Estado Android actual — 22/08/2026
+## Estado mobile actual — 22/08/2026
 
-El primer slice implementado vive sólo en `mobile/` y apunta únicamente a
-Android. Incluye una pantalla de diagnóstico local, solicitud de permiso de
-cámara, pipeline visible, trace persistida en el teléfono, salida `REFUSE` ante
-integración incompleta y un perfil EAS que produce un `.apk` (`preview`).
+El primer slice implementado vive en `mobile/` y comparte UI entre Android e
+iOS. Incluye solicitud de permisos nativos de cámara/ubicación, pipeline
+visible, trace persistida en el teléfono, salida `REFUSE` ante integración
+incompleta y un perfil EAS que produce un `.apk` (`preview`).
 
 La UI principal mantiene la paridad visual/UX con la app mobile anterior:
 `Mapa`, `Street View`, `Guardados`, búsqueda, favoritos y cards de ubicación.
@@ -17,16 +17,39 @@ no se usan requests de Google, Calgary ni un servidor propio. La app no va a
 consultar la API de cámaras cada minuto en esta etapa; el boundary del repo exige
 que Calgary se congele como research/snapshot antes de habilitar una ingestión.
 
-El próximo gate es integrar la captura real con una Development Build Android y
+El próximo gate es integrar la captura real con Development Builds Android/iOS y
 validar el artefacto ONNX exacto. Hasta completar ese gate, no se muestra una
 decisión positiva ni se interpreta la ausencia de boxes como espacio libre.
 
-## Build y distribución Android
+## Registro del ajuste multiplataforma
 
-`mobile/Dockerfile` contiene el builder local con Node, JDK 17, Android SDK y
-Gradle. Su entrada ejecuta `expo prebuild` y `:app:assembleDebug`, dejando el
-APK en `/output`. El mismo Dockerfile se usa en
+Se tomó la UI entrante como referencia común para Android e iOS. No se creó una
+pantalla Android paralela: ambos targets comparten `App.tsx`, navegación y
+componentes para `Map`, `Street View` y `Saved`, incluyendo búsqueda,
+filtros, favoritos y modo oscuro.
+
+La adaptación nativa quedó encapsulada en las capacidades del teléfono:
+
+- `expo-camera` solicita permisos de cámara en Android e iOS;
+- `expo-location` conserva el botón de ubicación en ambas plataformas;
+- `KeyboardAvoidingView` ajusta el teclado según el sistema operativo;
+- la trace acepta `android | ios` y mantiene `REFUSE` mientras el pipeline
+  local no esté completo.
+
+La composición visual se conserva, pero el contenido de mapa y Street View es
+local/sintético en ambos targets. Se excluyeron `react-native-maps`,
+`react-native-webview` y URLs de Google porque introducirían una dependencia
+remota incompatible con el boundary offline-first del hackathon.
+
+## Build y distribución
+
+`mobile/Dockerfile` contiene el builder Android local con Node, JDK 17, Android
+SDK y Gradle. Su entrada ejecuta `expo prebuild` y `:app:assembleDebug`,
+dejando el APK en `/output`. El mismo Dockerfile se usa en
 `.github/workflows/android-apk-release.yml`.
+
+La build iOS usa el mismo `App.tsx`, configuración Expo y contratos, pero
+requiere macOS/Xcode o EAS para compilar el binario nativo.
 
 Cada push a `hackaton` actualiza la Release `mobile-latest` y adjunta el APK.
 También se puede ejecutar manualmente para obtener un artifact de Actions. Un

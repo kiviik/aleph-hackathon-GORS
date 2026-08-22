@@ -3,10 +3,29 @@
     "name": "BA Estaciona",
     "slug": "ba-estaciona-mobile",
     "version": "1.0.0",
-    "platforms": ["android"],
+    "platforms": ["android", "ios"],
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "baestaciona",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow BA Estaciona to use the camera for local parking analysis.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow BA Estaciona to use your location to show nearby snapshot spots."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.baestaciona.mobile"
+    },
     "android": {
       "package": "com.baestaciona.mobile",
       "versionCode": 1,

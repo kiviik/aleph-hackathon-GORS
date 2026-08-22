@@ -13,7 +13,7 @@ export type MobileTrace = {
   sessionId: string;
   startedAt: string;
   finishedAt: string;
-  platform: "android";
+  platform: "android" | "ios";
   osVersion: string;
   network: "not_used";
   decision: MobileDecision;
@@ -23,18 +23,18 @@ export type MobileTrace = {
 
 const blockedDetail = "Se conserva REFUSE hasta validar el siguiente gate.";
 
-export function createBlockedAnalysisTrace(osVersion: string): MobileTrace {
+export function createBlockedAnalysisTrace(platform: "android" | "ios", osVersion: string): MobileTrace {
   const now = new Date().toISOString();
-  const sessionId = `android-${Date.now().toString(36)}`;
+  const sessionId = `${platform}-${Date.now().toString(36)}`;
   return {
     sessionId,
     startedAt: now,
     finishedAt: now,
-    platform: "android",
+    platform,
     osVersion,
     network: "not_used",
     decision: "REFUSE",
-    reason: "La cámara está autorizada, pero la captura nativa y el modelo local todavía no están integrados en este APK.",
+    reason: "La cámara está autorizada, pero la captura nativa y el modelo local todavía no están integrados en esta build.",
     events: [
       { stage: "capture", status: "blocked", detail: "Preview/captura nativa pendiente de integrar." },
       { stage: "detector", status: "blocked", detail: "ONNX, labels, input y NMS todavía no están fijados." },
