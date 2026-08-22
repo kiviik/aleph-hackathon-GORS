@@ -52,10 +52,11 @@ function StreetView({ spot, spots, onSelect, darkMode, onToggleTheme }: { spot: 
   const thumbnailHosts = ["https://geo0.ggpht.com/cbk", "https://geo1.ggpht.com/cbk"];
   const thumbnailSource = `${thumbnailHosts[thumbnailHost]}?cb_client=maps_sv.tactile&authuser=0&hl=en&gl=ca&output=thumbnail&thumb=2&w=900&h=600&ll=${spot.latitude},${spot.longitude}&yaw=${spot.heading}&pitch=0&thumbfov=90`;
   const mapsSource = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${spot.latitude},${spot.longitude}&heading=${spot.heading}&pitch=0&fov=90&hl=en`;
+  const legacyEmbedSource = `https://maps.google.com/maps?q=&layer=c&cbll=${spot.latitude},${spot.longitude}&cbp=11,${spot.heading},0,0,0&output=svembed&hl=en`;
   const embedKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
   const interactiveSource = embedKey
     ? `https://www.google.com/maps/embed/v1/streetview?location=${spot.latitude},${spot.longitude}&heading=${spot.heading}&pitch=0&fov=90&key=${embedKey}`
-    : mapsSource;
+    : legacyEmbedSource;
 
   useEffect(() => {
     setStreetViewError(false);
