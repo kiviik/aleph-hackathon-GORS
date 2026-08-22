@@ -49,16 +49,37 @@ deep link described below in the Vercel project environment variables.
 
 ## Mobile demo (Expo)
 
-The current demo target is iOS. The mobile app lives in [`mobile/`](mobile/)
-and includes the map, an embedded Street View tab, and device-local favorites.
-Install Expo Go, then run `cd mobile && npm install && npx expo start` and scan
-the QR code. Use `npx expo start --tunnel` when the phone cannot reach the
-computer over Wi-Fi.
+The demo target is **Android on a physical device**. The mobile app lives in
+[`mobile/`](mobile/) and runs YOLO26s on the QVAC ONNX engine locally, on frames
+from Calgary's public traffic cameras.
 
-For the landing, set `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` in Vercel to the Expo
-Go link or to the published demo deep link. The primary target is iOS; the
-Electron shell remains available as a local fallback but is not the public
+```bash
+cd mobile
+npm install
+(cd node_modules/@qvac/onnx && npm run mobile:copy-prebuilds)
+npm run bundle:worklet          # pack the Bare worklet
+npx expo prebuild --platform android
+npx expo run:android --device
+```
+
+**Expo Go cannot run this app**, and neither can an emulator. `@qvac/onnx` is a
+native Bare addon and QVAC does not run under `llamacpp` on emulators, so a
+development build on real hardware is required. `npm test` in `mobile/` runs the
+whole pure-JS core — detector post-processing, gap geometry, the appearance
+guard, parking rules and the decision policy — on a laptop with no device and no
+model, against a recorded golden fixture.
+
+iOS is supported as well: `@qvac/onnx` ships `ios-arm64` prebuilds with CoreML and
+`mobile/plugins/withQvacOnnx.js` links the addon on both platforms. It only needs a
+Mac (or EAS) to build.
+
+For the landing, set `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` in Vercel to the published
+demo build. The Electron shell remains a local fallback but is not the public
 experience.
+
+> The app reports *likely free* curb length from public camera imagery and
+> synthetic-free City of Calgary rule data. It is a prototype, not legal parking
+> advice.
 
 ## Original Atelier surface
 
