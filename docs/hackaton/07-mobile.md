@@ -7,6 +7,11 @@ Android. Incluye una pantalla de diagnóstico local, solicitud de permiso de
 cámara, pipeline visible, trace persistida en el teléfono, salida `REFUSE` ante
 integración incompleta y un perfil EAS que produce un `.apk` (`preview`).
 
+La UI principal mantiene la paridad visual/UX con la app mobile anterior:
+`Mapa`, `Street View`, `Guardados`, búsqueda, favoritos y cards de ubicación.
+Para respetar el runtime local, el mapa es un canvas sintético y `Street View`
+es un frame local pendiente de captura; no son tiles ni una vista remota.
+
 El push anterior de UI con mapa/Street View no forma parte del runtime objetivo:
 no se usan requests de Google, Calgary ni un servidor propio. La app no va a
 consultar la API de cámaras cada minuto en esta etapa; el boundary del repo exige
@@ -15,6 +20,19 @@ que Calgary se congele como research/snapshot antes de habilitar una ingestión.
 El próximo gate es integrar la captura real con una Development Build Android y
 validar el artefacto ONNX exacto. Hasta completar ese gate, no se muestra una
 decisión positiva ni se interpreta la ausencia de boxes como espacio libre.
+
+## Build y distribución Android
+
+`mobile/Dockerfile` contiene el builder local con Node, JDK 17, Android SDK y
+Gradle. Su entrada ejecuta `expo prebuild` y `:app:assembleDebug`, dejando el
+APK en `/output`. El mismo Dockerfile se usa en
+`.github/workflows/android-apk-release.yml`.
+
+Cada push a `hackaton` actualiza la Release `mobile-latest` y adjunta el APK.
+También se puede ejecutar manualmente para obtener un artifact de Actions. Un
+tag `mobile-v*` crea/actualiza una Release versionada. El archivo de CI es un
+APK debug instalable para demo; la firma de producción requiere una keystore
+administrada como secret y queda fuera de esta primera iteración.
 
 ## Decisión resumida
 
