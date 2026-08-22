@@ -1,6 +1,7 @@
 export type PipelineStage = "capture" | "detector" | "evidence" | "tools" | "policy";
 export type PipelineStatus = "pending" | "blocked" | "ready";
 export type CameraPermission = "unknown" | "granted" | "denied" | "blocked";
+export type FrameSource = "calgary-traffic-camera" | "local-fixture";
 export type MobileDecision = "PARK" | "DO_NOT_PARK" | "REFUSE";
 
 export type TraceEvent = {
@@ -15,10 +16,18 @@ export type MobileTrace = {
   finishedAt: string;
   platform: "android" | "ios";
   osVersion: string;
-  network: "not_used";
+  network: "not_used" | "calgary_open_data";
   decision: MobileDecision;
   reason: string;
   events: TraceEvent[];
+  /** Which local engine actually produced the evidence, so a demo cannot overstate itself. */
+  engine?: {
+    detector: string;
+    providers: string[];
+    model: string | null;
+    /** No local LLM in this slice: the deterministic policy decides alone. See src/policy/policy.mjs. */
+    qvac_llm: "not_loaded" | string;
+  };
 };
 
 const blockedDetail = "Se conserva REFUSE hasta validar el siguiente gate.";
@@ -42,5 +51,29 @@ export function createBlockedAnalysisTrace(platform: "android" | "ios", osVersio
       { stage: "tools", status: "pending", detail: "Se ejecutará sólo con evidencia estructurada local." },
       { stage: "policy", status: "ready", detail: "La policy fail-closed conserva REFUSE." },
     ],
+  };
+}
+
+/** Trace for a completed analysis. Companion to createBlockedAnalysisTrace below. */
+export function createAnalysisTrace(args: {
+  osVersion: string;
+  decision: MobileDecision;
+  reason: string;
+  events: TraceEvent[];
+  engine?: MobileTrace["engine"];
+  platform?: "android" | "ios";
+}): MobileTrace {
+  const now = new Date().toISOString();
+  return {
+    sessionId: `scan-${Date.now().toString(36)}`,
+    startedAt: now,
+    finishedAt: now,
+    platform: args.platform ?? "android",
+    osVersion: args.osVersion,
+    network: "calgary_open_data",
+    decision: args.decision,
+    reason: args.reason,
+    events: args.events,
+    engine: args.engine,
   };
 }

@@ -2,9 +2,21 @@ node_modules/
 .expo/
 dist/
 web-build/
+android/
+ios/
 artifacts/
+
+# Signing material must never be committed.
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+
+# Build artifacts from `npm run bundle:worklet` / `bundle:probe`. Regenerated, never reviewed.
+worklet/*.bundle
+worklet/bundle.js
+worklet/probe-bundle.js
+
+# The model is AGPL-3.0 and 38 MB: downloaded at first run, never committed.
+*.onnx

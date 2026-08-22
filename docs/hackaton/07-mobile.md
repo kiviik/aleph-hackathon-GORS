@@ -300,3 +300,99 @@ La primera versión se considera terminada cuando un teléfono físico puede:
 6. mostrar trace y métricas básicas;
 7. abstenerse ante incertidumbre;
 8. repetir el flujo con fixtures sin depender de Calgary online.
+
+---
+
+## Enmienda — 2026-08-22 · detector portado desde `calgary-free-parking`
+
+Esta sección corrige el documento anterior donde ya no describe el estado real.
+
+### Cambio de alcance: ingesta de Calgary en vivo
+
+La restricción de arriba ("no consulta online de cámaras de Calgary", línea ~54) **queda
+levantada por decisión del equipo**. `AGENTS.md` fue eliminado del repo y con él su regla
+equivalente. La app ahora sí busca frames de `trafficcam.calgary.ca` bajo demanda.
+
+Lo que **no** cambia: la inferencia sigue siendo 100 % local (`@qvac/onnx` + YOLO26s en un worklet
+Bare). No hay endpoint de inferencia remoto, ni API key, ni upload de frames, ni fallback cloud.
+Se descarga el modelo una vez en el primer arranque, como este documento ya permitía.
+
+Consecuencia de honestidad ya aplicada en la UI: el pill `LOCAL` de `App.tsx` pasó a ser
+`LOCAL INFERENCE` / `SCANNING` / `NOT SCANNED`, y el de Street View dice `GOOGLE STREET VIEW`.
+Un pill que dijera "LOCAL" mientras el teléfono consulta la ciudad sería una afirmación falsa.
+
+### El aprendizaje de bandas NO corre en el teléfono
+
+`learnBands` necesita ~20 frames distintos (~30-40 min de historia) **por cámara**. Es imposible
+durante una demo. Se resolvió así:
+
+- el aprendizaje queda en la laptop (`scripts/export-mobile-assets.mjs` en el repo fuente);
+- el teléfono consume `mobile/src/data/bands.json`: **15 cámaras, 16 bandas, ~18 KB**, con la
+  geometría de banda, el ajuste de escala de perspectiva y la zona de estacionamiento ya resuelta;
+- por eso la cobertura es de 15 cámaras, no de las 208. Una cámara sin banda aprendida no puede
+  reportar nada y no se escanea.
+
+Esto debe decirse en la demo: **el teléfono no aprende la geometría del cordón, la consume.**
+
+### Detector: 2 pasadas, no 4
+
+El escritorio corre 4 pasadas por frame (full, far crop, mitad izquierda, mitad derecha).
+En el teléfono el default es **2** (full + far). El costo de bajar recall es conservador: un auto
+no detectado deja una franja texturada y el guard de apariencia lo marca *unknown*, no *free*.
+
+Medición de paridad contra el pipeline de escritorio (misma imagen, mismos pesos):
+17 vehículos vs 17, todos emparejados con IoU >= 0.979. Ver
+`scripts/verify-mobile-detection.mjs`.
+
+### Artefacto del modelo — registro exigido por este documento
+
+| campo | valor |
+|---|---|
+| URL | `https://huggingface.co/zwh20081/yolo26-onnx/resolve/main/yolo26s.onnx` |
+| bytes | 38 290 649 |
+| licencia | **AGPL-3.0** (Ultralytics YOLO26s) |
+| input | `[1,3,640,640]` float32, RGB, `/255`, sin media/desvío |
+| letterbox | relleno gris 114, Lanczos3 al reducir |
+| salida | `[1,300,6]` = `[x1,y1,x2,y2,score,cls]` en espacio 640 — **end-to-end, sin NMS** |
+| labels | COCO-80; se conservan `car`, `truck`, `bus`, `motorcycle` |
+| threshold | 0.25 (bajo a propósito: la persistencia confirma, no el score) |
+| dedupe | IoU 0.55 *class-agnostic* |
+
+El modelo nunca se commitea. Es AGPL-3.0 y esa obligación viaja con el APK: hay que exponer la
+atribución en la app (ya está en la pantalla de estado) y resolverlo con quien firme la entrega.
+
+### Hallazgos del Gate 0 (linkeo del addon), verificados sobre el binario
+
+No hay ningún ejemplo oficial de `@qvac/onnx` dentro de Expo/react-native-bare-kit, así que se
+inspeccionó el prebuild directamente:
+
+- `prebuilds/android-arm64/qvac__onnx.bare` es un ELF aarch64 válido y exporta
+  `bare_register_module_v0`, igual que el prebuild `linux-x64` que ya funciona.
+- también exporta `OrtSessionOptionsAppendExecutionProvider_Nnapi`: NNAPI está compilado.
+- `NEEDED`: `liblog.so libdl.so libvulkan.so libm.so libc++_shared.so libc.so`.
+  `libvulkan.so` exige API >= 24 (usamos `minSdkVersion 29`) y `libc++_shared.so` debe empaquetarse.
+- **Android no trae `.bare.exports`, iOS y macOS sí. No es un bloqueante**: es un artefacto Mach-O
+  de Apple; `linux-x64` tampoco lo tiene y funciona.
+- `bare-pack --target android-arm64 --linked` resuelve el addon a
+  **`linked:libqvac__onnx.0.15.1.so`** — el nombre lleva versión. `plugins/withQvacOnnx.js` copia
+  el prebuild a `jniLibs/arm64-v8a/` con exactamente ese nombre, derivado de `package.json`.
+  Con el nombre sin versión el addon queda presente pero nunca se encuentra.
+
+Lo único que sigue sin poder verificarse sin un teléfono físico es la carga en runtime.
+`worklet/probe.mjs` (`npm run bundle:probe`) existe para responder eso en 30 segundos.
+
+### Zona horaria — riesgo real, ya mitigado
+
+`legality()` depende de `America/Edmonton`. Hermes suele venir **sin ICU completo**, y ahí
+`Intl.DateTimeFormat` devuelve la hora equivocada en silencio: reglas de estacionamiento mal
+evaluadas, que es el peor error posible en esta app. `src/core/zones-rules.mjs` detecta el soporte
+real una vez y, si no lo hay, usa una regla explícita de Mountain Time. Verificado hora por hora
+contra `Intl` durante todo 2026, incluidas las dos transiciones de DST: 0 diferencias.
+La pantalla de estado muestra cuál de los dos caminos está activo.
+
+### Política: `referenceDecision`, no `reconcileDecision`
+
+`ba-estaciona-qvac/src/policy.js:34-40` devuelve `REFUSE / MODEL_DISAGREEMENT` cuando no recibe
+opinión del LLM. Como este slice no carga LLM, usar `reconcileDecision` haría que `PARK` fuera
+**inalcanzable para siempre**, con aspecto de sistema fail-closed sano. Mobile llama
+`referenceDecision` y la traza declara `qvac_llm: "not_loaded"`.

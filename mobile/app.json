@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "BA Estaciona",
+    "name": "Calgary Estaciona",
     "slug": "ba-estaciona-mobile",
     "version": "1.0.0",
     "platforms": ["android", "ios"],
@@ -9,18 +9,18 @@
     "scheme": "baestaciona",
     "plugins": [
       [
-        "expo-camera",
+        "expo-build-properties",
         {
-          "cameraPermission": "Allow BA Estaciona to use the camera for local parking analysis.",
-          "recordAudioAndroid": false
+          "android": { "minSdkVersion": 29 }
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow BA Estaciona to use your location to show nearby snapshot spots."
+          "locationWhenInUsePermission": "Allow Calgary Estaciona to use your location to find nearby curb segments."
         }
-      ]
+      ],
+      "./plugins/withQvacOnnx.js"
     ],
     "ios": {
       "supportsTablet": true,
@@ -32,7 +32,8 @@
       "adaptiveIcon": {
         "backgroundColor": "#1f4333"
       },
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": ["android.permission.INTERNET"],
+      "blockedPermissions": ["android.permission.CAMERA"]
     }
   }
 }

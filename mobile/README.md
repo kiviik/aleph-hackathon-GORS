@@ -1,111 +1,100 @@
-# BA Estaciona Mobile / Android + iOS
+# Calgary Estaciona — mobile
 
-Superficie mobile local-first para el hackathon. Android e iOS usan el mismo
-árbol de UI y el mismo lenguaje visual: `Mapa`, `Street View` y `Guardados`.
-Este primer slice valida el contrato de ejecución en el teléfono: permiso de
-cámara, modo offline, evidencia local, `REFUSE` fail-closed y trace persistida.
+On-device estimation of free curb parking, from Calgary's public traffic cameras.
+Vehicle detection runs locally with **YOLO26s** on the **QVAC ONNX engine**
+(`@qvac/onnx`) inside a Bare worklet. No inference server, no API key, no frame upload.
 
-No hay backend propio ni acceso runtime a Calgary, Google Street View, ParkPlus
-o cualquier otra API pública. El mapa y la vista de calle conservan la
-composición visual de la app anterior, pero ahora son canvas/evidencia local:
-Calgary queda como research y snapshots locales fuera de esta pantalla.
+Ported from the `calgary-free-parking` prototype. See
+[`docs/hackaton/07-mobile.md`](../docs/hackaton/07-mobile.md) for the full record.
 
-## Preparar el APK
+## Requirements
 
-Desde esta carpeta, con Node.js instalado:
+- **A physical Android device.** Expo Go and emulators cannot run this: `@qvac/onnx`
+  is a native Bare addon and QVAC does not run on emulators.
+- Node 22+, and Android SDK/NDK via `expo prebuild` (or use the Docker build below).
+
+`app.json` and `eas.json` also list iOS, and `@qvac/onnx` ships `ios-arm64` prebuilds
+with CoreML — but `plugins/withQvacOnnx.js` links the addon for **Android only** today.
+An iOS build will run the UI with no detector until that plugin is extended.
+
+## Run
 
 ```bash
 npm install
-npm run prebuild:android
-npm run build:android:preview
+(cd node_modules/@qvac/onnx && npm run mobile:copy-prebuilds)
+npm run bundle:worklet
+npx expo prebuild --platform android
+npx expo run:android --device
 ```
 
-El perfil `preview` genera un `.apk` instalable para la demo. El perfil
-`production` genera un `.aab` para Play Store. EAS puede pedir login o una
-cuenta/proyecto configurado; eso no cambia el runtime local de la app.
-
-Para validar la misma app en iOS:
+A containerised Android build is also available and needs no local SDK:
 
 ```bash
-npm run build:ios:preview
+npm run build:android:docker   # APK into artifacts/
 ```
 
-La build iOS requiere macOS/Xcode o EAS y un `bundleIdentifier` válido. No
-existe una segunda implementación de UI para iOS.
+Open the **Scan** tab first. It is the status surface: it shows the ONNX provider list,
+the Bare version, whether the model is downloaded, and whether the runtime really has
+`America/Edmonton` timezone data. Nothing on the map should be trusted until the engine
+row reads OK.
 
-## Build local con Docker
+### Gate 0 — is the addon even linked?
 
-Docker instala Node, JDK 17, Android SDK y Gradle dependencies dentro de un
-builder aislado. El resultado es un APK `debug` firmado con la debug keystore
-de Android, apto para instalarlo en un teléfono de demo:
+Before anything else, prove the addon loads on the phone:
 
 ```bash
-docker build -f Dockerfile -t ba-estaciona-android-builder .
-mkdir -p artifacts
-docker run --rm \
-  -e BUILD_VARIANT=debug \
-  -v "$(pwd)/artifacts:/output" \
-  ba-estaciona-android-builder
+npm run bundle:probe
+# render <OnnxProbe/> and run on device
 ```
 
-El archivo queda en `mobile/artifacts/ba-estaciona-android-debug.apk`.
-También se puede ejecutar `npm run build:android:docker`. El builder acepta
-`BUILD_VARIANT=release`, pero ese APK no queda firmado para distribución: no se
-guardan keystores ni passwords en el repo.
+PASS is a non-empty provider list (expect `NnapiExecutionProvider` and/or
+`XnnpackExecutionProvider`, plus `CPUExecutionProvider`). There is no official example
+of `@qvac/onnx` inside Expo/react-native-bare-kit, so this is the one genuinely unproven
+step. If it fails, `docs/hackaton/07-mobile.md` records the fallbacks.
 
-## CI y GitHub Releases
-
-El workflow [android-apk-release.yml](../.github/workflows/android-apk-release.yml)
-se ejecuta manualmente o con cada push a `hackaton`. Compila el APK con el
-Dockerfile, lo deja como artifact de Actions y actualiza la Release permanente
-`mobile-latest`. Para una Release versionada, pushear un tag `mobile-v*`:
+## Test — no device, no model, no network
 
 ```bash
-git tag mobile-v0.1.0
-git push origin mobile-v0.1.0
+npm test        # 51 tests
 ```
 
-El workflow usa `contents: write` para publicar la Release. En GitHub hay que
-revisar `Settings > Actions > General > Workflow permissions` y seleccionar
-`Read and write permissions`. Si la organización impone tokens read-only, crear
-un token fine-grained con permiso `Contents: Read and write`, guardarlo como
-secret del repo llamado `RELEASE_TOKEN` y volver a ejecutar el workflow. El
-workflow usa ese secret si existe y, si no, el `GITHUB_TOKEN` integrado.
+This covers the detector post-processing, letterbox geometry, dwell tracking, gap
+geometry, the appearance texture guard, Calgary rule parsing, the timezone fallback and
+the whole decision matrix — by replaying `test/fixtures/detector-golden.json`, raw model
+output recorded from the desktop sidecar. `src/core/frame-pipeline.mjs` is the *same*
+module the worklet runs, so what is verified here is what ships.
 
-No se requiere Expo token, API key ni servidor propio. El APK de CI es de
-demo/debug. Para un release firmado de producción habrá que agregar una
-keystore mediante GitHub Secrets y una variante de firma explícita.
-
-Para abrir el bundler durante el desarrollo:
+Parity against the desktop pipeline is checked from the source repo:
 
 ```bash
-npm run start
+# in calgary-free-parking, with `npm run detector` running
+node scripts/verify-mobile-preprocess.mjs    # pure-JS letterbox vs sharp
+node scripts/verify-mobile-detection.mjs     # same boxes from the real weights
+node scripts/verify-mobile-pipeline.mjs 76 4 # full on-device path, live camera
 ```
 
-La validación de QVAC no se hace en Expo Go ni en un emulador. El siguiente
-gate necesita un Development Build y un Android físico.
+## What it does and does not prove
 
-## Estado actual
+- Detection is genuinely on-device. Frames come from Calgary's public cameras over the
+  network; **inference never leaves the phone**.
+- **The curb geometry was learned offline**, on a laptop, from hours of camera history.
+  The phone consumes `src/data/bands.json` (15 cameras, 16 bands) — it does not learn it.
+- Only those 15 cameras are covered, of 208.
+- A curb segment needs **three consistent observations** before it can read "free". One
+  scan always shows `review`. That is the design, not a bug.
+- Two inference passes per frame instead of the desktop's four. Lower recall, but a missed
+  car leaves a textured strip that the appearance guard marks *unknown*, never *free*.
+- Daytime only. Night, rain and snow are untested, and the quality thresholds in
+  `src/evidence/evidence.mjs` are calibrated against a single daytime fixture.
 
-- Android + iOS: configurados en `app.json` con permisos nativos de cámara y
-  ubicación mediante Expo.
-- APK: perfil EAS `preview` listo.
-- UI: paridad visual con la app anterior; mapa/vista de calle son locales y no
-  prometen disponibilidad real.
-- Cámara: permisos cross-platform y flujo de evidencia listos;
-  preview/captura nativa pendiente.
-- YOLO26s: candidato, todavía no aceptado hasta fijar ONNX, labels, NMS, licencia
-  y benchmark.
-- QVAC: integración local pendiente de validar en Development Build.
-- Decisión: nunca muestra `PARK` desde esta pantalla; el estado incompleto es
-  `REFUSE` y queda registrado en una trace local.
+## Layout
 
-## Orden de integración
-
-1. Validar el APK en un Android físico y la build iOS en un dispositivo físico,
-   registrando API, memoria y cold start.
-2. Conectar `expo-camera` a la captura sin persistir ni subir frames.
-3. Integrar el ONNX exacto de YOLO y normalizar boxes, ROI, calidad y confianza.
-4. Conectar `evidence -> lookup_sector -> lookup_rules -> decide` con fixtures
-   locales y policy determinística.
-5. Recién después sumar QVAC tool-calling y medir memoria/latencia/batería.
+```
+worklet/        Bare worklet: @qvac/onnx session + framed IPC
+src/core/       plain ESM shared by Metro, bare-pack and node --test
+src/evidence/   boxes + band geometry -> {state, quality, confidence, roi, detections}
+src/policy/     the fail-closed decision gate
+src/scan/       per-camera scan, with state persisted across scans
+src/data/       bands.json fixture + Calgary frame fetch
+plugins/        Expo config plugin that links the addon into jniLibs
+```
