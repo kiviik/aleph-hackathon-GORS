@@ -1,0 +1,40 @@
+[
+  {
+    "sector_id": "S-REGULAR",
+    "source": "SYNTHETIC_DEMO_ONLY",
+    "restrictions": []
+  },
+  {
+    "sector_id": "S-CARGA",
+    "source": "SYNTHETIC_DEMO_ONLY",
+    "restrictions": [
+      {
+        "start_hour_utc": 11,
+        "end_hour_utc": 23,
+        "explanation": "Restricción sintética de carga y descarga activa (08:00–20:00 ART)."
+      }
+    ]
+  },
+  {
+    "sector_id": "S-SCHOOL",
+    "source": "SYNTHETIC_DEMO_ONLY",
+    "restrictions": [
+      {
+        "start_hour_utc": 10,
+        "end_hour_utc": 18,
+        "explanation": "Restricción sintética de zona escolar activa (07:00–15:00 ART)."
+      }
+    ]
+  },
+  {
+    "sector_id": "S-NO-PARK",
+    "source": "SYNTHETIC_DEMO_ONLY",
+    "restrictions": [
+      {
+        "start_hour_utc": 0,
+        "end_hour_utc": 24,
+        "explanation": "Restricción sintética permanente de estacionamiento."
+      }
+    ]
+  }
+]
