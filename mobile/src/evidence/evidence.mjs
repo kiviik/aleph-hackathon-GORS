@@ -74,19 +74,19 @@ export function buildObservation ({ band, scale, bandState, guarded, vehicles, f
   let state, explanation
   if (frame.stale) {
     state = 'UNCERTAIN'
-    explanation = 'La cámara no se actualizó recientemente; la evidencia está vencida.'
+    explanation = 'The camera has not refreshed recently, so this evidence is stale.'
   } else if (bandState.ticks >= MIN_TICKS && carsFit > 0) {
     state = 'FREE'
-    explanation = `Hueco confirmado de ${freeMetres} m sobre el cordón (entran ~${carsFit}).`
+    explanation = `Confirmed gap of ${freeMetres} m of curb (room for about ${carsFit}).`
   } else if (inBandV.length > 0) {
     state = 'OCCUPIED'
-    explanation = `${inBandV.length} vehículo(s) ocupan el tramo observable.`
+    explanation = `${inBandV.length} vehicle${inBandV.length === 1 ? '' : 's'} occupying the stretch the camera can see.`
   } else if (bandState.ticks < MIN_TICKS) {
     state = 'UNCERTAIN'
-    explanation = `Evidencia insuficiente: ${bandState.ticks} de ${MIN_TICKS} observaciones consistentes.`
+    explanation = `Not enough evidence yet: ${bandState.ticks} of ${MIN_TICKS} consistent observations.`
   } else {
     state = 'UNCERTAIN'
-    explanation = 'No se detectaron vehículos, pero tampoco un hueco medible: la ausencia de cajas no prueba que haya lugar.'
+    explanation = 'No vehicles detected, but no measurable gap either: an empty box list does not prove there is room.'
   }
 
   // Confidence is the temporal EMA over the confirmed gaps -- how consistently the curb read free.
@@ -128,7 +128,7 @@ export function frameQuality ({ band, guarded, vehicles, frame }) {
 
 /** Calgary open-data rules for this camera's zone, in the shape the policy expects. */
 export function buildRules (zone, at = new Date()) {
-  if (!zone) return { sourceStatus: 'UNAVAILABLE', parkingAllowed: false, confidence: 0, explanation: 'Sin zona de estacionamiento asociada.' }
+  if (!zone) return { sourceStatus: 'UNAVAILABLE', parkingAllowed: false, confidence: 0, explanation: 'No parking zone is associated with this curb.' }
   const l = legality(zone, at)
   return {
     sourceStatus: 'AVAILABLE',
@@ -136,8 +136,8 @@ export function buildRules (zone, at = new Date()) {
     paid: l.paid,
     confidence: 1,
     explanation: l.parkable
-      ? `Permitido ahora (${l.reason}).`
-      : `Prohibido ahora: ${l.reason}.`,
+      ? `Allowed right now: ${l.reason}.`
+      : `Not allowed right now: ${l.reason}.`,
     zoneId: zone.id,
     address: zone.address,
     enforceableTime: zone.enforceableTime,

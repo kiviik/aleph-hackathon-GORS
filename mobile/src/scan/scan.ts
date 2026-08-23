@@ -129,7 +129,7 @@ async function bootDetector(onProgress?: (fraction: number) => void): Promise<vo
   const loaded = await detector.loadModel(m.path);
   // Trust the worklet's own flag: a failed createSession otherwise looks healthy here and only
   // resurfaces as "model not loaded" on every frame of every later scan.
-  if (!loaded?.loaded) throw new Error(`La sesión ONNX no cargó: ${JSON.stringify(loaded)}`);
+  if (!loaded?.loaded) throw new Error(`The ONNX session did not load: ${JSON.stringify(loaded)}`);
 }
 
 /**
@@ -210,17 +210,17 @@ export async function scanCamera(
     stage("detector", "blocked", `Detector: ${e?.message || e}`);
     for (const b of bands) updateBandState(mem.bandStates[b.id], null, { stale: true });
     await saveState();
-    return { results: refuseAll(camera, at, `Detector no disponible: ${e?.message || e}`), trace };
+    return { results: refuseAll(camera, at, `Detector unavailable: ${e?.message || e}`), trace };
   }
 
   const f = await fetchFrame(camera.url);
   if (!f.jpeg) {
-    stage("capture", "blocked", `No se pudo leer la cámara: ${f.error}`);
+    stage("capture", "blocked", `Could not read the camera: ${f.error}`);
     for (const b of bands) updateBandState(mem.bandStates[b.id], null, { stale: true });
     await saveState();
-    return { results: refuseAll(camera, at, `No se pudo leer la cámara: ${f.error}`), trace, frameError: f.error };
+    return { results: refuseAll(camera, at, `Could not read the camera: ${f.error}`), trace, frameError: f.error };
   }
-  stage("capture", "ready", `Frame de ${(f.jpeg.length / 1024).toFixed(0)} KB${f.stale ? " (vencido)" : ""}`);
+  stage("capture", "ready", `Frame of ${(f.jpeg.length / 1024).toFixed(0)} KB${f.stale ? " (stale)" : ""}`);
 
   // Whether this is a frame we have not already judged. The desktop pipeline skips detection
   // outright when the camera has not refreshed; this does NOT (it still needs the boxes to report
@@ -235,9 +235,9 @@ export async function scanCamera(
     stage("detector", "blocked", `Detector: ${e?.message || e}`);
     for (const b of bands) updateBandState(mem.bandStates[b.id], null, { stale: true });
     await saveState();
-    return { results: refuseAll(camera, at, `Detector no disponible: ${e?.message || e}`), trace };
+    return { results: refuseAll(camera, at, `Detector unavailable: ${e?.message || e}`), trace };
   }
-  stage("detector", "ready", `${r.vehicles.length} vehículos · ${r.ms.decode}ms decode + ${r.ms.infer}ms inferencia`);
+  stage("detector", "ready", `${r.vehicles.length} vehicles · ${r.ms.decode}ms decode + ${r.ms.infer}ms inference`);
 
   if (fresh) {
     mem.tracks = r.tracks;
@@ -280,7 +280,7 @@ export async function scanCamera(
     results.push({ cameraId: camera.id, bandId: band.id, observation, decision, rules, ...place(camera, band), band });
   }
 
-  stage("evidence", "ready", `${results.filter((x) => x.observation.state === "FREE").length}/${results.length} tramos con hueco confirmado`);
+  stage("evidence", "ready", `${results.filter((x) => x.observation.state === "FREE").length}/${results.length} curb(s) with a confirmed gap`);
   stage("policy", "ready", results.map((x) => x.decision.decision).join(", "));
   await saveState();
 

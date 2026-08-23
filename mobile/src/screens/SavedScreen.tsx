@@ -12,6 +12,7 @@ import {
   List,
   type ListRenderItemInfo,
   ScreenList,
+  StatusBarScrim,
   StyleSheet,
   Text,
   type Theme,
@@ -73,16 +74,19 @@ export function SavedScreen({ navigation }: Props) {
   const footer = useMemo(() => <SavedFooter onPickQuery={onPickQuery} />, [onPickQuery]);
 
   return (
-    <ScreenList
-      data={favorites}
-      renderItem={renderSpot}
-      keyExtractor={spotKeyExtractor}
-      ItemSeparatorComponent={ListSeparator}
-      ListHeaderComponent={savedHeader}
-      ListEmptyComponent={savedEmpty}
-      ListFooterComponent={footer}
-      contentContainerStyle={styles.content}
-    />
+    <View style={styles.root}>
+      <ScreenList
+        data={favorites}
+        renderItem={renderSpot}
+        keyExtractor={spotKeyExtractor}
+        ItemSeparatorComponent={ListSeparator}
+        ListHeaderComponent={savedHeader}
+        ListEmptyComponent={savedEmpty}
+        ListFooterComponent={footer}
+        contentContainerStyle={styles.content}
+      />
+      <StatusBarScrim />
+    </View>
   );
 }
 
@@ -152,6 +156,7 @@ const savedEmpty = <SavedEmpty />;
 
 const savedStyles = (theme: Theme) =>
   StyleSheet.create({
+    root: { flex: 1 },
     content: { paddingHorizontal: theme.space.lg, paddingBottom: theme.space.xl },
     headerBlock: { gap: theme.space.sm, paddingBottom: theme.space.md },
     empty: { alignItems: "center", gap: theme.space.sm, paddingVertical: theme.space.xl * 2 },

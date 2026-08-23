@@ -48,6 +48,19 @@ export type OsmMarker = {
 
 type LatLng = { latitude: number; longitude: number };
 
+/**
+ * A request to bring one point into view. `nonce` is what makes it a *request* rather than a
+ * position: asking twice for the same coordinate has to pan twice, and a plain lat/lng prop would
+ * compare equal the second time and do nothing.
+ */
+export type MapFocus = {
+  latitude: number;
+  longitude: number;
+  /** Push the point this many px above centre, to clear chrome overlaying the bottom of the map. */
+  offsetY?: number;
+  nonce: number;
+};
+
 type Props = {
   markers: OsmMarker[];
   center: LatLng;
@@ -55,6 +68,15 @@ type Props = {
   userLocation?: LatLng | null;
   /** false = a still picture: no drag, no zoom, no popups. */
   interactive?: boolean;
+  /** Leaflet's +/- buttons. Off for a full-bleed map, where they collide with the app's own chrome. */
+  zoomControl?: boolean;
+  /**
+   * Px to lift Leaflet's bottom controls by. The OSM tile policy requires the attribution stay
+   * visible, so anything the app floats over the bottom of the map must be declared here rather
+   * than left to cover it.
+   */
+  bottomInset?: number;
+  focus?: MapFocus | null;
   style?: StyleProp<ViewStyle>;
   onSelect?: (id: string) => void;
   /** Popup tapped. */
@@ -67,8 +89,16 @@ const LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 // If the map has not reported `ready` by now, assume the CDN or the tiles are unreachable.
 const READY_TIMEOUT_MS = 15000;
 
-function buildHtml(center: LatLng, zoom: number, interactive: boolean, background: string): string {
+function buildHtml(
+  center: LatLng,
+  zoom: number,
+  interactive: boolean,
+  background: string,
+  zoomControl: boolean,
+  bottomInset: number
+): string {
   const on = interactive ? "true" : "false";
+  const withZoomControl = interactive && zoomControl ? "true" : "false";
   return `<!doctype html>
 <html>
 <head>
@@ -86,6 +116,8 @@ function buildHtml(center: LatLng, zoom: number, interactive: boolean, backgroun
   .cal .st { font-weight: 600; }
   .cal .hint { color: #6b776e; font-size: 11px; margin-top: 4px; }
   .leaflet-control-attribution { font-size: 9px; }
+  /* Lifted clear of whatever the app floats over the bottom of the map -- see bottomInset. */
+  .leaflet-bottom { bottom: ${Math.round(bottomInset)}px; }
 </style>
 </head>
 <body>
@@ -100,7 +132,7 @@ function buildHtml(center: LatLng, zoom: number, interactive: boolean, backgroun
 
   var interactive = ${on};
   var map = L.map('map', {
-    zoomControl: interactive,
+    zoomControl: ${withZoomControl},
     dragging: interactive,
     scrollWheelZoom: false,
     doubleClickZoom: interactive,
@@ -223,6 +255,17 @@ function buildHtml(center: LatLng, zoom: number, interactive: boolean, backgroun
     }).addTo(map);
   };
 
+  /**
+   * Bring one point into view without throwing away the user's zoom. The offset is applied in
+   * projected pixels, so the pin lands above the sheet rather than behind it.
+   */
+  window.__focus = function (f) {
+    if (!f) return;
+    var z = Math.max(map.getZoom(), 16);
+    var pt = map.project([f.latitude, f.longitude], z).add([0, f.offsetY || 0]);
+    map.setView(map.unproject(pt, z), z, { animate: true });
+  };
+
   map.whenReady(function () { post({ type: 'ready' }); });
 })();
 </script>
@@ -236,6 +279,9 @@ export default function OsmMap({
   zoom = 12,
   userLocation = null,
   interactive = true,
+  zoomControl = true,
+  bottomInset = 0,
+  focus = null,
   style,
   onSelect,
   onOpen,
@@ -252,9 +298,18 @@ export default function OsmMap({
   // The HTML is built once per attempt. Marker data is pushed in afterwards so that a scan
   // result never remounts the WebView and throws away the user's pan/zoom.
   const html = useMemo(
-    () => buildHtml(center, zoom, interactive, background),
+    () => buildHtml(center, zoom, interactive, background, zoomControl, bottomInset),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [center.latitude, center.longitude, zoom, interactive, background, attempt]
+    [
+      center.latitude,
+      center.longitude,
+      zoom,
+      interactive,
+      background,
+      zoomControl,
+      bottomInset,
+      attempt,
+    ]
   );
 
   const push = useCallback(() => {
@@ -266,6 +321,14 @@ export default function OsmMap({
   useEffect(() => {
     if (status === "ready") push();
   }, [status, push]);
+
+  // Panning is pushed in the same way marker data is: injected into a live map, never a remount.
+  useEffect(() => {
+    if (status !== "ready" || !focus) return;
+    webRef.current?.injectJavaScript(
+      `window.__focus && window.__focus(${JSON.stringify(focus)}); true;`
+    );
+  }, [focus, status]);
 
   useEffect(() => {
     if (status !== "loading") return;

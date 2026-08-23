@@ -5,7 +5,13 @@
 // takes care of the bottom edge. Android has no equivalent for the top edge, so the inset is
 // applied there — and only there — rather than wrapping everything in a SafeAreaView.
 import { useMemo, type ReactNode } from "react";
-import { Platform, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  type LayoutChangeEvent,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
 import { List, type ListProps } from "./list";
 import { useSafeAreaInsets } from "./safe-area";
@@ -22,21 +28,39 @@ function useUnhandledTopInset(): number {
 type ScreenProps = {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
+  /**
+   * Paint under the status bar instead of below it.
+   *
+   * For the map this is the whole point: a full-bleed map with floating chrome is only full-bleed
+   * if the tiles run to the top edge of the display. Screens that opt in own their own top inset —
+   * the map spends it on the search bar rather than on empty background.
+   */
+  edgeToEdge?: boolean;
+  /** Measured size of the screen itself, for screens that lay their own chrome out over it. */
+  onLayout?: (event: LayoutChangeEvent) => void;
 };
 
 /**
  * A non-scrolling screen root (map, street view). There is no native content-inset behaviour for
  * a plain View, so the top inset is applied manually on both platforms.
  */
-export function Screen({ children, style }: ScreenProps) {
+export function Screen({ children, style, edgeToEdge = false, onLayout }: ScreenProps) {
   const theme = useTheme();
   const { top } = useSafeAreaInsets();
   const containerStyle = useMemo(
-    () => [styles.flex, { backgroundColor: theme.color.background, paddingTop: top }, style],
-    [theme.color.background, top, style]
+    () => [
+      styles.flex,
+      { backgroundColor: theme.color.background, paddingTop: edgeToEdge ? 0 : top },
+      style,
+    ],
+    [theme.color.background, edgeToEdge, top, style]
   );
 
-  return <View style={containerStyle}>{children}</View>;
+  return (
+    <View style={containerStyle} onLayout={onLayout}>
+      {children}
+    </View>
+  );
 }
 
 /** A scrolling screen root. iOS gets the native inset behaviour; Android gets the measured one. */

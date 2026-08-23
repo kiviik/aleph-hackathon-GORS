@@ -4,6 +4,10 @@
 // `contentInsetAdjustmentBehavior="automatic"` does on iOS and what Android's edge-to-edge mode
 // does everywhere. Without something behind the system clock, scrolled text collides with it.
 // This paints that strip and nothing else: no layout, no insets applied to content.
+//
+// The map wants the same protection without the opaque bar: on a full-bleed map the tiles have to
+// run to the top edge, but the clock and the battery are white and the tiles are not. `veil` keeps
+// the tiles visible and the system text legible.
 import { useMemo } from "react";
 import { StyleSheet } from "react-native";
 
@@ -11,12 +15,15 @@ import { useSafeAreaInsets } from "./safe-area";
 import { useTheme } from "./use-theme";
 import { View } from "./view";
 
-export function StatusBarScrim() {
+export function StatusBarScrim({ variant = "solid" }: { variant?: "solid" | "veil" }) {
   const theme = useTheme();
   const { top } = useSafeAreaInsets();
   const style = useMemo(
-    () => [styles.scrim, { height: top, backgroundColor: theme.color.background }],
-    [theme.color.background, top]
+    () => [
+      styles.scrim,
+      { height: top, backgroundColor: variant === "veil" ? theme.color.veil : theme.color.background },
+    ],
+    [theme.color.background, theme.color.veil, top, variant]
   );
 
   if (top === 0) return null;

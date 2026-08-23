@@ -22,6 +22,7 @@ import {
   Image,
   Pressable,
   ScreenList,
+  StatusBarScrim,
   StyleSheet,
   Text,
   View,
@@ -65,15 +66,20 @@ export function EvidenceScreen() {
     [selectSpot]
   );
 
+  // The scrim rides with the screen rather than with the app: this list scrolls under the status
+  // bar, so it needs something behind the clock. The map does not.
   return (
-    <ScreenList
-      data={ordered}
-      renderItem={renderSpot}
-      keyExtractor={spotKeyExtractor}
-      ItemSeparatorComponent={ListSeparator}
-      ListHeaderComponent={evidenceHeader}
-      contentContainerStyle={styles.content}
-    />
+    <View style={styles.root}>
+      <ScreenList
+        data={ordered}
+        renderItem={renderSpot}
+        keyExtractor={spotKeyExtractor}
+        ItemSeparatorComponent={ListSeparator}
+        ListHeaderComponent={evidenceHeader}
+        contentContainerStyle={styles.content}
+      />
+      <StatusBarScrim />
+    </View>
   );
 }
 
@@ -385,6 +391,7 @@ const evidenceHeader = <EvidenceHeader />;
 
 const evidenceStyles = (theme: Theme) =>
   StyleSheet.create({
+    root: { flex: 1 },
     content: { paddingHorizontal: theme.space.lg, paddingBottom: theme.space.xl },
     header: { gap: theme.space.md, paddingBottom: theme.space.md },
     selectedRow: { flexDirection: "row", alignItems: "center", gap: theme.space.md },

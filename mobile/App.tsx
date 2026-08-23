@@ -1,5 +1,9 @@
 // Root of the app: providers only. Every screen lives under src/screens and is mounted by the
 // native tab navigator in src/navigation/RootTabs.
+//
+// The status-bar scrim is NOT here any more. It belongs to the scrolling screens, whose text would
+// otherwise run into the system clock; the map deliberately paints tiles all the way to the top
+// edge, and a global scrim would put an opaque bar across the one screen that wants none.
 import { useEffect, useMemo } from "react";
 import {
   DarkTheme,
@@ -10,7 +14,6 @@ import {
 import {
   SafeAreaProvider,
   StatusBar,
-  StatusBarScrim,
   StyleSheet,
   View,
   useTheme,
@@ -62,7 +65,6 @@ function ThemedNavigation() {
       <NavigationContainer theme={navigationTheme}>
         <RootTabs />
       </NavigationContainer>
-      <StatusBarScrim />
     </View>
   );
 }

@@ -75,6 +75,18 @@ export function spotExtent(spot: Spot, lead?: string | null): string {
     .join(" · ");
 }
 
+/**
+ * The one line a list row can afford: what the verdict means in metres where there are metres, and
+ * the neighbourhood to place it. Not the same text as the pin popup, which has room for the extent.
+ */
+export function spotSubtitle(spot: Spot): string {
+  const lead =
+    spot.status === "free" && spot.freeMetres
+      ? `${spot.freeMetres} m free`
+      : statusLabel[spot.status];
+  return `${lead} · ${spot.neighborhood}`;
+}
+
 /** "7 St SW ,  Fr 5 Av SW To 6 Av SW" -> { street: "7 St SW", number: "5 Av → 6 Av" } */
 function splitAddress(address: string): { street: string; number: string } {
   const [head, ...rest] = (address || "").split(",");
@@ -158,7 +170,7 @@ export function seedSpots(): Spot[] {
         confidence: "—",
         checked: "not checked",
         scanned: false,
-        reason: "Sin escanear todavía.",
+        reason: "Not scanned yet.",
         pairKey: c.id,
         ...geo(c, band),
       });

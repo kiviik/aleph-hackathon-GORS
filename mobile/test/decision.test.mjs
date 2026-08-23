@@ -91,7 +91,7 @@ test('a single observation of an empty-looking curb is UNCERTAIN, never FREE', (
   // MIN_TICKS frames. This is the branch the tick gate exists for.
   const obs = observe([], 1)
   assert.equal(obs.state, 'UNCERTAIN')
-  assert.match(obs.explanation, /1 de 3/)
+  assert.match(obs.explanation, /1 of 3/)
   assert.equal(referenceDecision({ observation: obs, sector, rules: buildRules(openZone, mon1200) }).decision, 'REFUSE')
 })
 
@@ -110,7 +110,7 @@ test('no boxes + DOUBTFUL asphalt is never FREE -- absence of detections is not 
   const obs = observe([], 5, { gray })
   assert.notEqual(obs.state, 'FREE')
   assert.equal(obs.carsFit, 0)
-  assert.match(obs.explanation, /ausencia de cajas/)
+  assert.match(obs.explanation, /empty box list/)
   assert.equal(referenceDecision({ observation: obs, sector, rules: buildRules(openZone, mon1200) }).decision, 'REFUSE')
 })
 

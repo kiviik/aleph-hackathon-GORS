@@ -22,6 +22,7 @@ export type Theme = {
     review: string;
     unscanned: string;
     scrim: string;
+    veil: string;
   };
   fontSize: {
     display: number;
@@ -61,6 +62,8 @@ export const theme: Theme = {
     onAccent: "#ffffff",
     danger: "#d98c76",
     scrim: "rgba(16,23,19,0.94)",
+    // Just enough to carry white system text over map tiles nobody controls.
+    veil: "rgba(16,23,19,0.42)",
     // Status colours encode meaning, not chrome. `unscanned` is deliberately grey and not amber —
     // a segment nobody has looked at is not the same claim as one the detector looked at and
     // found genuinely ambiguous.
