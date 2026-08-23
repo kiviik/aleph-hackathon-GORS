@@ -20,8 +20,8 @@ import {
   useColorScheme,
   View,
 } from "react-native";
-import MapView, { Callout, Marker, type Region } from "react-native-maps";
 import { WebView } from "react-native-webview";
+import OsmMap from "./src/components/OsmMap";
 import { useSpots, type Spot, type Status } from "./src/spots/useSpots";
 import ScanScreen from "./src/screens/ScanScreen";
 
@@ -33,7 +33,9 @@ const statusColor: Record<Status, string> = { free: "#247b52", occupied: "#b6543
 
 const storageKey = "ba-estaciona-mobile-memory";
 const themeStorageKey = "ba-estaciona-mobile-theme";
-const initialRegion: Region = { latitude: 51.0447, longitude: -114.0719, latitudeDelta: 0.085, longitudeDelta: 0.085 };
+// Calgary downtown. Zoom 12 covers the same ground the old 0.085 degree delta did.
+const mapCenter = { latitude: 51.0447, longitude: -114.0719 };
+const mapZoom = 12;
 
 type Memory = { favoriteIds: string[]; asked: string[] };
 
@@ -98,7 +100,7 @@ function StreetView({ spot, spots, onSelect, darkMode, onToggleTheme }: { spot: 
           <View style={[styles.streetStatus, { backgroundColor: `${statusColor[spot.status]}18` }]}><View style={[styles.chipDot, { backgroundColor: statusColor[spot.status] }]} /><Text style={[styles.streetStatusText, { color: statusColor[spot.status] }]}>{statusText[spot.status]}</Text></View>
         </View>
         <View style={styles.streetFrame}>
-          {streetViewError ? <View style={styles.streetFallback}>{thumbnailError ? <MapView style={styles.streetFallbackMap} initialRegion={{ latitude: spot.latitude, longitude: spot.longitude, latitudeDelta: 0.004, longitudeDelta: 0.004 }} scrollEnabled={false} zoomEnabled={false} rotateEnabled={false} pitchEnabled={false} toolbarEnabled={false}><Marker coordinate={{ latitude: spot.latitude, longitude: spot.longitude }} pinColor={statusColor[spot.status]} /></MapView> : <Image source={{ uri: thumbnailSource }} style={styles.streetImage} resizeMode="cover" onError={handleThumbnailError} />}<View style={[styles.streetFallbackPanel, darkMode && styles.darkCard]}><Text style={[styles.webErrorIcon, darkMode && styles.textDark]}>◎</Text><Text style={[styles.webErrorTitle, darkMode && styles.textDark]}>Interactive Street View unavailable</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Google blocked the live panorama in this preview. This is a static backup only.</Text><View style={styles.streetFallbackActions}><Pressable onPress={reloadStreetView} style={styles.webRetry}><Text style={styles.webRetryText}>Try again</Text></Pressable><Pressable onPress={() => void Linking.openURL(mapsSource)} style={styles.webOpen}><Text style={[styles.webOpenText, darkMode && styles.textDark]}>Open Google Maps</Text></Pressable></View></View></View> : <WebView key={webViewKey} source={{ uri: interactiveSource }} style={styles.webView} originWhitelist={["*"]} javaScriptEnabled domStorageEnabled cacheEnabled thirdPartyCookiesEnabled setSupportMultipleWindows={false} allowsInlineMediaPlayback mediaPlaybackRequiresUserAction={false} mixedContentMode="always" startInLoadingState renderLoading={() => <View style={styles.webLoading}><ActivityIndicator size="large" color="#247b52" /><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Loading live Street View…</Text></View>} onLoadStart={() => setInteractiveLoading(true)} onLoadEnd={() => setInteractiveLoading(false)} onError={() => setStreetViewError(true)} onHttpError={() => setStreetViewError(true)} />}
+          {streetViewError ? <View style={styles.streetFallback}>{thumbnailError ? <OsmMap style={styles.streetFallbackMap} markers={[{ id: spot.id, latitude: spot.latitude, longitude: spot.longitude, color: statusColor[spot.status] }]} center={{ latitude: spot.latitude, longitude: spot.longitude }} zoom={16} interactive={false} dark={darkMode} /> : <Image source={{ uri: thumbnailSource }} style={styles.streetImage} resizeMode="cover" onError={handleThumbnailError} />}<View style={[styles.streetFallbackPanel, darkMode && styles.darkCard]}><Text style={[styles.webErrorIcon, darkMode && styles.textDark]}>◎</Text><Text style={[styles.webErrorTitle, darkMode && styles.textDark]}>Interactive Street View unavailable</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Google blocked the live panorama in this preview. This is a static backup only.</Text><View style={styles.streetFallbackActions}><Pressable onPress={reloadStreetView} style={styles.webRetry}><Text style={styles.webRetryText}>Try again</Text></Pressable><Pressable onPress={() => void Linking.openURL(mapsSource)} style={styles.webOpen}><Text style={[styles.webOpenText, darkMode && styles.textDark]}>Open Google Maps</Text></Pressable></View></View></View> : <WebView key={webViewKey} source={{ uri: interactiveSource }} style={styles.webView} originWhitelist={["*"]} javaScriptEnabled domStorageEnabled cacheEnabled thirdPartyCookiesEnabled setSupportMultipleWindows={false} allowsInlineMediaPlayback mediaPlaybackRequiresUserAction={false} mixedContentMode="always" startInLoadingState renderLoading={() => <View style={styles.webLoading}><ActivityIndicator size="large" color="#247b52" /><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Loading live Street View…</Text></View>} onLoadStart={() => setInteractiveLoading(true)} onLoadEnd={() => setInteractiveLoading(false)} onError={() => setStreetViewError(true)} onHttpError={() => setStreetViewError(true)} />}
           <View style={styles.streetCompass}><Text style={styles.streetCompassArrow}>↑</Text><Text style={styles.streetCompassText}>N</Text></View>
           <View style={styles.streetSource}><Text style={styles.streetSourceText}>Google Street View</Text></View>
         </View>
@@ -211,6 +213,15 @@ export default function App() {
   }, [query, spots]);
   const visibleSpots = useMemo(() => statusFilter === "all" ? searchedSpots : searchedSpots.filter((spot) => spot.status === statusFilter), [searchedSpots, statusFilter]);
   const selected = visibleSpots.find((spot) => spot.id === selectedId) ?? visibleSpots[0] ?? spots[0];
+  const mapMarkers = useMemo(() => visibleSpots.map((spot) => ({
+    id: spot.id,
+    latitude: spot.latitude,
+    longitude: spot.longitude,
+    color: statusColor[spot.status],
+    title: `${spot.street} ${spot.number}`,
+    status: `${statusText[spot.status]} · ${spot.confidence}`,
+    hint: "Tap to open Street View",
+  })), [visibleSpots]);
   const counts = useMemo(() => ({
     all: searchedSpots.length,
     free: searchedSpots.filter((spot) => spot.status === "free").length,
@@ -281,10 +292,16 @@ export default function App() {
           <View style={[styles.searchBox, darkMode && styles.darkInput]}><Text style={[styles.searchIcon, darkMode && styles.textMutedDark]}>⌕</Text><TextInput value={query} onChangeText={setQuery} onSubmitEditing={rememberQuery} placeholder="Destination, street or neighborhood" placeholderTextColor={darkMode ? "#9aaa9e" : "#88958b"} style={[styles.searchInput, darkMode && styles.textDark]} returnKeyType="search" /><Pressable onPress={locate} style={styles.locateButton} disabled={locating}><Text style={styles.locateText}>{locating ? "…" : "⌖"}</Text></Pressable></View>
           {streetSuggestions.length > 0 && <View style={[styles.suggestionPanel, darkMode && styles.darkCard]}>{streetSuggestions.map((suggestion) => <Pressable key={suggestion} style={styles.suggestionRow} onPress={() => { setQuery(suggestion); setStatusFilter("all"); }}><Text style={[styles.suggestionIcon, darkMode && styles.textMutedDark]}>⌕</Text><Text style={[styles.suggestionText, darkMode && styles.textDark]}>{suggestion}</Text><Text style={[styles.suggestionCity, darkMode && styles.textMutedDark]}>Calgary</Text></Pressable>)}</View>}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsScroller}>{filterCards.map((filter) => <Pressable key={filter.key} accessibilityRole="button" accessibilityLabel={filter.key === "all" ? "Show all detected spots" : `Filter ${filter.label}`} onPress={() => setStatusFilter(filter.key)} style={[styles.statFilterCard, darkMode && styles.darkCard, statusFilter === filter.key && styles.statFilterCardActive]}><View style={[styles.statFilterDot, { backgroundColor: filter.color }]} /><Text style={styles.statNumber}>{filter.value}</Text><Text style={[styles.statLabel, darkMode && styles.textMutedDark]}>{filter.label}</Text></Pressable>)}<Text style={[styles.updated, darkMode && styles.textMutedDark]}>{selected.scanned ? `checked ${selected.checked} ago` : "LIVE MAP"}</Text></ScrollView>
-          <MapView style={styles.map} initialRegion={initialRegion} showsUserLocation={Boolean(userLocation)} showsMyLocationButton={false} mapType="standard">
-            {visibleSpots.map((spot) => <Marker key={spot.id} coordinate={{ latitude: spot.latitude, longitude: spot.longitude }} pinColor={statusColor[spot.status]} onPress={() => setSelectedId(spot.id)}><Callout onPress={() => { setSelectedId(spot.id); setTab("street"); }}><View style={styles.callout}><Text style={styles.calloutStreet}>{spot.street} {spot.number}</Text><Text style={[styles.calloutStatus, { color: statusColor[spot.status] }]}>{statusText[spot.status]} · {spot.confidence}</Text><Text style={styles.calloutHint}>Tap to open Street View</Text></View></Callout></Marker>)}
-            {userLocation && <Marker coordinate={userLocation} pinColor="#2979ff" title="Your location" />}
-          </MapView>
+          <OsmMap
+            style={styles.map}
+            markers={mapMarkers}
+            center={mapCenter}
+            zoom={mapZoom}
+            userLocation={userLocation}
+            dark={darkMode}
+            onSelect={(id) => setSelectedId(id)}
+            onOpen={(id) => { setSelectedId(id); setTab("street"); }}
+          />
           <View style={[styles.mapLegend, darkMode && styles.darkCard]}><View><View style={[styles.legendDot, { backgroundColor: statusColor.free }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Free</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.occupied }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Occupied</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.review }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Review</Text></View></View>
           <View style={[styles.selectedCard, darkMode && styles.darkCard]}><View style={[styles.selectedDot, { backgroundColor: statusColor[selected.status] }]} /><View style={styles.selectedCopy}><Text style={[styles.selectedStreet, darkMode && styles.textDark]}>{selected.street} {selected.number}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{selected.scanned ? `${selected.neighborhood} · read ${selected.checked} ago · ${selected.confidence}` : selected.neighborhood}</Text>{selected.scanned && <Text style={[styles.muted, darkMode && styles.textMutedDark]} numberOfLines={2}>{selected.status === "free" ? `≈${selected.carsFit} car${selected.carsFit === 1 ? "" : "s"} fit · ${selected.freeMetres} m free` : selected.reason}</Text>}{selected.scanned && selected.rule ? <Text style={[styles.muted, darkMode && styles.textMutedDark]} numberOfLines={2}>{selected.rule}</Text> : null}</View><Pressable onPress={toggleFavorite} style={styles.starButton}><Text style={styles.star}>{memory.favoriteIds.includes(selected.id) ? "★" : "☆"}</Text></Pressable><Pressable onPress={openStreetTab} style={styles.streetButton}><Text style={styles.streetButtonText}>Street View</Text></Pressable></View>
         </View>}
