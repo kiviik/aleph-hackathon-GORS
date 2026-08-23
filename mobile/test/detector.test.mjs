@@ -96,8 +96,7 @@ test('toSourceVehicles reproduces the desktop 2-pass slice exactly', () => {
   const vFarAll = toSourceVehicles(golden.passes.far.mobileObjects, far)
   const vFar = vFarAll.filter((v) => Math.max(v.w, v.h) < 0.12 * img.width)
   const got = addSignatures(img, dedupe([...vFull, ...vFar]))
-  // The fixture is the raw capture from when trucks and buses still counted; only cars do now.
-  const want = golden.mobileVehicles.filter((v) => v.label === 'car')
+  const want = golden.mobileVehicles
 
   assert.equal(got.length, want.length)
   for (let i = 0; i < want.length; i++) {
@@ -107,7 +106,7 @@ test('toSourceVehicles reproduces the desktop 2-pass slice exactly', () => {
   }
 })
 
-test('only the car class survives, and every box is inside the frame', () => {
+test('only curb-occupying vehicles survive, and every box is inside the frame', () => {
   const img = decodeJpeg(jpeg)
   const lb = letterbox(img)
   const v = toSourceVehicles(golden.passes.full.mobileObjects, lb)
@@ -119,14 +118,15 @@ test('only the car class survives, and every box is inside the frame', () => {
     assert.ok(x.box[2] > x.box[0] && x.box[3] > x.box[1])
     assert.deepEqual(x.bottomCenter, [+((x.box[0] + x.box[2]) / 2).toFixed(1), x.box[3]])
   }
-  // a person, and any non-car vehicle, must be filtered out
-  const rejected = toSourceVehicles([
+  // A truck or a bus takes the curb; a person or a motorcycle does not get to claim one.
+  const kept = toSourceVehicles([
     { label: 'person', cls: 0, score: 0.99, box: [0.1, 0.1, 0.2, 0.2] },
     { label: 'truck', cls: 7, score: 0.99, box: [0.3, 0.3, 0.4, 0.4] },
     { label: 'bus', cls: 5, score: 0.99, box: [0.5, 0.5, 0.6, 0.6] },
-    { label: 'motorcycle', cls: 3, score: 0.99, box: [0.7, 0.7, 0.8, 0.8] }
+    { label: 'motorcycle', cls: 3, score: 0.99, box: [0.7, 0.7, 0.8, 0.8] },
+    { label: 'bicycle', cls: 1, score: 0.99, box: [0.8, 0.8, 0.9, 0.9] }
   ], lb)
-  assert.equal(rejected.length, 0)
+  assert.deepEqual(kept.map((v) => v.label), ['truck', 'bus'])
 })
 
 test('signature reads RGBA (stride 4) and packed RGB (stride 3) identically', () => {
@@ -154,13 +154,13 @@ test('grayPlane is full resolution and tracks luma', () => {
   assert.ok(Math.abs(mean - meanLuma(img)) < 3, `gray mean ${mean} vs sampled ${meanLuma(img)}`)
 })
 
-test('LABELS is COCO-80 with car at the known id, and only car counts as a vehicle', () => {
+test('LABELS is COCO-80 with the vehicle classes at their known ids', () => {
   assert.equal(LABELS.length, 80)
   assert.equal(LABELS[2], 'car')
   assert.equal(LABELS[3], 'motorcycle')
   assert.equal(LABELS[5], 'bus')
   assert.equal(LABELS[7], 'truck')
-  assert.deepEqual([...VEHICLE_LABELS], ['car'])
+  assert.deepEqual([...VEHICLE_LABELS].sort(), ['bus', 'car', 'truck'])
 })
 
 test('iou basics', () => {

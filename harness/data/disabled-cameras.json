@@ -15,6 +15,16 @@
    "why": "PTZ: the camera no longer holds the view its band was learned on, and the band was never sound to begin with.",
    "evidence": "Corner direction label read SW on the learning-era frame (data/debug-182.jpg) and NW live; 12 frames sampled over 4 minutes all held the new view. The shipped band drawn on a current frame runs diagonally across both travel lanes. Independently, the band fails today's learner: sideFrac 0.74 in state.json against minSideFrac 0.8 ('traffic both sides'), only 13.9 m of its claimed 33.3 m ever observed (coreT 145.2-440.8 of 697.1 px), and 33.3 m claimed against a 23.9 m zone.",
    "disabledAt": "2026-08-23"
+  },
+  "169": {
+   "why": "The band lies on the Holt Renfrew sidewalk, not on a curb. No part of the corridor has roadway under it.",
+   "evidence": "Drawn on a live frame (npm run diag:overlay), the whole corridor runs along the shopfront at 8 Av / 1 St SW with pedestrians walking through it; the real parked-car row is off to the right, past the traffic signal, and the band never reaches it. The view is stable, not mid-pan: four frames over two minutes differ by 2.7-4.3/255 mean greyscale. There is no learning-era frame for this camera, so whether the camera panned or the fit was always wrong cannot be settled -- it does not need to be, because the shipped geometry is wrong against today's view either way. Independently: 137 support over a 7.0 m core split into 3 slots is 2.3 m per slot, physically impossible for parallel parking, and no history is collected for it so `freeT` cannot bound what it may claim.",
+   "disabledAt": "2026-08-23"
+  },
+  "171": {
+   "why": "The band runs off the curb, down the travel lane and out through the intersection. It reported 8.5 m free -- and PARK -- in a live traffic lane.",
+   "evidence": "Two independent frames agree: on the archived daytime snapshot (data/snapshots/171-1787427682000.jpg) the corridor crosses the crosswalk and leaves the frame at the bottom-right corner, and on a live frame its 'occupied' run covers cars stopped at the red light rather than parked at a kerb. The view is stable over two minutes (mean greyscale delta 4.3-5.9/255), so this is not a pan caught in progress. It carries the weakest evidence of any shipped band -- support 67, against 89 for the next lowest and 481 for camera 27 -- and it cannot be reproduced from anything in this repo: state.json's own 171 band is a different line entirely (226 px, core 94-185) from the shipped one (507 px, core 65-301), which came from a research-repo export. No history is collected for it, so `freeT` cannot bound what it claims.",
+   "disabledAt": "2026-08-23"
   }
  }
 }

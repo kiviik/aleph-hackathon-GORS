@@ -93,12 +93,25 @@ const read = createFrameReader(async (header, payload) => {
   }
 })
 
+// `configureEnvironment` sets a NATIVE singleton, and the singleton outlives this worklet: a
+// second worklet in the same process gets "OnnxRuntime::configure() must be called before the
+// first instance() call". That is not a failure -- the environment is configured, by the worklet
+// that ran before this one -- but it used to be caught here and reported as `ready: false`, which
+// blocked every DETECT for the life of the process. On the phone that turns one JS reload into an
+// app whose map keeps updating while nothing is being detected at all, with no error surfaced past
+// a console warning. Only the provider list decides readiness; configuring is best-effort.
+let configureError = null
 try {
   onnx.configureEnvironment({ loggingLevel: 'error' })
-  providers = onnx.getAvailableProviders()
-  send({ id: 0, type: 'ready', ok: true, ...health() })
 } catch (e) {
-  send({ id: 0, type: 'ready', ok: false, error: String(e?.message || e) })
+  configureError = String(e?.message || e)
+}
+try {
+  providers = onnx.getAvailableProviders()
+  if (!providers?.length) throw new Error('no ONNX execution providers')
+  send({ id: 0, type: 'ready', ok: true, ...health(), configureError })
+} catch (e) {
+  send({ id: 0, type: 'ready', ok: false, error: String(e?.message || e), configureError })
 }
 
 IPC.on('data', read)

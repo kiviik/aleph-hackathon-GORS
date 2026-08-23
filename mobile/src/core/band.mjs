@@ -4,6 +4,30 @@
 import { projectToAxis } from './geom.mjs'
 import { pxPerMetre } from './scale.mjs'
 
+/** The band parameter interval the learner actually saw cars in, falling back to the whole band. */
+export function coreRange (band) {
+  const [t0, t1] = Array.isArray(band.coreT) && band.coreT.length === 2 ? band.coreT : [0, band.length]
+  return [Math.max(0, Math.min(t0, t1)), Math.min(band.length, Math.max(t0, t1))]
+}
+
+/**
+ * The stretch of the band FREE space may be claimed on.
+ *
+ * `freeT` is baked from collected history: the run of the band that parked cars have actually
+ * covered, at a support threshold, so one mis-tracked car cannot open a junction. It is wider and
+ * more honest than the fitted core, which is anchor-based and inlier-filtered — camera 27 and
+ * camera 76's near curb turn out to be parkable end to end, and clipping them to their cores threw
+ * away most of their real free space.
+ *
+ * Without it the core is the fallback, because the core is still *observation*, where the padded
+ * ends of the band are not. Cameras with no collected history therefore read conservatively until
+ * `npm run bake:freerange` has something to work from.
+ */
+export function freeRange (band) {
+  const raw = Array.isArray(band.freeT) && band.freeT.length === 2 ? band.freeT : coreRange(band)
+  return [Math.max(0, Math.min(raw[0], raw[1])), Math.min(band.length, Math.max(raw[0], raw[1]))]
+}
+
 /** Is point p inside the band corridor (within halfWidth, and along the axis with slack)? */
 export function inBand (band, p, slack = 0.15) {
   const { t, n } = projectToAxis(band, p)

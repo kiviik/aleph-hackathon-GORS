@@ -15,6 +15,9 @@
 // -- and moved the pin on every scan as the gap set changed.
 import { metresBetween, pxPerMetre } from './scale.mjs'
 import { MIN_PX_PER_M } from './gaps.mjs'
+import { coreRange } from './band.mjs'
+
+export { coreRange }
 
 /** Median perpendicular distance between opposite-side zones of one block (Calgary zones.json, n=239). */
 export const STREET_WIDTH_M = 12.4
@@ -57,12 +60,6 @@ export function zoneAxis (zone) {
 export function nearEnd (band, scale) {
   if (!scale?.ok || !Number.isFinite(scale.b) || Math.abs(scale.b) < FLAT_SLOPE) return null
   return scale.b > 0 ? 't1' : 't0'
-}
-
-/** The band parameter interval the learner actually saw cars in, falling back to the whole band. */
-export function coreRange (band) {
-  const [t0, t1] = Array.isArray(band.coreT) && band.coreT.length === 2 ? band.coreT : [0, band.length]
-  return [Math.max(0, Math.min(t0, t1)), Math.min(band.length, Math.max(t0, t1))]
 }
 
 /**

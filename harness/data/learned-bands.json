@@ -1,0 +1,456 @@
+{
+ "learnedAt": "2026-08-23T03:26:17.854Z",
+ "learner": {
+  "module": "mobile/src/core/band-learning.mjs",
+  "options": {
+   "maxBands": 4,
+   "minSupport": 12,
+   "minFrames": 4,
+   "minSlots": 3,
+   "minPairSpan": 50,
+   "residualHeightFraction": 0.32,
+   "minResidualPx": 3,
+   "maxResidualPx": 14,
+   "learnDwell": 3,
+   "maxDwellWeight": 10,
+   "longDwell": 6,
+   "longDwellFrac": 0.15,
+   "longDwellMax": 20,
+   "minLongFrac": 0.5,
+   "minMedianDwell": 5,
+   "maxMovingRatio": 0.4,
+   "minMovingNear": 0.5,
+   "minSideFrac": 0.8,
+   "requireTraffic": true
+  },
+  "extended": true,
+  "extentModel": "box"
+ },
+ "cameras": {
+  "14": {
+   "source": {
+    "file": "harness/data/history/14.jsonl",
+    "frames": 301,
+    "from": "2026-08-22T18:49:04.000Z",
+    "to": "2026-08-23T03:09:04.000Z",
+    "passes": [
+     "full",
+     "far"
+    ]
+   },
+   "frame": {
+    "width": 840,
+    "height": 630
+   },
+   "bands": [
+    {
+     "id": "b0",
+     "p0": [
+      149.6,
+      622.7
+     ],
+     "p1": [
+      171,
+      305.3
+     ],
+     "dir": [
+      0.0672,
+      -0.9977
+     ],
+     "length": 318.1,
+     "halfWidth": 12.1,
+     "meanBoxH": 97.4,
+     "coreT": [
+      26.2,
+      205.6
+     ],
+     "slots": 3,
+     "support": 519,
+     "medianDwell": 62,
+     "longFrac": 0.85,
+     "movingRatio": 0.04,
+     "movingNear": 1.93,
+     "sideFrac": 0.85
+    }
+   ],
+   "scales": {
+    "b0": {
+     "a": 11.092,
+     "b": 0.040718,
+     "samples": 125,
+     "ok": true
+    }
+   },
+   "warnings": []
+  },
+  "27": {
+   "source": {
+    "file": "harness/data/history/27.jsonl",
+    "frames": 305,
+    "from": "2026-08-22T18:49:06.000Z",
+    "to": "2026-08-23T03:16:06.000Z",
+    "passes": [
+     "full",
+     "far"
+    ]
+   },
+   "frame": {
+    "width": 840,
+    "height": 630
+   },
+   "bands": [
+    {
+     "id": "b0",
+     "p0": [
+      450.1,
+      170.8
+     ],
+     "p1": [
+      688,
+      624.8
+     ],
+     "dir": [
+      0.4641,
+      0.8858
+     ],
+     "length": 512.6,
+     "halfWidth": 13.2,
+     "meanBoxH": 65.1,
+     "coreT": [
+      44.8,
+      497.7
+     ],
+     "slots": 13,
+     "support": 1697,
+     "medianDwell": 23,
+     "longFrac": 0.62,
+     "movingRatio": 0.11,
+     "movingNear": 5.25,
+     "sideFrac": 0.96
+    }
+   ],
+   "scales": {
+    "b0": {
+     "a": 1.967,
+     "b": 0.064811,
+     "samples": 1449,
+     "ok": true
+    }
+   },
+   "warnings": []
+  },
+  "76": {
+   "source": {
+    "file": "harness/data/history/76.jsonl",
+    "frames": 300,
+    "from": "2026-08-22T18:49:11.000Z",
+    "to": "2026-08-23T03:09:11.000Z",
+    "passes": [
+     "full",
+     "far"
+    ]
+   },
+   "frame": {
+    "width": 840,
+    "height": 630
+   },
+   "bands": [
+    {
+     "id": "b0",
+     "p0": [
+      261.4,
+      117
+     ],
+     "p1": [
+      835.9,
+      467
+     ],
+     "dir": [
+      0.854,
+      0.5203
+     ],
+     "length": 672.7,
+     "halfWidth": 8.2,
+     "meanBoxH": 47.3,
+     "coreT": [
+      44.5,
+      628.5
+     ],
+     "slots": 12,
+     "support": 2024,
+     "medianDwell": 29,
+     "longFrac": 0.67,
+     "movingRatio": 0.1,
+     "movingNear": 3.09,
+     "sideFrac": 0.93
+    },
+    {
+     "id": "b1",
+     "p0": [
+      213,
+      146.4
+     ],
+     "p1": [
+      322.7,
+      317.6
+     ],
+     "dir": [
+      0.5395,
+      0.842
+     ],
+     "length": 203.4,
+     "halfWidth": 5.6,
+     "meanBoxH": 39.1,
+     "coreT": [
+      36,
+      136.1
+     ],
+     "slots": 9,
+     "support": 635,
+     "medianDwell": 15,
+     "longFrac": 0.5,
+     "movingRatio": 0.13,
+     "movingNear": 2.07,
+     "sideFrac": 0.98
+    }
+   ],
+   "scales": {
+    "b0": {
+     "a": 3.0514,
+     "b": 0.04014,
+     "samples": 1698,
+     "ok": true
+    },
+    "b1": {
+     "a": 5.1855,
+     "b": 0.065312,
+     "samples": 544,
+     "ok": true
+    }
+   },
+   "warnings": []
+  },
+  "130": {
+   "source": {
+    "file": "harness/data/history/130.jsonl",
+    "frames": 300,
+    "from": "2026-08-22T18:49:17.000Z",
+    "to": "2026-08-23T03:09:17.000Z",
+    "passes": [
+     "full",
+     "far"
+    ]
+   },
+   "frame": {
+    "width": 840,
+    "height": 630
+   },
+   "bands": [
+    {
+     "id": "b0",
+     "p0": [
+      303.3,
+      145.2
+     ],
+     "p1": [
+      398.7,
+      227.2
+     ],
+     "dir": [
+      0.7582,
+      0.652
+     ],
+     "length": 125.7,
+     "halfWidth": 4.5,
+     "meanBoxH": 19.9,
+     "coreT": [
+      27.5,
+      90.2
+     ],
+     "slots": 7,
+     "support": 516,
+     "medianDwell": 21,
+     "longFrac": 0.59,
+     "movingRatio": 0.09,
+     "movingNear": 1.12,
+     "sideFrac": 0.98
+    }
+   ],
+   "scales": {
+    "b0": {
+     "a": 4.4038,
+     "b": 0.023253,
+     "samples": 431,
+     "ok": true
+    }
+   },
+   "warnings": []
+  },
+  "162": {
+   "source": {
+    "file": "harness/data/history/162.jsonl",
+    "frames": 303,
+    "from": "2026-08-22T18:49:21.000Z",
+    "to": "2026-08-23T03:16:21.000Z",
+    "passes": [
+     "full",
+     "far"
+    ]
+   },
+   "frame": {
+    "width": 840,
+    "height": 630
+   },
+   "bands": [],
+   "scales": {},
+   "warnings": []
+  },
+  "164": {
+   "source": {
+    "file": "harness/data/history/164.jsonl",
+    "frames": 299,
+    "from": "2026-08-22T18:49:21.000Z",
+    "to": "2026-08-23T03:09:22.000Z",
+    "passes": [
+     "full",
+     "far"
+    ]
+   },
+   "frame": {
+    "width": 840,
+    "height": 630
+   },
+   "bands": [
+    {
+     "id": "b0",
+     "p0": [
+      468,
+      596.5
+     ],
+     "p1": [
+      803,
+      145.1
+     ],
+     "dir": [
+      0.5959,
+      -0.8031
+     ],
+     "length": 562.1,
+     "halfWidth": 9.2,
+     "meanBoxH": 64.4,
+     "coreT": [
+      212.7,
+      482.9
+     ],
+     "slots": 11,
+     "support": 973,
+     "medianDwell": 20,
+     "longFrac": 0.58,
+     "movingRatio": 0.12,
+     "movingNear": 2.32,
+     "sideFrac": 0.99
+    },
+    {
+     "id": "b1",
+     "p0": [
+      148.1,
+      421.8
+     ],
+     "p1": [
+      665.4,
+      81.6
+     ],
+     "dir": [
+      0.8355,
+      -0.5495
+     ],
+     "length": 619.1,
+     "halfWidth": 13.3,
+     "meanBoxH": 61.3,
+     "coreT": [
+      217.3,
+      533.8
+     ],
+     "slots": 4,
+     "support": 603,
+     "medianDwell": 46,
+     "longFrac": 0.77,
+     "movingRatio": 0.07,
+     "movingNear": 3.14,
+     "sideFrac": 0.97
+    }
+   ],
+   "scales": {
+    "b0": {
+     "a": 43.4911,
+     "b": -0.067634,
+     "samples": 797,
+     "ok": true
+    },
+    "b1": {
+     "a": 33.4717,
+     "b": -0.045332,
+     "samples": 517,
+     "ok": true
+    }
+   },
+   "warnings": []
+  },
+  "219": {
+   "source": {
+    "file": "harness/data/history/219.jsonl",
+    "frames": 302,
+    "from": "2026-08-22T18:49:29.000Z",
+    "to": "2026-08-23T03:16:29.000Z",
+    "passes": [
+     "full",
+     "far"
+    ]
+   },
+   "frame": {
+    "width": 840,
+    "height": 630
+   },
+   "bands": [
+    {
+     "id": "b0",
+     "p0": [
+      186.3,
+      433.3
+     ],
+     "p1": [
+      679.7,
+      82.7
+     ],
+     "dir": [
+      0.8151,
+      -0.5793
+     ],
+     "length": 605.2,
+     "halfWidth": 5.6,
+     "meanBoxH": 36.1,
+     "coreT": [
+      205.3,
+      529.7
+     ],
+     "slots": 16,
+     "support": 1366,
+     "medianDwell": 33,
+     "longFrac": 0.72,
+     "movingRatio": 0.06,
+     "movingNear": 2.82,
+     "sideFrac": 0.98
+    }
+   ],
+   "scales": {
+    "b0": {
+     "a": 31.2484,
+     "b": -0.0435,
+     "samples": 1104,
+     "ok": true
+    }
+   },
+   "warnings": []
+  }
+ }
+}

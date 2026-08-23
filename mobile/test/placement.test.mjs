@@ -56,7 +56,9 @@ test('metresFromNearEnd is zero at the near end and the full span at the far one
 test('the judgeable span is the stretch gaps can actually be measured on', () => {
   // gaps.mjs refuses any gap below MIN_PX_PER_M, so the far end of a steep band can never read
   // free. Reporting the learned core instead put "8.9 m of curb" next to "23.9 m free" on camera
-  // 76's far band; the judgeable span for it is 24.5 m, which is consistent with what it reports.
+  // 76's far band; the judgeable span for it is 17.8 m, which is consistent with what it reports.
+  // (It was 24.5 m before the extension bound was enforced on the fixture: that band observed
+  // 8.9 m of parked cars and carried 27 m of guessed curb, 20.4 m of it on one end.)
   const camera = cam('76')
   for (const band of camera.bands) {
     const scale = camera.scales[band.id]
@@ -64,7 +66,7 @@ test('the judgeable span is the stretch gaps can actually be measured on', () =>
     assert.ok(t0 >= 0 && t1 <= band.length && t1 > t0)
     assert.ok(pxPerMetre(scale, (t0 + t1) / 2) >= 3)
   }
-  assert.ok(Math.abs(bandSpanM(camera.bands[1], camera.scales.b1) - 24.5) < 0.2)
+  assert.ok(Math.abs(bandSpanM(camera.bands[1], camera.scales.b1) - 17.8) < 0.2)
 })
 
 test('a placement never leaves the surveyed zone segment', () => {
@@ -124,7 +126,7 @@ test('the two bands of camera 76 are placed apart and ranked near/far', () => {
   assert.equal(side0.label, 'near curb')
   assert.notDeepEqual([b0.lng, b0.lat], [b1.lng, b1.lat])
   // Their curb segments DO coincide here, and that is the honest answer: both bands read more curb
-  // (28.4 m and 24.5 m) than the 16.7 m zone segment they currently share, so both clamp to the
+  // (23.7 m and 17.8 m) than the 16.7 m zone segment they currently share, so both clamp to the
   // whole of it. Only a per-band zone match separates them geographically -- until then the map
   // tells them apart by label and by screen-space declutter, not by pretending to know where the
   // far curb is. The next test covers the matched case.

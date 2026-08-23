@@ -145,6 +145,78 @@ Three questions to answer by eye before exporting anything — does every band l
 band straddle the travel lane or a parking lot, and does each side/zone caption match the curb it is
 drawn on?
 
+### 6b. What the *mobile* pipeline sees — `npm run diag:overlay -- <frame.jpg> <cameraId> [outDir]`
+
+`debug:overlay` draws the reference client's boxes. This draws `mobile/src/core/frame-pipeline.mjs`'s
+own output over the same frame — every detection with its class and score, the band corridor, and
+the three states the gap logic ends up in: **red** occupied, **yellow** moving, **purple** textured
+(the appearance guard said unknown), **green** confirmed free. It replays the frame three times so
+dwell reaches `isParked`, and prints the per-band JSON alongside.
+
+It is the fastest way to answer "why did this curb read free?", and it is what caught two of the
+findings below. Snapshots to run it on live in `data/snapshots/`.
+
+```bash
+npm run diag:overlay -- data/snapshots/76-1787427611000.jpg 76 /tmp/diag
+npm run diag:classes            # what the vehicle keep-set drops, over every snapshot
+```
+
+### 6c. Re-binding shipped geometry — `npm run clamp:bands`
+
+`extendBandBounded` only binds bands this repo learns. Everything in `mobile/src/data/bands.json`
+was padded in the research repo by a flat two car lengths per end, with no relation to how much curb
+each band observed — measured against their own cores, **all fourteen were over the bound**. Camera
+76's far curb carried 20.4 m of guessed curb on 8.9 m of evidence; camera 169 carried 23.9 m on
+7.0 m. `clamp:bands` applies `clampBandExtension` to the shipped fixture in place — geometry only,
+no re-learn and no re-match of zones — and bumps `exportedAt`, which is what makes the phone discard
+band history that now describes a different stretch of curb. `export:bands` applies the same bound
+to every source, so this is a one-off for geometry that predates it.
+
+### 6d. Where FREE may be claimed — `npm run bake:freerange`
+
+The clamp above bounds how far a band may be *padded*. This bounds what may be *sold*.
+
+A band is padded past its last parked car so the gap logic and the texture guard can look just
+beyond it. Looking is fine; claiming is not. Camera 219's band runs off its curb and straight across
+the 6 Ave SW / 10 St SW intersection — and the texture guard passes it, because an empty junction is
+flat asphalt. Replaying its 302 collected frames (`npm run diag:freeab`), **144 of the 230 frames
+that reported free space put that free space entirely outside the curb the band was learned on.**
+No metre bound fixes it: at 31 px/m the near end swallows a whole junction in seven metres.
+
+What does fix it is the thing the padding discards — whether a car has ever been there.
+`bake:freerange` walks the history, marks every pixel of the axis a parked car's *ground contact*
+has covered (`groundExtent`, not `boxExtent`, which leaks box height into length on a steep band),
+and writes the outermost run supported by ≥1% of frames as `freeT` on the band. `computeGaps` clips
+free intervals to it; occupancy and the texture guard still read the whole band.
+
+The fitted `coreT` is not a good enough substitute — it is anchor-based and inlier-filtered, so it
+sits systematically inside the real curb. Cameras 27 and 76's near curb are parkable end to end;
+clipping them to their cores threw away most of their genuine free space. `coreT` is only the
+fallback for a camera with no collected history, which reads conservatively until it has some.
+
+```bash
+npm run bake:freerange -- --dry-run
+npm run diag:freeab                 # A/B the clip over every collected history
+npm run diag:envelope               # per-band coverage bars: where cars have actually parked
+npm run diag:traffic -- 219         # per-metre moving/parked profile along a band
+```
+
+Measured over the 2107 collected frames, free-reporting frames go 1068 → 703, and every one of the
+184 confirmed gaps that lay entirely outside a band's observed curb is gone.
+
+### 6e. Dropping a camera — `npm run prune:disabled`
+
+`data/disabled-cameras.json` is the permanent record of which cameras must never ship, and
+`export:bands` honours it for every source. But a full export also re-runs zone matching, which
+moves rules and side wording at the same time; when the only decision made is *this camera must not
+ship*, `prune:disabled` applies just that to the shipped fixture in place and bumps `exportedAt`.
+
+Four cameras are out: **162** and **182** pan away from the view their bands were learned on, and
+**169** and **171** hold their view but carry a band drawn on the wrong surface — 169's along a
+shopfront pavement, 171's down a travel lane and out through an intersection, where it was reporting
+8.5 m free and a PARK verdict. The evidence for each is in the file, reproducible with
+`npm run diag:overlay`.
+
 ### 7. Band export — `npm run export:bands`
 
 Band learning needs ~20 distinct frames per camera and is far too expensive for a phone, so it

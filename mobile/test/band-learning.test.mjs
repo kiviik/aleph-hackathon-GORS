@@ -1,8 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { assignVehiclesToBands } from '../src/core/band.mjs'
+import { readFileSync } from 'node:fs'
+import { assignVehiclesToBands, freeRange } from '../src/core/band.mjs'
 import { bandSeparation, learnBands } from '../src/core/band-learning.mjs'
-import { CAR_LENGTH_M, EXTEND_CAR_LENGTHS, extendBand, extendBandBounded, metresBetween } from '../src/core/scale.mjs'
+import { computeGaps } from '../src/core/gaps.mjs'
+import { CAR_LENGTH_M, EXTEND_CAR_LENGTHS, EXTEND_MAX_FRAC_OF_CORE, clampBandExtension, extendBand, extendBandBounded, metresBetween, pxPerMetre } from '../src/core/scale.mjs'
 
 function car (x, groundY, frame, dwell = frame + 2) {
   const w = 44, h = 28
@@ -112,4 +114,95 @@ test('a band is never padded with more curb than it actually observed', () => {
   const long = { ...band, p1: [1100, 300], length: 1000, coreT: [0, 1000] }
   assert.equal(extendBandBounded(long, scale, 1200, 630).band.length, extendBand(long, scale, 1200, 630).band.length)
   assert.ok(EXTEND_CAR_LENGTHS * CAR_LENGTH_M > 0)
+})
+
+test('an already-extended band can be re-bound, from either end and under perspective', () => {
+  // extendBandBounded only binds geometry this module produced. Everything in bands.json was padded
+  // elsewhere, so the bound has to be enforceable after the fact -- on a band whose scale already
+  // carries the extension in its parametrisation.
+  const scale = { a: 6, b: 0.06, ok: true }   // 6 px/m at t=0, 36 px/m at t=500: steep perspective
+  const band = { id: 'b0', p0: [40, 400], p1: [540, 200], dir: [0.928, -0.371], length: 500, halfWidth: 10, meanBoxH: 30, coreT: [200, 300] }
+
+  const coreM = metresBetween(scale, 200, 300)
+  const cap = Math.min(EXTEND_CAR_LENGTHS * CAR_LENGTH_M, EXTEND_MAX_FRAC_OF_CORE * coreM)
+  assert.ok(metresBetween(scale, 0, 200) > cap && metresBetween(scale, 300, 500) > cap, 'both ends start over')
+
+  const { band: out, scale: s2 } = clampBandExtension(band, scale)
+  const [c0, c1] = out.coreT
+  assert.ok(Math.abs(metresBetween(s2, 0, c0) - cap) < 0.05, 'near end trimmed to the cap')
+  assert.ok(Math.abs(metresBetween(s2, c1, out.length) - cap) < 0.05, 'far end trimmed to the cap')
+  // The trim is in METRES, so perspective must make the two ends different lengths in pixels.
+  assert.ok(Math.abs(c0 - (out.length - c1)) > 20, 'a metre-based trim is not a pixel-based one')
+  // The core survives untouched: same metres, same pixels on the ground, same endpoints.
+  assert.ok(Math.abs(metresBetween(s2, c0, c1) - coreM) < 0.01)
+  assert.ok(Math.abs(pxPerMetre(s2, c0) - pxPerMetre(scale, 200)) < 0.01, 'the scale is re-parametrised, not re-fitted')
+  const coreStart = [band.p0[0] + band.dir[0] * 200, band.p0[1] + band.dir[1] * 200]
+  assert.ok(Math.hypot(out.p0[0] + out.dir[0] * c0 - coreStart[0], out.p0[1] + out.dir[1] * c0 - coreStart[1]) < 0.2)
+
+  // Idempotent, and a band already inside the bound is returned as-is.
+  const again = clampBandExtension(out, s2)
+  assert.equal(again.band, out)
+  assert.equal(again.scale, s2)
+  // A band with no core cannot be judged over-extended, so it is left alone.
+  assert.equal(clampBandExtension({ ...band, coreT: undefined }, scale).band.coreT, undefined)
+})
+
+test('every shipped band respects the extension bound', () => {
+  const doc = JSON.parse(readFileSync(new URL('../src/data/bands.json', import.meta.url), 'utf8'))
+  for (const [id, cam] of Object.entries(doc.cameras)) {
+    for (const band of cam.bands) {
+      const scale = cam.scales[band.id]
+      const [c0, c1] = band.coreT
+      const cap = Math.min(EXTEND_CAR_LENGTHS * CAR_LENGTH_M, EXTEND_MAX_FRAC_OF_CORE * metresBetween(scale, c0, c1))
+      assert.ok(metresBetween(scale, 0, c0) <= cap + 0.05, `${id}/${band.id}: ${metresBetween(scale, 0, c0).toFixed(1)} m guessed before a ${cap.toFixed(1)} m cap`)
+      assert.ok(metresBetween(scale, c1, band.length) <= cap + 0.05, `${id}/${band.id}: ${metresBetween(scale, c1, band.length).toFixed(1)} m guessed after a ${cap.toFixed(1)} m cap`)
+    }
+  }
+})
+
+test('FREE is claimed only where a car has been seen parked', () => {
+  // The padded ends of a band are there for the texture guard to look at, not for the app to sell.
+  // Camera 219's band runs off its curb and across an intersection; replaying its 302 collected
+  // frames, 144 of the 230 frames that reported free space put it ENTIRELY in that junction.
+  const band = { id: 'b0', p0: [0, 100], p1: [400, 100], dir: [1, 0], length: 400, halfWidth: 12, meanBoxH: 30, coreT: [100, 300] }
+  const scale = { a: 10, b: 0, ok: true } // 10 px/m throughout: the whole band is 40 m
+  const empty = []
+
+  // No freeT: the learned core is the bound, and nothing outside it can be claimed.
+  const onCore = computeGaps(band, scale, empty)
+  assert.deepEqual(onCore.free.map((g) => [g.t1, g.t2]), [[100, 300]])
+  assert.deepEqual(freeRange(band), [100, 300])
+
+  // freeT baked from history is wider than the anchor-based core, and it wins.
+  const baked = { ...band, freeT: [60, 380] }
+  assert.deepEqual(freeRange(baked), [60, 380])
+  assert.deepEqual(computeGaps(baked, scale, empty).free.map((g) => [g.t1, g.t2]), [[60, 380]])
+
+  // A dead end shorter than MIN_GAP_M after clipping disappears rather than being reported short.
+  const car = { box: [355, 70, 395, 105], bottomCenter: [375, 105], dwell: 5, w: 40, h: 35 }
+  const blocked = computeGaps({ ...baked, freeT: [340, 400] }, scale, [car])
+  assert.deepEqual(blocked.free, [], 'a 1.5 m sliver is not free space')
+  // ... but the car still counts as occupying the band, clipping or not.
+  assert.equal(blocked.occupied.length, 1)
+
+  // A band with no coreT and no freeT is claimable end to end: nothing says otherwise.
+  const bare = { id: 'b0', p0: [0, 100], p1: [400, 100], dir: [1, 0], length: 400, halfWidth: 12, meanBoxH: 30 }
+  assert.deepEqual(freeRange(bare), [0, 400])
+  assert.deepEqual(computeGaps(bare, scale, empty).free.map((g) => [g.t1, g.t2]), [[0, 400]])
+})
+
+test('every band with baked history keeps freeT inside the band', () => {
+  const doc = JSON.parse(readFileSync(new URL('../src/data/bands.json', import.meta.url), 'utf8'))
+  let baked = 0
+  for (const [id, cam] of Object.entries(doc.cameras)) {
+    for (const band of cam.bands) {
+      if (!band.freeT) continue
+      baked++
+      const [lo, hi] = band.freeT
+      assert.ok(lo >= 0 && hi <= band.length && hi > lo, `${id}/${band.id}: freeT ${band.freeT} outside [0, ${band.length}]`)
+      assert.ok(band.freeSupport?.frames > 0, `${id}/${band.id}: freeT with no recorded support`)
+      assert.deepEqual(freeRange(band), [lo, hi])
+    }
+  }
+  assert.ok(baked >= 7, `expected the collected cameras to carry freeT, got ${baked}`)
 })

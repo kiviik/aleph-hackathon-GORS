@@ -6,9 +6,20 @@ export const SIZE = 640
 export const SCORE_MIN_RAW = 0.15 // detector-side floor; the client applies its own threshold
 export const SCORE_MIN = 0.25     // low on purpose: parked vehicles are confirmed by persistence, not score
 export const DEDUPE_IOU = 0.55
-// Cars only: the parking model counts car-sized spots, so trucks, buses and motorcycles
-// are deliberately not treated as occupants.
-export const VEHICLE_LABELS = new Set(['car'])
+/**
+ * What occupies curb. `car` alone was the original filter, on the reasoning that the model counts
+ * car-sized spots -- but that conflates "how big is a spot" with "is this stretch taken". A parked
+ * pickup takes the curb whether or not it fits the slot arithmetic, and YOLO26 routinely calls
+ * SUVs, vans and pickups `truck`: over the 29 archived Calgary snapshots the car-only filter
+ * discarded 19 vehicles no `car` box covered, including a 0.743 pickup sitting inside camera 14's
+ * shipped band. The appearance guard caught that one as texture and said `unknown`; a dark vehicle
+ * in shadow would not have been caught, and `unknown` is in any case a worse answer than `occupied`
+ * when the pixels plainly show a vehicle.
+ *
+ * `motorcycle` stays out: it is small enough to hide inside a legal gap, and the class doubles as
+ * the model's guess for bicycles at rack-sized scales.
+ */
+export const VEHICLE_LABELS = new Set(['car', 'truck', 'bus'])
 
 export const LABELS = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
 

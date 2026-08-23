@@ -32,8 +32,7 @@ test('the worklet pipeline reproduces the golden vehicle set', async () => {
 
   assert.equal(r.width, golden.width)
   assert.equal(r.height, golden.height)
-  // The fixture predates the car-only filter, so trucks and buses in it are expected to be gone.
-  const want = golden.mobileVehicles.filter((v) => v.label === 'car')
+  const want = golden.mobileVehicles
   assert.equal(r.vehicles.length, want.length)
   for (let i = 0; i < r.vehicles.length; i++) {
     assert.deepEqual(r.vehicles[i].box, want[i].box, `box ${i}`)

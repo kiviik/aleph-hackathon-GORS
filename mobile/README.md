@@ -61,7 +61,7 @@ step. If it fails, `docs/hackaton/07-mobile.md` records the fallbacks.
 ## Test — no device, no model, no network
 
 ```bash
-npm test        # 88 tests
+npm test        # 92 tests
 npm run typecheck
 ```
 
@@ -86,7 +86,7 @@ npm run verify:pipeline 76 4      # full on-device path, live camera
 - Detection is genuinely on-device. Frames come from Calgary's public cameras over the
   network; **inference never leaves the phone**.
 - **The curb geometry was learned offline**, on a laptop, from hours of camera history.
-  The phone consumes `src/data/bands.json` (13 cameras, 14 bands) — it does not learn it.
+  The phone consumes `src/data/bands.json` (11 cameras, 12 bands) — it does not learn it.
 - The offline learner is side-aware: it extracts one narrow line at a time and removes only that
   line's inliers, so opposite curbs become separate bands instead of one widened corridor. At
   runtime a detection is assigned to **one** band — the nearest centreline in metres — so a car on
@@ -100,7 +100,7 @@ npm run verify:pipeline 76 4      # full on-device path, live camera
   mapping whose own error is tens of metres. Where the fixture matches a zone per curb, each band is
   judged under *its* rules: 47% of opposite-side zone pairs in the City data differ somewhere, and
   25% differ in the restriction window itself.
-- Only those 13 cameras are covered, of 208.
+- Only those 11 cameras are covered, of 208.
 - **Some of the City's cameras pan.** A band is geometry in the pixels of one view, so a camera that
   changes preset makes its own band meaningless — and nothing in the pipeline notices: there is no
   view fingerprint, and a re-aimed camera keeps being judged against stale geometry. Cameras 162 and
@@ -108,6 +108,17 @@ npm run verify:pipeline 76 4      # full on-device path, live camera
   [`harness/data/disabled-cameras.json`](../harness/data/disabled-cameras.json), which the exporter
   honours for every source. With 208 cameras in the city, dropping one that will not hold still is
   cheaper than trusting it. Verify a new camera holds its view before adding it.
+- **A band drawn on the wrong surface is the same failure, without the pan.** Cameras 169 and 171
+  are excluded for it. 169's corridor lies along the Holt Renfrew shopfront with pedestrians walking
+  through it and no roadway under any part of it; 171's runs off the kerb, down the travel lane and
+  out through the intersection, and it was reporting 8.5 m free — and PARK — in live traffic. Both
+  views are stable over two minutes, so neither is a pan caught in progress; the geometry is simply
+  wrong against the view the camera holds today. Nothing in the pipeline can tell: a band is
+  geometry, and an empty traffic lane is flat asphalt to the texture guard.
+- **Cameras 36 and 108 are still open questions.** On a live night frame 108's corridor crosses the
+  travel lanes and the kerb it was learned on is now behind construction hoarding, and 36's runs
+  over the roadway. One night frame is not enough to disable a camera on — both need a daytime
+  overlay (`npm run diag:overlay`, 09:30–15:00 Calgary time) before a call is made.
 - A curb segment needs **three consistent observations** before it can read "free". One
   scan always shows `review`. That is the design, not a bug.
 - **Opening the app is not a blank slate.** The curb segments are drawn from the bundled fixture on
@@ -118,6 +129,26 @@ npm run verify:pipeline 76 4      # full on-device path, live camera
   knowing the answers. A first-ever launch still has to download the model and take its own frames.
 - Two inference passes per frame instead of the desktop's four. Lower recall, but a missed
   car leaves a textured strip that the appearance guard marks *unknown*, never *free*.
+- **`car`, `truck` and `bus` all occupy curb.** The keep-set was `car` alone, on the reasoning that
+  the model counts car-sized spots — but that is a question about slot arithmetic, not about whether
+  a stretch is taken, and YOLO26 calls most SUVs, vans and pickups `truck`. Across the 29 archived
+  Calgary snapshots the car-only filter discarded 19 vehicles no `car` box covered, one of them a
+  0.743 pickup parked inside camera 14's own band. `motorcycle` stays out: it hides inside a legal
+  gap, and the class doubles as the model's guess for bicycles at rack scale.
+- **FREE is only claimed where a car has been seen parked.** A band's padded ends exist so the
+  texture guard can look past the last parked car; they are not curb the app may sell. Camera 219's
+  band runs off its curb and across the 6 Ave SW / 10 St SW intersection, which is flat asphalt and
+  so passes the texture guard — replaying its 302 collected frames, **144 of the 230 frames that
+  reported free space put it entirely in that junction**. `band.freeT`, baked offline by
+  `harness`'s `npm run bake:freerange` from where parked cars' ground contact has actually covered
+  the axis, is what `computeGaps` now clips free intervals to; occupancy and the texture guard still
+  read the whole band. The 7 cameras with no collected history fall back to the learned core and
+  therefore read conservatively — collecting history for them is the outstanding work.
+- **A band is padded by at most half the curb it observed, per end.** `scale.mjs` has enforced that
+  on anything learned here for a while; the shipped fixture predated it and every one of its
+  fourteen bands was over — camera 76's far curb carried 20.4 m of guessed curb on 8.9 m of
+  evidence. `harness`'s `npm run clamp:bands` re-bound them in place. Guessed curb is where the
+  false "free" readings live.
 - Daytime only. Night, rain and snow are untested, and the quality thresholds in
   `src/evidence/evidence.mjs` are calibrated against a single daytime fixture.
 

@@ -31,6 +31,8 @@ declare module "*/core/temporal.mjs" {
   export function stableGaps(state: any, scale: any): any[];
 }
 declare module "*/core/band.mjs" {
+  export function coreRange(band: any): number[];
+  export function freeRange(band: any): number[];
   export function inBand(band: any, point: number[], slack?: number): boolean;
   export function assignVehiclesToBands(bands: any[], vehicles: any[], scales?: Record<string, any> | null): Record<string, any[]>;
 }

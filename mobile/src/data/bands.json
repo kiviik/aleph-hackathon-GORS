@@ -1,896 +1,827 @@
 {
- "exportedAt": "2026-08-23T04:25:35.973Z",
- "sourceRepo": "calgary-free-parking",
- "sourceSha": "unknown",
- "note": "Bands learned offline from traffic-camera history. Synthetic of nothing: geometry is real, rules are City of Calgary open data. Not legal parking advice.",
- "cameras": {
-  "14": {
-   "id": "14",
-   "name": "Camera 14",
-   "location": "8 Avenue / 11 Street SW",
-   "quadrant": "SW",
-   "lat": 51.046258,
-   "lng": -114.0886408,
-   "url": "https://trafficcam.calgary.ca/loc13.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      151,
-      624.2
-     ],
-     "p1": [
-      183.7,
-      212.6
-     ],
-     "dir": [
-      0.0794,
-      -0.9968
-     ],
-     "length": 412.9,
-     "halfWidth": 27.8,
-     "meanBoxH": 79.4,
-     "coreT": [
-      15.5,
-      247.4
-     ],
-     "slots": 3,
-     "support": 357
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 16.3685,
-     "b": 0.006526,
-     "samples": 198,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "2134",
-    "address": "8 Av SW ,  Fr 10 St SW To 11 St SW",
-    "blockSide": "N",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1750 MON-FRI",
-    "restrictType": "none",
-    "restrictTime": "none",
-    "maxTime": "120.0",
-    "priceZone": "7",
-    "brz": "Downtown",
-    "distanceM": 39.7,
-    "onCameraStreet": true,
-    "lengthM": 55.2,
-    "p0": [
-     -114.087429,
-     51.046292
-    ],
-    "p1": [
-     -114.08777,
-     51.046285
-    ]
-   }
-  },
-  "27": {
-   "id": "27",
-   "name": "Camera 27",
-   "location": "5 Avenue btw 1 Street & 2 Street SW",
-   "quadrant": "SW",
-   "lat": 51.0484854,
-   "lng": -114.06642,
-   "url": "https://trafficcam.calgary.ca/loc26.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      449,
-      172.5
-     ],
-     "p1": [
-      685,
-      624.3
-     ],
-     "dir": [
-      0.4628,
-      0.8864
-     ],
-     "length": 509.8,
-     "halfWidth": 23.7,
-     "meanBoxH": 67.7,
-     "coreT": [
-      43.8,
-      495.9
-     ],
-     "slots": 5,
-     "support": 481
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 1.8321,
-     "b": 0.06686,
-     "samples": 469,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "1578",
-    "address": "5 Av SW ,  Fr 1 St SW To 2 St SW",
-    "blockSide": "N",
-    "stallType": "Parallel",
-    "enforceableTime": "0840-1520 MON-FRI, 0910-1750 SAT",
-    "restrictType": "AM&PM",
-    "restrictTime": "07:00 - 08:30 , 15:30 - 18:00",
-    "maxTime": "120.0",
-    "priceZone": "4a",
-    "brz": "Downtown",
-    "distanceM": 11.5,
-    "onCameraStreet": false,
-    "lengthM": 105,
-    "p0": [
-     -114.066138,
-     51.048557
-    ],
-    "p1": [
-     -114.066519,
-     51.048568
-    ]
-   }
-  },
-  "36": {
-   "id": "36",
-   "name": "Camera 36",
-   "location": "Memorial Drive / 10 Street NW",
-   "quadrant": "NW",
-   "lat": 51.0519424,
-   "lng": -114.0858242,
-   "url": "https://trafficcam.calgary.ca/loc35.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      440.7,
-      147.3
-     ],
-     "p1": [
-      631.4,
-      378.4
-     ],
-     "dir": [
-      0.6365,
-      0.7713
-     ],
-     "length": 299.6,
-     "halfWidth": 11.6,
-     "meanBoxH": 33.1,
-     "coreT": [
-      71.4,
-      187.9
-     ],
-     "slots": 3,
-     "support": 201
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 5.0671,
-     "b": 0.037695,
-     "samples": 173,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "2871",
-    "address": "Memorial Dr NW ,  Fr 10 St NW To 10A St NW",
-    "blockSide": "N",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1750 MON-SAT",
-    "restrictType": "none",
-    "restrictTime": "none",
-    "maxTime": "120.0",
-    "priceZone": "17",
-    "brz": "Kensington / Louise Crossing",
-    "distanceM": 29.7,
-    "onCameraStreet": false,
-    "lengthM": 28.2,
-    "p0": [
-     -114.086817,
-     51.05186
-    ],
-    "p1": [
-     -114.086244,
-     51.051984
-    ]
-   }
-  },
-  "76": {
-   "id": "76",
-   "name": "Camera 76",
-   "location": "5 Avenue / 7 Street SW",
-   "quadrant": "SW",
-   "lat": 51.04882,
-   "lng": -114.0786008,
-   "url": "https://trafficcam.calgary.ca/loc75.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      392.3,
-      190.4
-     ],
-     "p1": [
-      834.9,
-      469.2
-     ],
-     "dir": [
-      0.8461,
-      0.533
-     ],
-     "length": 523.1,
-     "halfWidth": 21.1,
-     "meanBoxH": 60.4,
-     "coreT": [
-      142.3,
-      465.7
-     ],
-     "slots": 5,
-     "support": 344
+  "exportedAt": "2026-08-23T05:18:39.678Z",
+  "sourceRepo": "calgary-free-parking",
+  "sourceSha": "unknown",
+  "note": "Bands learned offline from traffic-camera history. Synthetic of nothing: geometry is real, rules are City of Calgary open data. Not legal parking advice.",
+  "cameras": {
+    "14": {
+      "id": "14",
+      "name": "Camera 14",
+      "location": "8 Avenue / 11 Street SW",
+      "quadrant": "SW",
+      "lat": 51.046258,
+      "lng": -114.0886408,
+      "url": "https://trafficcam.calgary.ca/loc13.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            151,
+            624.2
+          ],
+          "p1": [
+            180.5,
+            254.2
+          ],
+          "dir": [
+            0.0794,
+            -0.9968
+          ],
+          "length": 371.2,
+          "halfWidth": 27.8,
+          "meanBoxH": 79.4,
+          "coreT": [
+            15.5,
+            247.4
+          ],
+          "slots": 3,
+          "support": 357,
+          "freeT": [
+            1,
+            252
+          ],
+          "freeSupport": {
+            "frames": 301,
+            "observations": 848,
+            "minSupport": 3
+          }
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 16.3685,
+          "b": 0.006526,
+          "samples": 198,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "2134",
+        "address": "8 Av SW ,  Fr 10 St SW To 11 St SW",
+        "blockSide": "N",
+        "stallType": "Parallel",
+        "enforceableTime": "0910-1750 MON-FRI",
+        "restrictType": "none",
+        "restrictTime": "none",
+        "maxTime": "120.0",
+        "priceZone": "7",
+        "brz": "Downtown",
+        "distanceM": 39.7,
+        "onCameraStreet": true,
+        "lengthM": 55.2,
+        "p0": [
+          -114.087429,
+          51.046292
+        ],
+        "p1": [
+          -114.08777,
+          51.046285
+        ]
+      }
     },
-    {
-     "id": "b1",
-     "p0": [
-      196.9,
-      121.7
-     ],
-     "p1": [
-      369.1,
-      390.2
-     ],
-     "dir": [
-      0.5397,
-      0.8419
-     ],
-     "length": 319,
-     "halfWidth": 13.6,
-     "meanBoxH": 38.8,
-     "coreT": [
-      65.4,
-      165.3
-     ],
-     "slots": 3,
-     "support": 183
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 8.8127,
-     "b": 0.046755,
-     "samples": 282,
-     "ok": true
+    "27": {
+      "id": "27",
+      "name": "Camera 27",
+      "location": "5 Avenue btw 1 Street & 2 Street SW",
+      "quadrant": "SW",
+      "lat": 51.0484854,
+      "lng": -114.06642,
+      "url": "https://trafficcam.calgary.ca/loc26.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            454.1,
+            182.3
+          ],
+          "p1": [
+            684.9,
+            624.4
+          ],
+          "dir": [
+            0.4628,
+            0.8864
+          ],
+          "length": 498.7,
+          "halfWidth": 23.7,
+          "meanBoxH": 67.7,
+          "coreT": [
+            32.7,
+            484.8
+          ],
+          "slots": 5,
+          "support": 481,
+          "freeT": [
+            10,
+            498
+          ],
+          "freeSupport": {
+            "frames": 305,
+            "observations": 2013,
+            "minSupport": 3
+          }
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 2.5735,
+          "b": 0.06686,
+          "samples": 469,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "1578",
+        "address": "5 Av SW ,  Fr 1 St SW To 2 St SW",
+        "blockSide": "N",
+        "stallType": "Parallel",
+        "enforceableTime": "0840-1520 MON-FRI, 0910-1750 SAT",
+        "restrictType": "AM&PM",
+        "restrictTime": "07:00 - 08:30 , 15:30 - 18:00",
+        "maxTime": "120.0",
+        "priceZone": "4a",
+        "brz": "Downtown",
+        "distanceM": 11.5,
+        "onCameraStreet": false,
+        "lengthM": 105,
+        "p0": [
+          -114.066138,
+          51.048557
+        ],
+        "p1": [
+          -114.066519,
+          51.048568
+        ]
+      }
     },
-    "b1": {
-     "a": 0.821,
-     "b": 0.096136,
-     "samples": 157,
-     "ok": true
+    "36": {
+      "id": "36",
+      "name": "Camera 36",
+      "location": "Memorial Drive / 10 Street NW",
+      "quadrant": "NW",
+      "lat": 51.0519424,
+      "lng": -114.0858242,
+      "url": "https://trafficcam.calgary.ca/loc35.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            459.8,
+            170.5
+          ],
+          "p1": [
+            611.9,
+            354.7
+          ],
+          "dir": [
+            0.6365,
+            0.7713
+          ],
+          "length": 238.9,
+          "halfWidth": 11.6,
+          "meanBoxH": 33.1,
+          "coreT": [
+            41.3,
+            157.8
+          ],
+          "slots": 3,
+          "support": 201
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 6.1998,
+          "b": 0.037695,
+          "samples": 173,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "2871",
+        "address": "Memorial Dr NW ,  Fr 10 St NW To 10A St NW",
+        "blockSide": "N",
+        "stallType": "Parallel",
+        "enforceableTime": "0910-1750 MON-SAT",
+        "restrictType": "none",
+        "restrictTime": "none",
+        "maxTime": "120.0",
+        "priceZone": "17",
+        "brz": "Kensington / Louise Crossing",
+        "distanceM": 29.7,
+        "onCameraStreet": false,
+        "lengthM": 28.2,
+        "p0": [
+          -114.086817,
+          51.05186
+        ],
+        "p1": [
+          -114.086244,
+          51.051984
+        ]
+      }
+    },
+    "76": {
+      "id": "76",
+      "name": "Camera 76",
+      "location": "5 Avenue / 7 Street SW",
+      "quadrant": "SW",
+      "lat": 51.04882,
+      "lng": -114.0786008,
+      "url": "https://trafficcam.calgary.ca/loc75.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            431.8,
+            215.3
+          ],
+          "p1": [
+            834.9,
+            469.2
+          ],
+          "dir": [
+            0.8461,
+            0.533
+          ],
+          "length": 476.4,
+          "halfWidth": 21.1,
+          "meanBoxH": 60.4,
+          "coreT": [
+            95.6,
+            419
+          ],
+          "slots": 5,
+          "support": 344,
+          "freeT": [
+            0,
+            472
+          ],
+          "freeSupport": {
+            "frames": 300,
+            "observations": 1476,
+            "minSupport": 3
+          }
+        },
+        {
+          "id": "b1",
+          "p0": [
+            218.3,
+            155.1
+          ],
+          "p1": [
+            336.2,
+            338.9
+          ],
+          "dir": [
+            0.5397,
+            0.8419
+          ],
+          "length": 218.3,
+          "halfWidth": 13.6,
+          "meanBoxH": 38.8,
+          "coreT": [
+            25.7,
+            125.6
+          ],
+          "slots": 3,
+          "support": 183,
+          "freeT": [
+            19,
+            147
+          ],
+          "freeSupport": {
+            "frames": 300,
+            "observations": 691,
+            "minSupport": 3
+          }
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 10.9976,
+          "b": 0.046755,
+          "samples": 282,
+          "ok": true
+        },
+        "b1": {
+          "a": 4.6359,
+          "b": 0.096136,
+          "samples": 157,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "1716",
+        "address": "7 St SW ,  Fr 5 Av SW To 6 Av SW",
+        "blockSide": "E",
+        "stallType": "Parallel",
+        "enforceableTime": "0910-1520 MON-FRI",
+        "restrictType": "AM&PM",
+        "restrictTime": "07:00 - 08:30 , 15:30 - 18:00",
+        "maxTime": "120.0",
+        "priceZone": "4b",
+        "brz": "Downtown",
+        "distanceM": 15.2,
+        "onCameraStreet": true,
+        "lengthM": 16.7,
+        "p0": [
+          -114.078561,
+          51.048686
+        ],
+        "p1": [
+          -114.078571,
+          51.048536
+        ]
+      }
+    },
+    "108": {
+      "id": "108",
+      "name": "Camera 108",
+      "location": "7 Avenue / 8 Street SW",
+      "quadrant": "SW",
+      "lat": 51.0470302,
+      "lng": -114.0811841,
+      "url": "https://trafficcam.calgary.ca/loc107.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            5.9,
+            437.8
+          ],
+          "p1": [
+            299.5,
+            278.5
+          ],
+          "dir": [
+            0.879,
+            -0.4767
+          ],
+          "length": 334.1,
+          "halfWidth": 14.3,
+          "meanBoxH": 40.8,
+          "coreT": [
+            65.9,
+            261.5
+          ],
+          "slots": 3,
+          "support": 89
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 29.6529,
+          "b": -0.044279,
+          "samples": 73,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "1920",
+        "address": "6 Av SW ,  Fr 8 St SW To 9 St SW",
+        "blockSide": "S",
+        "stallType": "Parallel",
+        "enforceableTime": "0910-1520 MON-FRI",
+        "restrictType": "AM&PM",
+        "restrictTime": "07:00 - 08:30 , 15:30 - 18:00",
+        "maxTime": "60.0",
+        "priceZone": "6",
+        "brz": "Downtown",
+        "distanceM": 97.1,
+        "onCameraStreet": false,
+        "lengthM": 59.2,
+        "p0": [
+          -114.081382,
+          51.047894
+        ],
+        "p1": [
+          -114.082229,
+          51.047917
+        ]
+      }
+    },
+    "130": {
+      "id": "130",
+      "name": "Camera 130",
+      "location": "9 Avenue / 5 Street SW",
+      "quadrant": "SW",
+      "lat": 51.0448849,
+      "lng": -114.0738336,
+      "url": "https://trafficcam.calgary.ca/loc129.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            303.9,
+            143.7
+          ],
+          "p1": [
+            465,
+            283.3
+          ],
+          "dir": [
+            0.7557,
+            0.6549
+          ],
+          "length": 213.3,
+          "halfWidth": 7.3,
+          "meanBoxH": 20.8,
+          "coreT": [
+            28.1,
+            127.8
+          ],
+          "slots": 5,
+          "support": 111,
+          "freeT": [
+            7,
+            144
+          ],
+          "freeSupport": {
+            "frames": 300,
+            "observations": 550,
+            "minSupport": 3
+          }
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 3.2258,
+          "b": 0.051541,
+          "samples": 92,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "2455",
+        "address": "9 Av SW ,  Fr 4 St SW To 5 St SW",
+        "blockSide": "N",
+        "stallType": "Parallel",
+        "enforceableTime": "0710-1750 MON-FRI, 0910-1750 SAT",
+        "restrictType": "none",
+        "restrictTime": "none",
+        "maxTime": "120.0",
+        "priceZone": "4d",
+        "brz": "Downtown",
+        "distanceM": 25.6,
+        "onCameraStreet": true,
+        "lengthM": 63.8,
+        "p0": [
+          -114.073497,
+          51.044975
+        ],
+        "p1": [
+          -114.072585,
+          51.044949
+        ]
+      }
+    },
+    "157": {
+      "id": "157",
+      "name": "Camera 157",
+      "location": "12 Ave / 3 St  SE",
+      "quadrant": "SE",
+      "lat": 51.0412162,
+      "lng": -114.0559291,
+      "url": "https://trafficcam.calgary.ca/loc156.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            620,
+            333.3
+          ],
+          "p1": [
+            776.4,
+            111.7
+          ],
+          "dir": [
+            0.5766,
+            -0.817
+          ],
+          "length": 271.3,
+          "halfWidth": 9.6,
+          "meanBoxH": 27.6,
+          "coreT": [
+            91.1,
+            226.3
+          ],
+          "slots": 3,
+          "support": 240
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 12.6506,
+          "b": -0.030211,
+          "samples": 202,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "3471",
+        "address": "12 Av SE , Fr 3 St SE To Olympic wy SE",
+        "blockSide": "S",
+        "stallType": "Parallel",
+        "enforceableTime": "0910-1750 MON-FRI",
+        "restrictType": "none",
+        "restrictTime": "none",
+        "maxTime": "240.0",
+        "priceZone": "15",
+        "brz": "Victoria Park",
+        "distanceM": 13.4,
+        "onCameraStreet": true,
+        "lengthM": 111,
+        "p0": [
+          -114.055741,
+          51.041241
+        ],
+        "p1": [
+          -114.053777,
+          51.041192
+        ]
+      }
+    },
+    "163": {
+      "id": "163",
+      "name": "Camera 163",
+      "location": "17 Ave / 14 St SW",
+      "quadrant": "SW",
+      "lat": 51.0379174,
+      "lng": -114.0946681,
+      "url": "https://trafficcam.calgary.ca/loc162.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            241.3,
+            580.7
+          ],
+          "p1": [
+            494.3,
+            41
+          ],
+          "dir": [
+            0.4244,
+            -0.9055
+          ],
+          "length": 596,
+          "halfWidth": 19.8,
+          "meanBoxH": 36.1,
+          "coreT": [
+            177.8,
+            548.1
+          ],
+          "slots": 6,
+          "support": 192
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 25.6784,
+          "b": -0.035696,
+          "samples": 176,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "4557",
+        "address": "17 Av SW ,  Fr 13 St SW To 14 St SW",
+        "blockSide": "S",
+        "stallType": "Parallel",
+        "enforceableTime": "0910-1750 MON-SAT",
+        "restrictType": "AM",
+        "restrictTime": "07:00 - 09:00",
+        "maxTime": "120.0",
+        "priceZone": "11",
+        "brz": "Uptown 17",
+        "distanceM": 51.1,
+        "onCameraStreet": true,
+        "lengthM": 48.8,
+        "p0": [
+          -114.093276,
+          51.037774
+        ],
+        "p1": [
+          -114.093973,
+          51.037773
+        ]
+      }
+    },
+    "164": {
+      "id": "164",
+      "name": "Camera 164",
+      "location": "3 Ave / 3 St SW",
+      "quadrant": "SW",
+      "lat": 51.0506131,
+      "lng": -114.0699408,
+      "url": "https://trafficcam.calgary.ca/loc163.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            510,
+            542
+          ],
+          "p1": [
+            774.4,
+            179.8
+          ],
+          "dir": [
+            0.5895,
+            -0.8077
+          ],
+          "length": 448.4,
+          "halfWidth": 21.8,
+          "meanBoxH": 62.3,
+          "coreT": [
+            184.8,
+            392.4
+          ],
+          "slots": 3,
+          "support": 218,
+          "freeT": [
+            114,
+            443
+          ],
+          "freeSupport": {
+            "frames": 299,
+            "observations": 1151,
+            "minSupport": 3
+          }
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 37.4486,
+          "b": -0.066477,
+          "samples": 178,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "1222",
+        "address": "3 Av SW ,  Fr 2 St SW To 3 St SW",
+        "blockSide": "N",
+        "stallType": "Parallel",
+        "enforceableTime": "0910-1750 MON-SAT",
+        "restrictType": "none",
+        "restrictTime": "none",
+        "maxTime": "120.0",
+        "priceZone": "5",
+        "brz": "Downtown",
+        "distanceM": 20.5,
+        "onCameraStreet": true,
+        "lengthM": 69.2,
+        "p0": [
+          -114.069317,
+          51.050545
+        ],
+        "p1": [
+          -114.067813,
+          51.050502
+        ]
+      }
+    },
+    "203": {
+      "id": "203",
+      "name": "Camera 203",
+      "location": "11 Ave / 4 St SW",
+      "quadrant": "SW",
+      "lat": 51.0427157,
+      "lng": -114.071569,
+      "url": "https://trafficcam.calgary.ca/loc202.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            193.4,
+            600.9
+          ],
+          "p1": [
+            303.6,
+            97.4
+          ],
+          "dir": [
+            0.2139,
+            -0.9769
+          ],
+          "length": 515.4,
+          "halfWidth": 16.7,
+          "meanBoxH": 47.8,
+          "coreT": [
+            227.4,
+            463.9
+          ],
+          "slots": 4,
+          "support": 142
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 40.279,
+          "b": -0.068396,
+          "samples": 122,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "3111",
+        "address": "4 St SW , fr 10 Av SW to 11 Av SW",
+        "blockSide": "E",
+        "stallType": "Parallel",
+        "enforceableTime": "0910-1750 MON-SAT",
+        "restrictType": "none",
+        "restrictTime": "none",
+        "maxTime": "120.0",
+        "priceZone": "12",
+        "brz": "Beltline",
+        "distanceM": 6.1,
+        "onCameraStreet": true,
+        "lengthM": 31.6,
+        "p0": [
+          -114.071616,
+          51.042762
+        ],
+        "p1": [
+          -114.071615,
+          51.043047
+        ]
+      }
+    },
+    "219": {
+      "id": "219",
+      "name": "Camera 219",
+      "location": "6 Ave & 10 St SW",
+      "quadrant": "SW",
+      "lat": 51.048108,
+      "lng": -114.0860385,
+      "url": "https://trafficcam.calgary.ca/loc218.jpg",
+      "bands": [
+        {
+          "id": "b0",
+          "p0": [
+            194.3,
+            426.2
+          ],
+          "p1": [
+            658,
+            99.4
+          ],
+          "dir": [
+            0.8174,
+            -0.5761
+          ],
+          "length": 567.2,
+          "halfWidth": 12.2,
+          "meanBoxH": 34.9,
+          "coreT": [
+            227.5,
+            514.9
+          ],
+          "slots": 10,
+          "support": 334,
+          "freeT": [
+            159,
+            564
+          ],
+          "freeSupport": {
+            "frames": 302,
+            "observations": 1450,
+            "minSupport": 3
+          }
+        }
+      ],
+      "scales": {
+        "b0": {
+          "a": 38.4231,
+          "b": -0.060233,
+          "samples": 275,
+          "ok": true
+        }
+      },
+      "zone": {
+        "id": "1894",
+        "address": "10 St SW ,  Fr 6 Av SW To 7 Av SW",
+        "blockSide": "W",
+        "stallType": "Parallel",
+        "enforceableTime": "0910-1750 MON-FRI",
+        "restrictType": "none",
+        "restrictTime": "none",
+        "maxTime": "180.0",
+        "priceZone": "7",
+        "brz": "Downtown",
+        "distanceM": 16.7,
+        "onCameraStreet": false,
+        "lengthM": 54.1,
+        "p0": [
+          -114.086153,
+          51.047685
+        ],
+        "p1": [
+          -114.086158,
+          51.047578
+        ]
+      }
     }
-   },
-   "zone": {
-    "id": "1716",
-    "address": "7 St SW ,  Fr 5 Av SW To 6 Av SW",
-    "blockSide": "E",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1520 MON-FRI",
-    "restrictType": "AM&PM",
-    "restrictTime": "07:00 - 08:30 , 15:30 - 18:00",
-    "maxTime": "120.0",
-    "priceZone": "4b",
-    "brz": "Downtown",
-    "distanceM": 15.2,
-    "onCameraStreet": true,
-    "lengthM": 16.7,
-    "p0": [
-     -114.078561,
-     51.048686
-    ],
-    "p1": [
-     -114.078571,
-     51.048536
-    ]
-   }
-  },
-  "108": {
-   "id": "108",
-   "name": "Camera 108",
-   "location": "7 Avenue / 8 Street SW",
-   "quadrant": "SW",
-   "lat": 51.0470302,
-   "lng": -114.0811841,
-   "url": "https://trafficcam.calgary.ca/loc107.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      5.9,
-      437.8
-     ],
-     "p1": [
-      382,
-      233.9
-     ],
-     "dir": [
-      0.879,
-      -0.4767
-     ],
-     "length": 427.8,
-     "halfWidth": 14.3,
-     "meanBoxH": 40.8,
-     "coreT": [
-      65.9,
-      261.5
-     ],
-     "slots": 3,
-     "support": 89
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 29.6529,
-     "b": -0.044279,
-     "samples": 73,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "1920",
-    "address": "6 Av SW ,  Fr 8 St SW To 9 St SW",
-    "blockSide": "S",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1520 MON-FRI",
-    "restrictType": "AM&PM",
-    "restrictTime": "07:00 - 08:30 , 15:30 - 18:00",
-    "maxTime": "60.0",
-    "priceZone": "6",
-    "brz": "Downtown",
-    "distanceM": 97.1,
-    "onCameraStreet": false,
-    "lengthM": 59.2,
-    "p0": [
-     -114.081382,
-     51.047894
-    ],
-    "p1": [
-     -114.082229,
-     51.047917
-    ]
-   }
-  },
-  "130": {
-   "id": "130",
-   "name": "Camera 130",
-   "location": "9 Avenue / 5 Street SW",
-   "quadrant": "SW",
-   "lat": 51.0448849,
-   "lng": -114.0738336,
-   "url": "https://trafficcam.calgary.ca/loc129.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      292.6,
-      133.9
-     ],
-     "p1": [
-      468.7,
-      286.5
-     ],
-     "dir": [
-      0.7557,
-      0.6549
-     ],
-     "length": 233,
-     "halfWidth": 7.3,
-     "meanBoxH": 20.8,
-     "coreT": [
-      43,
-      142.7
-     ],
-     "slots": 5,
-     "support": 111
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 2.4577,
-     "b": 0.051541,
-     "samples": 92,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "2455",
-    "address": "9 Av SW ,  Fr 4 St SW To 5 St SW",
-    "blockSide": "N",
-    "stallType": "Parallel",
-    "enforceableTime": "0710-1750 MON-FRI, 0910-1750 SAT",
-    "restrictType": "none",
-    "restrictTime": "none",
-    "maxTime": "120.0",
-    "priceZone": "4d",
-    "brz": "Downtown",
-    "distanceM": 25.6,
-    "onCameraStreet": true,
-    "lengthM": 63.8,
-    "p0": [
-     -114.073497,
-     51.044975
-    ],
-    "p1": [
-     -114.072585,
-     51.044949
-    ]
-   }
-  },
-  "157": {
-   "id": "157",
-   "name": "Camera 157",
-   "location": "12 Ave / 3 St  SE",
-   "quadrant": "SE",
-   "lat": 51.0412162,
-   "lng": -114.0559291,
-   "url": "https://trafficcam.calgary.ca/loc156.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      620,
-      333.3
-     ],
-     "p1": [
-      781.3,
-      104.7
-     ],
-     "dir": [
-      0.5766,
-      -0.817
-     ],
-     "length": 279.8,
-     "halfWidth": 9.6,
-     "meanBoxH": 27.6,
-     "coreT": [
-      91.1,
-      226.3
-     ],
-     "slots": 3,
-     "support": 240
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 12.6506,
-     "b": -0.030211,
-     "samples": 202,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "3471",
-    "address": "12 Av SE , Fr 3 St SE To Olympic wy SE",
-    "blockSide": "S",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1750 MON-FRI",
-    "restrictType": "none",
-    "restrictTime": "none",
-    "maxTime": "240.0",
-    "priceZone": "15",
-    "brz": "Victoria Park",
-    "distanceM": 13.4,
-    "onCameraStreet": true,
-    "lengthM": 111,
-    "p0": [
-     -114.055741,
-     51.041241
-    ],
-    "p1": [
-     -114.053777,
-     51.041192
-    ]
-   }
-  },
-  "163": {
-   "id": "163",
-   "name": "Camera 163",
-   "location": "17 Ave / 14 St SW",
-   "quadrant": "SW",
-   "lat": 51.0379174,
-   "lng": -114.0946681,
-   "url": "https://trafficcam.calgary.ca/loc162.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      241.3,
-      580.7
-     ],
-     "p1": [
-      497.8,
-      33.5
-     ],
-     "dir": [
-      0.4244,
-      -0.9055
-     ],
-     "length": 604.4,
-     "halfWidth": 19.8,
-     "meanBoxH": 36.1,
-     "coreT": [
-      177.8,
-      548.1
-     ],
-     "slots": 6,
-     "support": 192
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 25.6784,
-     "b": -0.035696,
-     "samples": 176,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "4557",
-    "address": "17 Av SW ,  Fr 13 St SW To 14 St SW",
-    "blockSide": "S",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1750 MON-SAT",
-    "restrictType": "AM",
-    "restrictTime": "07:00 - 09:00",
-    "maxTime": "120.0",
-    "priceZone": "11",
-    "brz": "Uptown 17",
-    "distanceM": 51.1,
-    "onCameraStreet": true,
-    "lengthM": 48.8,
-    "p0": [
-     -114.093276,
-     51.037774
-    ],
-    "p1": [
-     -114.093973,
-     51.037773
-    ]
-   }
-  },
-  "164": {
-   "id": "164",
-   "name": "Camera 164",
-   "location": "3 Ave / 3 St SW",
-   "quadrant": "SW",
-   "lat": 51.0506131,
-   "lng": -114.0699408,
-   "url": "https://trafficcam.calgary.ca/loc163.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      482.4,
-      579.8
-     ],
-     "p1": [
-      802.9,
-      140.6
-     ],
-     "dir": [
-      0.5895,
-      -0.8077
-     ],
-     "length": 543.8,
-     "halfWidth": 21.8,
-     "meanBoxH": 62.3,
-     "coreT": [
-      231.6,
-      439.2
-     ],
-     "slots": 3,
-     "support": 218
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 40.563,
-     "b": -0.066477,
-     "samples": 178,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "1222",
-    "address": "3 Av SW ,  Fr 2 St SW To 3 St SW",
-    "blockSide": "N",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1750 MON-SAT",
-    "restrictType": "none",
-    "restrictTime": "none",
-    "maxTime": "120.0",
-    "priceZone": "5",
-    "brz": "Downtown",
-    "distanceM": 20.5,
-    "onCameraStreet": true,
-    "lengthM": 69.2,
-    "p0": [
-     -114.069317,
-     51.050545
-    ],
-    "p1": [
-     -114.067813,
-     51.050502
-    ]
-   }
-  },
-  "169": {
-   "id": "169",
-   "name": "Camera 169",
-   "location": "8 Ave / 4 St SW",
-   "quadrant": "SW",
-   "lat": 51.0457185,
-   "lng": -114.071668,
-   "url": "https://trafficcam.calgary.ca/loc168.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      56.3,
-      121.9
-     ],
-     "p1": [
-      206.2,
-      612.9
-     ],
-     "dir": [
-      0.2919,
-      0.9564
-     ],
-     "length": 513.4,
-     "halfWidth": 21.6,
-     "meanBoxH": 61.6,
-     "coreT": [
-      125.7,
-      263.2
-     ],
-     "slots": 3,
-     "support": 137
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 1.2991,
-     "b": 0.098363,
-     "samples": 120,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "2462",
-    "address": "8 Av SW ,  Fr 3 St SW To 4 St SW",
-    "blockSide": "S",
-    "stallType": "Parallel",
-    "enforceableTime": "0710-1750 MON-FRI, 0910-1750 SAT",
-    "restrictType": "none",
-    "restrictTime": "none",
-    "maxTime": "30.0",
-    "priceZone": "4c",
-    "brz": "Downtown",
-    "distanceM": 42.6,
-    "onCameraStreet": true,
-    "lengthM": 20.5,
-    "p0": [
-     -114.070766,
-     51.045728
-    ],
-    "p1": [
-     -114.071059,
-     51.045737
-    ]
-   }
-  },
-  "171": {
-   "id": "171",
-   "name": "Camera 171",
-   "location": "9 Ave / 1 St SW",
-   "quadrant": "SW",
-   "lat": 51.0447401,
-   "lng": -114.065353,
-   "url": "https://trafficcam.calgary.ca/loc170.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      325.4,
-      119.7
-     ],
-     "p1": [
-      729.9,
-      494.4
-     ],
-     "dir": [
-      0.7336,
-      0.6796
-     ],
-     "length": 551.3,
-     "halfWidth": 17.7,
-     "meanBoxH": 50.6,
-     "coreT": [
-      100.1,
-      335.9
-     ],
-     "slots": 4,
-     "support": 67
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 5.5532,
-     "b": 0.053201,
-     "samples": 61,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "2511",
-    "address": "9 Av SW ,  Fr Centre St S To 1 St SW",
-    "blockSide": "N",
-    "stallType": "Parallel",
-    "enforceableTime": "0710-1750 MON-FRI, 0910-1750 SAT",
-    "restrictType": "none",
-    "restrictTime": "none",
-    "maxTime": "120.0",
-    "priceZone": "4c",
-    "brz": "Downtown",
-    "distanceM": 10.7,
-    "onCameraStreet": true,
-    "lengthM": 56.1,
-    "p0": [
-     -114.0652,
-     51.044737
-    ],
-    "p1": [
-     -114.064398,
-     51.044714
-    ]
-   }
-  },
-  "203": {
-   "id": "203",
-   "name": "Camera 203",
-   "location": "11 Ave / 4 St SW",
-   "quadrant": "SW",
-   "lat": 51.0427157,
-   "lng": -114.071569,
-   "url": "https://trafficcam.calgary.ca/loc202.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      193.4,
-      600.9
-     ],
-     "p1": [
-      309.5,
-      70.8
-     ],
-     "dir": [
-      0.2139,
-      -0.9769
-     ],
-     "length": 542.6,
-     "halfWidth": 16.7,
-     "meanBoxH": 47.8,
-     "coreT": [
-      227.4,
-      463.9
-     ],
-     "slots": 4,
-     "support": 142
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 40.279,
-     "b": -0.068396,
-     "samples": 122,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "3111",
-    "address": "4 St SW , fr 10 Av SW to 11 Av SW",
-    "blockSide": "E",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1750 MON-SAT",
-    "restrictType": "none",
-    "restrictTime": "none",
-    "maxTime": "120.0",
-    "priceZone": "12",
-    "brz": "Beltline",
-    "distanceM": 6.1,
-    "onCameraStreet": true,
-    "lengthM": 31.6,
-    "p0": [
-     -114.071616,
-     51.042762
-    ],
-    "p1": [
-     -114.071615,
-     51.043047
-    ]
-   }
-  },
-  "219": {
-   "id": "219",
-   "name": "Camera 219",
-   "location": "6 Ave & 10 St SW",
-   "quadrant": "SW",
-   "lat": 51.048108,
-   "lng": -114.0860385,
-   "url": "https://trafficcam.calgary.ca/loc218.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      194.3,
-      426.2
-     ],
-     "p1": [
-      670.9,
-      90.3
-     ],
-     "dir": [
-      0.8174,
-      -0.5761
-     ],
-     "length": 583,
-     "halfWidth": 12.2,
-     "meanBoxH": 34.9,
-     "coreT": [
-      227.5,
-      514.9
-     ],
-     "slots": 10,
-     "support": 334
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 38.4231,
-     "b": -0.060233,
-     "samples": 275,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "1894",
-    "address": "10 St SW ,  Fr 6 Av SW To 7 Av SW",
-    "blockSide": "W",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1750 MON-FRI",
-    "restrictType": "none",
-    "restrictTime": "none",
-    "maxTime": "180.0",
-    "priceZone": "7",
-    "brz": "Downtown",
-    "distanceM": 16.7,
-    "onCameraStreet": false,
-    "lengthM": 54.1,
-    "p0": [
-     -114.086153,
-     51.047685
-    ],
-    "p1": [
-     -114.086158,
-     51.047578
-    ]
-   }
   }
- }
 }

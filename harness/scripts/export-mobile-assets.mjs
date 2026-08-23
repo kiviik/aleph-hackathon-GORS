@@ -25,6 +25,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
+import { clampBandExtension } from '../../mobile/src/core/scale.mjs'
 import { applyOverrides, proposeBandZones } from '../src/band-zones.mjs'
 import { zonesNear, zoneOnCameraStreet, pointAlongZone, zoneLengthM } from '../src/zones.mjs'
 import { dataFile, MOBILE_DATA, HARNESS, rel } from '../src/paths.mjs'
@@ -122,11 +123,24 @@ for (const id of ids) {
 
   // A band with no fitted scale cannot be measured in metres, so it cannot report free space and
   // must not become a map pin. Drop it here rather than shipping something unjudgeable.
-  const usable = geometry.bands.filter((b) => geometry.scales?.[b.id]?.ok)
-  if (usable.length < geometry.bands.length) {
-    notes.push(`${id}: dropped ${geometry.bands.length - usable.length} band(s) with no fitted scale`)
+  const withScale = geometry.bands.filter((b) => geometry.scales?.[b.id]?.ok)
+  if (withScale.length < geometry.bands.length) {
+    notes.push(`${id}: dropped ${geometry.bands.length - withScale.length} band(s) with no fitted scale`)
   }
-  if (!usable.length) { skipped.push(`${id}: no band with a fitted scale`); continue }
+  if (!withScale.length) { skipped.push(`${id}: no band with a fitted scale`); continue }
+
+  // Every source is re-bound here, not just the learner's own output. state.json and the shipped
+  // fixture were padded by a flat two car lengths per end in the research repo, with no relation to
+  // how much curb each band actually observed -- which is where the false "free" readings came from.
+  const scales = {}
+  const usable = withScale.map((b) => {
+    const clamped = clampBandExtension(b, geometry.scales[b.id])
+    scales[b.id] = clamped.scale
+    if (clamped.band.length < b.length - 0.5) {
+      notes.push(`${id}/${b.id}: extension clamped ${b.length.toFixed(0)} -> ${clamped.band.length.toFixed(0)} px (core ${clamped.band.coreT.map((v) => v.toFixed(0)).join('-')})`)
+    }
+    return clamped.band
+  })
 
   // Match the camera to its parking zone exactly as the desktop pipeline does, then bake the
   // result so the phone needs neither turf nor the 345 KB zone dataset.
@@ -165,7 +179,7 @@ for (const id of ids) {
         ...(m.source ? { zoneMatch: { source: m.source, confidence: m.confidence, why: m.why } } : {})
       }
     }),
-    scales: Object.fromEntries(usable.map((b) => [b.id, geometry.scales[b.id]])),
+    scales: Object.fromEntries(usable.map((b) => [b.id, scales[b.id]])),
     zone: primary,
     zones: shipped,
     provenance: geometry.provenance

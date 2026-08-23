@@ -107,6 +107,63 @@ export function extendBandBounded (band, scale, width, height, { maxFracOfCore =
   return extendBand(band, scale, width, height, allowedM / CAR_LENGTH_M)
 }
 
+/**
+ * Enforce the EXTEND_MAX_FRAC_OF_CORE bound on a band that is ALREADY extended.
+ *
+ * `extendBandBounded` only binds geometry this module produces. Every band in the shipped fixture
+ * predates it: they come from `state.json`, padded in the research repo by a flat two car lengths
+ * per end with no relation to how much curb was observed. Measured against their own cores, all
+ * fourteen are over — camera 76's far curb carries 20.4 m of guessed curb on 8.9 m of evidence, and
+ * camera 169 carries 23.9 m on 7.0 m. That guessed curb is where the false "free" readings live:
+ * camera 219 offered 10.3 m of parking across an intersection, entirely outside its core.
+ *
+ * Trimming is done in metres, per end, so perspective does not hand the near end a longer
+ * extension than the far one just for being closer to the camera. Returns a new band and a
+ * re-parametrised scale; a band already inside the bound is returned untouched.
+ */
+export function clampBandExtension (band, scale, { maxFracOfCore = EXTEND_MAX_FRAC_OF_CORE, maxCarLengths = EXTEND_CAR_LENGTHS } = {}) {
+  if (!scale?.ok || !Array.isArray(band.coreT) || band.coreT.length !== 2) return { band, scale }
+  const c0 = Math.min(band.coreT[0], band.coreT[1])
+  const c1 = Math.max(band.coreT[0], band.coreT[1])
+  if (!(c1 > c0) || c0 < 0 || c1 > band.length) return { band, scale }
+
+  const allowedM = Math.min(maxCarLengths * CAR_LENGTH_M, maxFracOfCore * metresBetween(scale, c0, c1))
+  // Walk inward from each end until the remaining extension fits in `allowedM`.
+  const trim0 = bisect(0, c0, (t) => metresBetween(scale, t, c0), allowedM)
+  const trim1 = (band.length - c1) - bisect(0, band.length - c1, (d) => metresBetween(scale, c1, c1 + d), allowedM)
+  if (trim0 < 0.5 && trim1 < 0.5) return { band, scale }
+
+  const at = (t) => [band.p0[0] + band.dir[0] * t, band.p0[1] + band.dir[1] * t]
+  const length = band.length - trim0 - trim1
+  const p0 = at(trim0), p1 = at(band.length - trim1)
+  const out = {
+    ...band,
+    p0: p0.map((v) => +v.toFixed(1)),
+    p1: p1.map((v) => +v.toFixed(1)),
+    length: +length.toFixed(1),
+    coreT: [+(c0 - trim0).toFixed(1), +(c1 - trim0).toFixed(1)]
+  }
+  // px/m = a + b·t with t' = t − trim0  →  a' = a + b·trim0
+  return { band: out, scale: { ...scale, a: +(scale.a + scale.b * trim0).toFixed(4) } }
+}
+
+/**
+ * The x in [lo, hi] where a monotone f(x) meets `target`, clamped to the interval when it never
+ * does. Direction is read off the endpoints, so the same call serves both ends of the band —
+ * metres shrink as the start walks inward and grow as the end walks outward.
+ */
+function bisect (lo, hi, f, target) {
+  const flo = f(lo), fhi = f(hi)
+  if ((flo - target) * (fhi - target) >= 0) return Math.abs(flo - target) <= Math.abs(fhi - target) ? lo : hi
+  const rising = fhi > flo
+  let a = lo, b = hi
+  for (let i = 0; i < 48; i++) {
+    const m = (a + b) / 2
+    if ((f(m) < target) === rising) a = m; else b = m
+  }
+  return (a + b) / 2
+}
+
 export function extendBand (band, scale, width, height, carLengths = EXTEND_CAR_LENGTHS) {
   if (!scale?.ok) return { band, scale }
   const margin = 4

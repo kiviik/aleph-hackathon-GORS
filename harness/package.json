@@ -18,6 +18,14 @@
     "collect:history": "node scripts/collect-history.mjs",
     "learn:bands": "node scripts/learn-bands.mjs",
     "debug:overlay": "node scripts/debug-overlay.mjs",
+    "diag:overlay": "node scripts/diag-overlay.mjs",
+    "diag:classes": "node scripts/diag-classes.mjs",
+    "clamp:bands": "node scripts/clamp-fixture-bands.mjs",
+    "bake:freerange": "node scripts/bake-free-range.mjs",
+    "prune:disabled": "node scripts/prune-disabled.mjs",
+    "diag:traffic": "node scripts/diag-traffic.mjs",
+    "diag:envelope": "node scripts/diag-envelope.mjs",
+    "diag:freeab": "node scripts/diag-freeab.mjs",
     "export:bands": "node scripts/export-mobile-assets.mjs"
   },
   "dependencies": {

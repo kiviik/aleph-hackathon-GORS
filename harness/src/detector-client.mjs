@@ -5,7 +5,7 @@ import sharp from 'sharp'
 export const DETECTOR_URL = process.env.DETECTOR_URL || 'http://127.0.0.1:3085'
 const SIZE = 640
 // Cars only, matching mobile/src/core/boxes.mjs.
-const VEHICLE_LABELS = new Set(['car'])
+const VEHICLE_LABELS = new Set(['car', 'truck', 'bus']) // must track mobile/src/core/boxes.mjs
 // Low on purpose: parked vehicles are confirmed by persistence across frames (stationary.mjs), not by score.
 export const SCORE_MIN = Number(process.env.SCORE_MIN || 0.25)
 
