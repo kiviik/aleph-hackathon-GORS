@@ -6,42 +6,362 @@
 // curb corridor, and the gaps that survived the appearance guard and the temporal filter.
 //
 // Band geometry, gaps and boxes are all in source-frame pixel space, so a single uniform scale
-// factor (view width / frame width) places all three together.
-import { useMemo } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+// factor (view width / frame width) places all three together. That width is measured with
+// onLayout rather than read off Dimensions: a Dimensions snapshot is wrong the moment the app is
+// rotated or put in split screen, and it silently misplaces every overlay when it is.
+import { memo, useCallback, useMemo, useState } from "react";
+
+import { Card, CardTitle, Muted, SectionLabel } from "../components/Card";
+import { EvidenceSpotRow } from "../components/EvidenceSpotRow";
+import { ListSeparator } from "../components/ListSeparator";
+import { ScreenHeader } from "../components/ScreenHeader";
+import { StatusDot, StatusText } from "../components/StatusDot";
+import {
+  Button,
+  ButtonText,
+  Image,
+  Pressable,
+  ScreenList,
+  StyleSheet,
+  Text,
+  View,
+  useThemedStyles,
+  type ListRenderItemInfo,
+  type Theme,
+  type ViewStyle,
+} from "../design-system";
 import type { FrameEvidence } from "../scan/scan";
-import type { Spot, Status } from "../spots/useSpots";
+import { agoPhrase, spotExtent, spotTitle, type Spot, type Status } from "../state/spots";
+import { useAppStore } from "../state/store";
 
-const GREEN = "#247b52";
-const RED = "#b6543b";
-const AMBER = "#ae7c27";
-const GREY = "#718075";
+const spotKeyExtractor = (spot: Spot) => spot.id;
 
-const statusColor: Record<Status, string> = { free: GREEN, occupied: RED, review: AMBER, unscanned: GREY };
-const statusText: Record<Status, string> = { free: "Free", occupied: "Occupied", review: "Review", unscanned: "Not scanned" };
+export function EvidenceScreen() {
+  const styles = useThemedStyles(evidenceStyles);
+  const spots = useAppStore((s) => s.spots);
+  const selectedSpotId = useAppStore((s) => s.selectedSpotId);
+  const selectSpot = useAppStore((s) => s.selectSpot);
 
-type Props = {
-  spot: Spot;
-  spots: Spot[];
-  evidence: Record<string, FrameEvidence>;
-  darkMode: boolean;
-  scanning: boolean;
-  onToggleTheme: () => void;
-  onSelect: (spot: Spot) => void;
-  onScan: () => void;
-  width: number;
-};
+  // This camera's own curbs first: they are the ones visible in the frame above. Sorting makes a
+  // new array but keeps the inner Spot references, which is what the virtualiser compares.
+  const ordered = useMemo(() => {
+    const selectedCameraId = spots.find((s) => s.id === selectedSpotId)?.cameraId;
+    return [...spots].sort(
+      (a, b) =>
+        Number(b.cameraId === selectedCameraId) - Number(a.cameraId === selectedCameraId)
+    );
+  }, [selectedSpotId, spots]);
 
-function ago(ts: number | null): string {
-  if (!ts) return "unknown";
-  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
-  if (s < 60) return `${s} s ago`;
-  const m = Math.round(s / 60);
-  return m < 60 ? `${m} min ago` : `${Math.round(m / 60)} h ago`;
+  const renderSpot = useCallback(
+    ({ item }: ListRenderItemInfo<Spot>) => (
+      <EvidenceSpotRow
+        id={item.id}
+        title={spotTitle(item)}
+        status={item.status}
+        cameraId={item.cameraId}
+        onPress={selectSpot}
+      />
+    ),
+    [selectSpot]
+  );
+
+  return (
+    <ScreenList
+      data={ordered}
+      renderItem={renderSpot}
+      keyExtractor={spotKeyExtractor}
+      ItemSeparatorComponent={ListSeparator}
+      ListHeaderComponent={evidenceHeader}
+      contentContainerStyle={styles.content}
+    />
+  );
 }
 
+const EvidenceHeader = memo(function EvidenceHeader() {
+  const styles = useThemedStyles(evidenceStyles);
+
+  const spots = useAppStore((s) => s.spots);
+  const selectedSpotId = useAppStore((s) => s.selectedSpotId);
+  const scanning = useAppStore((s) => s.scanning);
+  const scan = useAppStore((s) => s.scan);
+  const spot = useMemo(
+    () => spots.find((candidate) => candidate.id === selectedSpotId) ?? spots[0],
+    [selectedSpotId, spots]
+  );
+  const evidence = useAppStore((s) => (spot?.cameraId ? s.evidence[spot.cameraId] : undefined));
+
+  // Every band of the same camera is visible in the same frame, so draw them all and mark the
+  // selected one. Seeing the neighbouring corridor is what makes the geometry legible.
+  const siblings = useMemo(
+    () => spots.filter((s) => s.cameraId === spot?.cameraId && s.band),
+    [spot?.cameraId, spots]
+  );
+
+  const onScanCamera = useCallback(() => {
+    void scan(spot?.cameraId ? { cameraIds: [spot.cameraId] } : {});
+  }, [scan, spot?.cameraId]);
+
+  if (!spot) {
+    return (
+      <View style={styles.header}>
+        <ScreenHeader title="Evidence" />
+        <Muted>No curb segments are bundled with this build.</Muted>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.header}>
+      <ScreenHeader title="Evidence" />
+
+      <Card>
+        <View style={styles.selectedRow}>
+          <View style={styles.selectedCopy}>
+            <SectionLabel>SELECTED SEGMENT</SectionLabel>
+            <CardTitle>{spotTitle(spot)}</CardTitle>
+            <Muted>{spotExtent(spot, spot.sideLabel ? spot.number : null)}</Muted>
+          </View>
+          <View style={styles.selectedStatus}>
+            <StatusDot status={spot.status} size="sm" />
+            <StatusText status={spot.status} />
+          </View>
+        </View>
+      </Card>
+
+      {evidence ? (
+        <>
+          <EvidenceFrame evidence={evidence} spot={spot} siblings={siblings} />
+
+          <View style={styles.legend}>
+            <View style={styles.legendItem}>
+              <View style={[styles.swatch, styles.swatchVehicle]} />
+              <Text style={styles.legendText}>vehicle detected</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.swatch, styles.swatchCorridor]} />
+              <Text style={styles.legendText}>curb watched</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.swatch, styles.swatchGap]} />
+              <Text style={styles.legendText}>confirmed free</Text>
+            </View>
+          </View>
+
+          <Card>
+            <CardTitle>
+              {evidence.vehicles.length} vehicle{evidence.vehicles.length === 1 ? "" : "s"} in frame
+              ·{" "}
+              {spot.status === "free"
+                ? `${spot.freeMetres} m free · ≈${spot.carsFit} car${spot.carsFit === 1 ? "" : "s"}`
+                : `${spot.ticks ?? 0} of 3 consistent observations`}
+            </CardTitle>
+            <Muted>{spot.reason}</Muted>
+            {spot.rule ? <Muted>{spot.rule}</Muted> : null}
+            <Text style={styles.caveat}>
+              Boxes are the model&apos;s raw output. A segment only reads free after three
+              consistent observations and the appearance guard; a missed car leaves textured
+              asphalt, which reads unknown, never free.
+            </Text>
+          </Card>
+        </>
+      ) : (
+        <Card>
+          <Text style={styles.emptyIcon}>◎</Text>
+          <CardTitle>No frame for this camera yet</CardTitle>
+          <Muted>
+            Nothing is drawn here until the detector has actually run on a frame. Scanning fetches
+            one and shows you exactly what it judged.
+          </Muted>
+          <Button onPress={onScanCamera} disabled={scanning}>
+            <ButtonText>{scanning ? "Scanning…" : "Scan this camera"}</ButtonText>
+          </Button>
+        </Card>
+      )}
+
+      <SectionLabel>OTHER SEGMENTS</SectionLabel>
+    </View>
+  );
+});
+
+/**
+ * The frame plus its overlays. Owns its own measured width so nothing above it has to thread a
+ * Dimensions snapshot down, and so a rotation simply re-runs onLayout.
+ */
+const EvidenceFrame = memo(function EvidenceFrame({
+  evidence,
+  spot,
+  siblings,
+}: {
+  evidence: FrameEvidence;
+  spot: Spot;
+  siblings: readonly Spot[];
+}) {
+  const styles = useThemedStyles(evidenceStyles);
+  const onSelectCurb = useAppStore((s) => s.selectSpot);
+  const [width, setWidth] = useState(0);
+
+  const onLayout = useCallback((e: { nativeEvent: { layout: { width: number } } }) => {
+    // Primitive state: no need to compare before setting.
+    setWidth(e.nativeEvent.layout.width);
+  }, []);
+
+  const k = width > 0 ? width / evidence.width : 0;
+  const frameHeight = evidence.height * k;
+
+  const frameStyle = useMemo<ViewStyle>(() => ({ height: frameHeight }), [frameHeight]);
+
+  const corridors = useMemo(
+    () =>
+      k === 0
+        ? []
+        : siblings.map((sib) => ({
+            id: sib.id,
+            selected: sib.id === spot.id,
+            status: sib.status,
+            sideLabel: sib.sideLabel ?? null,
+            label: spotTitle(sib),
+            style: segmentStyle(sib.band, 0, sib.band.length, sib.band.halfWidth, k),
+          })),
+    [k, siblings, spot.id]
+  );
+
+  const vehicles = useMemo(
+    () =>
+      k === 0
+        ? []
+        : evidence.vehicles.map((v, index) => ({
+            key: `v-${index}`,
+            parked: v.parked,
+            style: {
+              left: v.box[0] * k,
+              top: v.box[1] * k,
+              width: (v.box[2] - v.box[0]) * k,
+              height: (v.box[3] - v.box[1]) * k,
+            } as ViewStyle,
+          })),
+    [evidence.vehicles, k]
+  );
+
+  const gaps = useMemo(
+    () =>
+      k === 0
+        ? []
+        : siblings.flatMap((sib) =>
+            (sib.gaps ?? []).map((g: any, index: number) => ({
+              key: `gap-${sib.id}-${index}`,
+              // A sibling's confirmed gap belongs to the OTHER curb; drawn identically it reads as
+              // free space on the segment the user is looking at.
+              other: sib.id !== spot.id,
+              style: segmentStyle(sib.band, g.t1, g.t2, sib.band.halfWidth, k),
+            }))
+          ),
+    [k, siblings, spot.id]
+  );
+
+  return (
+    <View style={[styles.frameCard, frameStyle]} onLayout={onLayout}>
+      {width > 0 ? (
+        <Image
+          source={evidence.dataUri}
+          style={styles.frameImage}
+          contentFit="cover"
+          // Without this, a recycled view keeps showing the previous camera's frame for a beat.
+          recyclingKey={evidence.cameraId}
+          cachePolicy="memory"
+        />
+      ) : null}
+
+      {/* The learned curb corridor, per band. Tapping one selects that curb: this is how the two
+          pins on the map are told apart -- by pointing at the curb each one means. */}
+      {corridors.map((c) => (
+        <CorridorOverlay
+          key={`band-${c.id}`}
+          id={c.id}
+          label={c.label}
+          sideLabel={c.sideLabel}
+          status={c.status}
+          selected={c.selected}
+          style={c.style}
+          onPress={onSelectCurb}
+        />
+      ))}
+
+      {/* Vehicle boxes, straight from the model. */}
+      {vehicles.map((v) => (
+        <View
+          key={v.key}
+          pointerEvents="none"
+          style={[styles.box, v.parked ? styles.boxParked : styles.boxMoving, v.style]}
+        />
+      ))}
+
+      {/* Confirmed free curb: the only thing here that ever means "you can park". */}
+      {gaps.map((g) => (
+        <View
+          key={g.key}
+          pointerEvents="none"
+          style={[g.style, styles.gap, g.other ? styles.gapOther : null]}
+        />
+      ))}
+
+      {evidence.stale ? (
+        <View style={styles.staleTag}>
+          <Text style={styles.staleText}>STALE FRAME</Text>
+        </View>
+      ) : null}
+      <View style={styles.sourceTag}>
+        <Text style={styles.sourceText}>
+          {evidence.cameraName} · {agoPhrase(evidence.capturedAt)}
+        </Text>
+      </View>
+    </View>
+  );
+});
+
+/** One curb corridor drawn over the frame, tappable so it can be selected by pointing at it. */
+const CorridorOverlay = memo(function CorridorOverlay({
+  id,
+  label,
+  sideLabel,
+  status,
+  selected,
+  style,
+  onPress,
+}: {
+  id: string;
+  label: string;
+  sideLabel: string | null;
+  status: Status;
+  selected: boolean;
+  style: ViewStyle;
+  onPress: (spotId: string) => void;
+}) {
+  const styles = useThemedStyles(evidenceStyles);
+  const handlePress = useCallback(() => onPress(id), [id, onPress]);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Select ${label}`}
+      onPress={handlePress}
+      style={[
+        style,
+        styles.corridor,
+        styles[status],
+        selected ? styles.corridorSelected : styles.corridorSibling,
+      ]}
+    >
+      {sideLabel ? (
+        <View style={[styles.sideBadge, selected ? styles.sideBadgeOn : null]} pointerEvents="none">
+          <Text style={styles.sideBadgeText}>{sideLabel}</Text>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+});
+
 /** A rotated rectangle laid along the band axis, from t0 to t1 in band-parameter space. */
-function segmentStyle(band: any, t0: number, t1: number, halfWidth: number, k: number) {
+function segmentStyle(band: any, t0: number, t1: number, halfWidth: number, k: number): ViewStyle {
   const [dx, dy] = band.dir;
   const mid = (t0 + t1) / 2;
   const cx = (band.p0[0] + dx * mid) * k;
@@ -49,7 +369,7 @@ function segmentStyle(band: any, t0: number, t1: number, halfWidth: number, k: n
   const w = Math.max(2, (t1 - t0) * k);
   const h = Math.max(2, halfWidth * 2 * k);
   return {
-    position: "absolute" as const,
+    position: "absolute",
     left: cx - w / 2,
     top: cy - h / 2,
     width: w,
@@ -58,254 +378,96 @@ function segmentStyle(band: any, t0: number, t1: number, halfWidth: number, k: n
   };
 }
 
-export default function EvidenceScreen(props: Props) {
-  const { spot, spots, evidence, darkMode: dark, scanning, onToggleTheme, onSelect, onScan, width } = props;
-  const ev = spot.cameraId ? evidence[spot.cameraId] : undefined;
+// Passed to the list as an *element*, not a component type: FlashList's getValidComponent only
+// accepts an element or a plain function, and memo() returns neither — a memo type is silently
+// dropped, leaving a list with no header at all.
+const evidenceHeader = <EvidenceHeader />;
 
-  // Every band of the same camera is visible in the same frame, so draw them all and mark the
-  // selected one. Seeing the neighbouring corridor is what makes the geometry legible.
-  const siblings = useMemo(
-    () => spots.filter((s) => s.cameraId === spot.cameraId && s.band),
-    [spots, spot.cameraId]
-  );
-
-  const k = ev ? width / ev.width : 1;
-  const frameH = ev ? ev.height * k : 0;
-
-  return (
-    <View style={[s.screen, dark && s.screenDark]}>
-      <View style={s.topBar}>
-        <View>
-          <Text style={[s.kicker, dark && s.mutedDark]}>WHAT THE DETECTOR SAW</Text>
-          <Text style={[s.title, dark && s.textDark]}>Evidence</Text>
-        </View>
-        <Pressable onPress={onToggleTheme} style={[s.themeButton, dark && s.themeButtonDark]}>
-          <Text style={s.themeIcon}>{dark ? "☀" : "☾"}</Text>
-        </Pressable>
-      </View>
-
-      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-        <View style={[s.header, dark && s.darkCard]}>
-          <View style={s.headerCopy}>
-            <Text style={[s.headerLabel, dark && s.mutedDark]}>SELECTED SEGMENT</Text>
-            <Text style={[s.headerTitle, dark && s.textDark]} numberOfLines={2}>
-              {spot.street} {spot.number}
-            </Text>
-            {spot.sideLabel || spot.accuracyM ? (
-              <Text style={[s.muted, dark && s.mutedDark]}>
-                {[spot.sideLabel, spot.spanM ? `~${Math.round(spot.spanM)} m of curb` : null, spot.accuracyM ? `±${spot.accuracyM} m` : null].filter(Boolean).join(" · ")}
-              </Text>
-            ) : null}
-          </View>
-          <View style={[s.pill, { backgroundColor: `${statusColor[spot.status]}22` }]}>
-            <View style={[s.pillDot, { backgroundColor: statusColor[spot.status] }]} />
-            <Text style={[s.pillText, { color: statusColor[spot.status] }]}>{statusText[spot.status]}</Text>
-          </View>
-        </View>
-
-        {!ev ? (
-          <View style={[s.empty, dark && s.darkCard]}>
-            <Text style={[s.emptyIcon, dark && s.textDark]}>◎</Text>
-            <Text style={[s.emptyTitle, dark && s.textDark]}>No frame for this camera yet</Text>
-            <Text style={[s.muted, dark && s.mutedDark]}>
-              Nothing is drawn here until the detector has actually run on a frame. Scanning fetches one
-              and shows you exactly what it judged.
-            </Text>
-            <Pressable onPress={onScan} disabled={scanning} style={[s.scanButton, scanning && s.scanButtonOff]}>
-              <Text style={s.scanButtonText}>{scanning ? "Scanning…" : "Scan this camera"}</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <>
-            <View style={[s.frameCard, { width, height: frameH }]}>
-              <Image source={{ uri: ev.dataUri }} style={{ width, height: frameH }} resizeMode="cover" />
-
-              {/* The learned curb corridor, per band. Tapping one selects that curb: this is how the
-                  two pins on the map are told apart -- by pointing at the curb each one means. */}
-              {siblings.map((sib) => {
-                const on = sib.id === spot.id;
-                return (
-                  <Pressable
-                    key={`band-${sib.id}`}
-                    onPress={() => onSelect(sib)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Select ${sib.street}${sib.sideLabel ? ` ${sib.sideLabel}` : ""}`}
-                    style={[
-                      segmentStyle(sib.band, 0, sib.band.length, sib.band.halfWidth, k),
-                      s.corridor,
-                      {
-                        borderColor: on ? statusColor[sib.status] : `${statusColor[sib.status]}88`,
-                        borderWidth: on ? 2.5 : 1.5,
-                      },
-                    ]}
-                  >
-                    {sib.sideLabel ? (
-                      <View style={[s.sideBadge, on && s.sideBadgeOn]} pointerEvents="none">
-                        <Text style={s.sideBadgeText}>{sib.sideLabel}</Text>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                );
-              })}
-
-              {/* Vehicle boxes, straight from the model. */}
-              {ev.vehicles.map((v, i) => (
-                <View
-                  key={`v-${i}`}
-                  pointerEvents="none"
-                  style={[
-                    s.box,
-                    {
-                      left: v.box[0] * k,
-                      top: v.box[1] * k,
-                      width: (v.box[2] - v.box[0]) * k,
-                      height: (v.box[3] - v.box[1]) * k,
-                      borderColor: v.parked ? RED : "rgba(182,84,59,.55)",
-                    },
-                  ]}
-                />
-              ))}
-
-              {/* Confirmed free curb: the only thing here that ever means "you can park". */}
-              {siblings.flatMap((sib) =>
-                (sib.gaps ?? []).map((g: any, i: number) => (
-                  <View
-                    key={`gap-${sib.id}-${i}`}
-                    pointerEvents="none"
-                    style={[
-                      segmentStyle(sib.band, g.t1, g.t2, sib.band.halfWidth, k),
-                      s.gap,
-                      // A sibling's confirmed gap belongs to the OTHER curb; drawn identically it
-                      // reads as free space on the segment the user is looking at.
-                      sib.id === spot.id ? null : s.gapOther,
-                    ]}
-                  />
-                ))
-              )}
-
-              {ev.stale && (
-                <View style={s.staleTag}>
-                  <Text style={s.staleText}>STALE FRAME</Text>
-                </View>
-              )}
-              <View style={s.sourceTag}>
-                <Text style={s.sourceText}>
-                  {ev.cameraName} · {ago(ev.capturedAt)}
-                </Text>
-              </View>
-            </View>
-
-            <View style={s.legend}>
-              <View style={s.legendItem}>
-                <View style={[s.legendSwatch, { borderColor: RED }]} />
-                <Text style={[s.legendText, dark && s.mutedDark]}>vehicle detected</Text>
-              </View>
-              <View style={s.legendItem}>
-                <View style={[s.legendSwatch, { borderColor: "#fff", backgroundColor: "rgba(255,255,255,.12)" }]} />
-                <Text style={[s.legendText, dark && s.mutedDark]}>curb watched</Text>
-              </View>
-              <View style={s.legendItem}>
-                <View style={[s.legendSwatch, { borderColor: GREEN, backgroundColor: "rgba(36,123,82,.45)" }]} />
-                <Text style={[s.legendText, dark && s.mutedDark]}>confirmed free</Text>
-              </View>
-            </View>
-
-            <View style={[s.readCard, dark && s.darkCard]}>
-              <Text style={[s.readTitle, dark && s.textDark]}>
-                {ev.vehicles.length} vehicle{ev.vehicles.length === 1 ? "" : "s"} in frame ·{" "}
-                {spot.status === "free"
-                  ? `${spot.freeMetres} m free · ≈${spot.carsFit} car${spot.carsFit === 1 ? "" : "s"}`
-                  : `${spot.ticks ?? 0} of 3 consistent observations`}
-              </Text>
-              <Text style={[s.muted, dark && s.mutedDark]}>{spot.reason}</Text>
-              {spot.rule ? <Text style={[s.muted, dark && s.mutedDark]}>{spot.rule}</Text> : null}
-              <Text style={[s.caveat, dark && s.mutedDark]}>
-                Boxes are the model's raw output. A segment only reads free after three consistent
-                observations and the appearance guard; a missed car leaves textured asphalt, which reads
-                unknown, never free.
-              </Text>
-            </View>
-          </>
-        )}
-
-        <Text style={[s.sectionLabel, dark && s.mutedDark]}>OTHER SEGMENTS</Text>
-        <View style={s.picker}>
-          {/* This camera's own curbs first: they are the ones visible in the frame above. */}
-          {[...spots].sort((a, b) => Number(b.cameraId === spot.cameraId) - Number(a.cameraId === spot.cameraId)).map((other) => {
-            const on = other.id === spot.id;
-            const has = other.cameraId ? Boolean(evidence[other.cameraId]) : false;
-            return (
-              <Pressable
-                key={other.id}
-                onPress={() => onSelect(other)}
-                style={[s.chip, dark && s.darkCard, on && s.chipOn]}
-              >
-                <View style={[s.chipDot, { backgroundColor: statusColor[other.status] }]} />
-                <Text style={[s.chipText, dark && s.textDark, on && s.chipTextOn]} numberOfLines={1}>
-                  {other.street} {other.sideLabel ? `· ${other.sideLabel}` : other.number}
-                </Text>
-                {!has && <Text style={[s.chipPending, on && s.chipTextOn]}>no frame</Text>}
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
-  screen: { flex: 1, paddingHorizontal: 18 },
-  screenDark: { backgroundColor: "#101713" },
-  topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 14, paddingBottom: 12 },
-  kicker: { color: "#718075", fontSize: 10, fontWeight: "700", letterSpacing: 1.4 },
-  title: { color: "#1f2d25", fontSize: 25, fontWeight: "800", letterSpacing: -0.9, marginTop: 3 },
-  themeButton: { width: 34, height: 34, alignItems: "center", justifyContent: "center", borderRadius: 11, borderWidth: 1, borderColor: "#d8e0d5", backgroundColor: "#fffdf8" },
-  themeButtonDark: { borderColor: "#405548", backgroundColor: "#26372c" },
-  themeIcon: { color: "#46614d", fontSize: 18, fontWeight: "700" },
-  content: { paddingBottom: 24 },
-  header: { flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 14, backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#e0e2da", marginBottom: 10 },
-  headerCopy: { flex: 1 },
-  headerLabel: { color: "#859287", fontSize: 9, fontWeight: "800", letterSpacing: 1.1 },
-  headerTitle: { color: "#26352c", fontSize: 15, fontWeight: "800", marginTop: 3 },
-  pill: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 18 },
-  pillDot: { width: 7, height: 7, borderRadius: 4 },
-  pillText: { fontSize: 10, fontWeight: "800" },
-  frameCard: { borderRadius: 16, overflow: "hidden", backgroundColor: "#dfe7de", borderWidth: 1, borderColor: "#d9e1d6" },
-  corridor: { borderWidth: 1.5, borderRadius: 2, backgroundColor: "rgba(255,255,255,.10)" },
-  gap: { borderWidth: 1.5, borderColor: GREEN, borderRadius: 2, backgroundColor: "rgba(36,123,82,.45)" },
-  gapOther: { opacity: 0.3 },
-  sideBadge: { position: "absolute", left: 2, top: -2, paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4, backgroundColor: "rgba(16,23,19,.62)" },
-  sideBadgeOn: { backgroundColor: "rgba(16,23,19,.85)" },
-  sideBadgeText: { color: "#fff", fontSize: 8, fontWeight: "800", letterSpacing: 0.3 },
-  box: { position: "absolute", borderWidth: 2, borderRadius: 3 },
-  staleTag: { position: "absolute", top: 10, right: 10, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 7, backgroundColor: "rgba(174,124,39,.92)" },
-  staleText: { color: "#fff", fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },
-  sourceTag: { position: "absolute", left: 10, bottom: 10, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, backgroundColor: "rgba(31,67,51,.88)" },
-  sourceText: { color: "#fff", fontSize: 9, fontWeight: "700" },
-  legend: { flexDirection: "row", flexWrap: "wrap", gap: 14, paddingVertical: 10 },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  legendSwatch: { width: 15, height: 11, borderWidth: 2, borderRadius: 3 },
-  legendText: { color: "#68766c", fontSize: 10 },
-  readCard: { padding: 12, borderRadius: 14, backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#e0e2da" },
-  readTitle: { color: "#26352c", fontSize: 13, fontWeight: "800" },
-  muted: { color: "#7a887e", fontSize: 11, marginTop: 4 },
-  mutedDark: { color: "#a7b4aa" },
-  textDark: { color: "#f4f7f1" },
-  darkCard: { backgroundColor: "#1a251f", borderColor: "#34473b" },
-  caveat: { color: "#8a968c", fontSize: 10, marginTop: 8, lineHeight: 14 },
-  empty: { alignItems: "center", padding: 22, borderRadius: 16, backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#e0e2da" },
-  emptyIcon: { color: "#5d6b62", fontSize: 26 },
-  emptyTitle: { color: "#34483a", fontSize: 15, fontWeight: "800", marginTop: 8, textAlign: "center" },
-  scanButton: { marginTop: 14, paddingHorizontal: 18, paddingVertical: 11, borderRadius: 999, backgroundColor: GREEN },
-  scanButtonOff: { backgroundColor: "#9fb9a9" },
-  scanButtonText: { color: "#fff", fontSize: 13, fontWeight: "700" },
-  sectionLabel: { color: "#79857b", fontSize: 10, fontWeight: "800", letterSpacing: 1.2, marginTop: 20, marginBottom: 8 },
-  picker: { gap: 7 },
-  chip: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 11, paddingVertical: 10, borderRadius: 11, backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#e0e2da" },
-  chipOn: { backgroundColor: "#1f4333", borderColor: "#1f4333" },
-  chipDot: { width: 8, height: 8, borderRadius: 4 },
-  chipText: { flex: 1, color: "#30473a", fontSize: 12, fontWeight: "700" },
-  chipTextOn: { color: "#fff" },
-  chipPending: { color: "#98a49a", fontSize: 9, fontWeight: "700" },
-});
+const evidenceStyles = (theme: Theme) =>
+  StyleSheet.create({
+    content: { paddingHorizontal: theme.space.lg, paddingBottom: theme.space.xl },
+    header: { gap: theme.space.md, paddingBottom: theme.space.md },
+    selectedRow: { flexDirection: "row", alignItems: "center", gap: theme.space.md },
+    selectedCopy: { flex: 1, gap: theme.space.xs },
+    selectedStatus: { flexDirection: "row", alignItems: "center", gap: theme.space.sm },
+    frameCard: {
+      width: "100%",
+      overflow: "hidden",
+      borderRadius: theme.radius.md,
+      borderCurve: "continuous",
+      backgroundColor: theme.color.surfaceMuted,
+      borderWidth: 1,
+      borderColor: theme.color.border,
+    },
+    frameImage: { ...StyleSheet.absoluteFillObject },
+    corridor: { borderRadius: 2, borderCurve: "continuous" },
+    corridorSelected: { borderWidth: 2.5, backgroundColor: "rgba(255,255,255,0.10)" },
+    corridorSibling: { borderWidth: 1.5, opacity: 0.55, backgroundColor: "rgba(255,255,255,0.06)" },
+    free: { borderColor: theme.color.free },
+    occupied: { borderColor: theme.color.occupied },
+    review: { borderColor: theme.color.review },
+    unscanned: { borderColor: theme.color.unscanned },
+    sideBadge: {
+      position: "absolute",
+      left: 2,
+      top: -2,
+      paddingHorizontal: theme.space.xs,
+      borderRadius: theme.radius.sm / 2,
+      borderCurve: "continuous",
+      backgroundColor: "rgba(16,23,19,0.62)",
+    },
+    sideBadgeOn: { backgroundColor: "rgba(16,23,19,0.85)" },
+    sideBadgeText: {
+      color: "#ffffff",
+      fontSize: theme.fontSize.caption,
+      fontWeight: "800",
+      letterSpacing: 0.3,
+    },
+    box: { position: "absolute", borderWidth: 2, borderRadius: 3, borderCurve: "continuous" },
+    boxParked: { borderColor: theme.color.occupied },
+    boxMoving: { borderColor: "rgba(182,84,59,0.55)" },
+    gapOther: { opacity: 0.3 },
+    gap: {
+      borderWidth: 1.5,
+      borderRadius: 2,
+      borderCurve: "continuous",
+      borderColor: theme.color.free,
+      backgroundColor: "rgba(36,123,82,0.45)",
+    },
+    staleTag: {
+      position: "absolute",
+      top: theme.space.sm,
+      right: theme.space.sm,
+      paddingHorizontal: theme.space.sm,
+      paddingVertical: theme.space.xs,
+      borderRadius: theme.radius.sm,
+      borderCurve: "continuous",
+      backgroundColor: "rgba(174,124,39,0.92)",
+    },
+    staleText: {
+      color: "#ffffff",
+      fontSize: theme.fontSize.caption,
+      fontWeight: "800",
+      letterSpacing: 0.6,
+    },
+    sourceTag: {
+      position: "absolute",
+      left: theme.space.sm,
+      bottom: theme.space.sm,
+      paddingHorizontal: theme.space.sm,
+      paddingVertical: theme.space.xs,
+      borderRadius: theme.radius.sm,
+      borderCurve: "continuous",
+      backgroundColor: theme.color.accentStrong,
+    },
+    sourceText: { color: theme.color.onAccent, fontSize: theme.fontSize.caption, fontWeight: "700" },
+    legend: { flexDirection: "row", flexWrap: "wrap", gap: theme.space.md },
+    legendItem: { flexDirection: "row", alignItems: "center", gap: theme.space.xs },
+    swatch: { width: 18, height: 12, borderWidth: 2, borderRadius: 3, borderCurve: "continuous" },
+    swatchVehicle: { borderColor: theme.color.occupied },
+    swatchCorridor: { borderColor: "#ffffff", backgroundColor: "rgba(255,255,255,0.12)" },
+    swatchGap: { borderColor: theme.color.free, backgroundColor: "rgba(36,123,82,0.45)" },
+    legendText: { color: theme.color.textMuted, fontSize: theme.fontSize.caption },
+    caveat: { color: theme.color.textMuted, fontSize: theme.fontSize.caption, lineHeight: 19 },
+    emptyIcon: { color: theme.color.textMuted, fontSize: theme.fontSize.title },
+  });

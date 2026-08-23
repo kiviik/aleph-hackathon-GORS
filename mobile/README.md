@@ -61,7 +61,8 @@ step. If it fails, `docs/hackaton/07-mobile.md` records the fallbacks.
 ## Test — no device, no model, no network
 
 ```bash
-npm test        # 75 tests
+npm test        # 88 tests
+npm run typecheck
 ```
 
 This covers the detector post-processing, letterbox geometry, dwell tracking, gap
@@ -116,11 +117,58 @@ npm run verify:pipeline 76 4      # full on-device path, live camera
 ## Layout
 
 ```
-worklet/        Bare worklet: @qvac/onnx session + framed IPC
-src/core/       plain ESM shared by Metro, bare-pack and node --test
-src/evidence/   boxes + band geometry -> {state, quality, confidence, roi, detections}
-src/policy/     the fail-closed decision gate
-src/scan/       per-camera scan, with state persisted across scans
-src/data/       bands.json fixture + Calgary frame fetch
-plugins/        Expo config plugin that links the addon into jniLibs
+worklet/            Bare worklet: @qvac/onnx session + framed IPC
+src/core/           plain ESM shared by Metro, bare-pack and node --test
+src/evidence/       boxes + band geometry -> {state, quality, confidence, roi, detections}
+src/policy/         the fail-closed decision gate
+src/scan/           per-camera scan, with state persisted across scans
+src/data/           bands.json fixture + Calgary frame fetch
+plugins/            Expo config plugin that links the addon into jniLibs
+
+App.tsx             providers only: SafeAreaProvider + NavigationContainer
+src/navigation/     native bottom tabs (UITabBarController / BottomNavigationView)
+src/screens/        one file per tab
+src/components/     memoised list rows, OsmMap, and small shared pieces
+src/design-system/  tokens + the re-exported primitives all UI code imports
+src/state/          the zustand store, the pure spot transforms, the rescan loop
+src/lib/            module-scope formatters
+assets/tabs/        tab bar icons (1x/2x/3x); iOS uses SF Symbols instead
 ```
+
+## UI conventions
+
+The UI follows the React Native performance rules in
+[`.claude/skills/vercel-react-native-skills`](../.claude/skills/vercel-react-native-skills).
+The parts worth knowing before editing a screen:
+
+- **Navigation is native.** `@bottom-tabs/react-navigation` drives a real
+  `UITabBarController` / `BottomNavigationView`. There is no `useState<Tab>` and no
+  hand-drawn tab bar; screens navigate with `navigation.navigate("Evidence")`.
+- **Every list is a `List`** (FlashList) from the design system — including the short
+  horizontal ones. `ScrollView` + `.map()` is not used for array-backed content, and a
+  virtualiser is never nested inside a `ScrollView`: section content goes in
+  `ListHeaderComponent` / `ListFooterComponent`, **passed as elements, not component
+  types** — FlashList silently drops a `memo()`-wrapped component there.
+- **Rows take primitives and are `memo`ised.** Anything that changes per row without the
+  list changing — favourite, selection, a reviewer's verdict, whether a camera has a frame
+  yet — is read inside the row with a store selector (`src/state/store.ts`), so one tap
+  re-renders one row.
+- **Shared state lives in the zustand store**, not in React Context, for the same reason.
+  The scan pipeline lives there too, so a scan survives a tab switch.
+- **All UI imports come from `src/design-system`**, never from `react-native`,
+  `@shopify/flash-list`, `expo-image` or `expo-status-bar` directly.
+- **Images go through `expo-image`**, never react-native's `Image`.
+- **The app is dark-only.** One palette in `design-system/theme.ts`, no theme switch and no
+  toggle. `useThemedStyles(factory)` builds each stylesheet once and hands back the same object
+  every render, so no `dark && styles.xDark` arrays and no inline style objects in rows. Four font
+  sizes only — hierarchy comes from weight and colour. `borderRadius` always ships with
+  `borderCurve: "continuous"`, elevation is a CSS `boxShadow` string, spacing is `gap`.
+- **Never `{value && <View/>}`** where `value` can be `""` or `0`; use a ternary with `null`.
+- **Nothing reads `Dimensions`.** The evidence overlay scales off a width measured with
+  `onLayout`, so a rotation or split screen cannot misplace the boxes.
+- **Safe areas** are handled by the platform: `contentInsetAdjustmentBehavior="automatic"`
+  on scrolling roots, the native tab bar for the bottom edge. `src/design-system/screen.tsx`
+  is the only place that touches insets for layout, and only on Android; the status-bar
+  strip is painted by `StatusBarScrim`, which is chrome, not padding.
+- **React Compiler is on** (`experiments.reactCompiler` in `app.json`). Destructure
+  functions off hooks and props at the top of render rather than dotting into objects.

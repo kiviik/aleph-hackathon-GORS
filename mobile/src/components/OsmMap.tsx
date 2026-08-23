@@ -13,15 +13,28 @@
 // fails, `status` goes to "failed" and the caller gets a placeholder with a retry instead of a
 // blank rectangle -- nothing here may ever fail silently.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { WebView } from "react-native-webview";
+
+import {
+  ActivityIndicator,
+  Button,
+  ButtonText,
+  StyleSheet,
+  Text,
+  View,
+  useTheme,
+  useThemedStyles,
+  type StyleProp,
+  type Theme,
+  type ViewStyle,
+} from "../design-system";
 
 export type OsmMarker = {
   id: string;
   latitude: number;
   longitude: number;
   color: string;
-  /** Popup heading. Omit for a bare pin with no popup (the static Street View fallback). */
+  /** Popup heading. Omit for a bare pin with no popup. */
   title?: string;
   status?: string;
   hint?: string;
@@ -42,7 +55,6 @@ type Props = {
   userLocation?: LatLng | null;
   /** false = a still picture: no drag, no zoom, no popups. */
   interactive?: boolean;
-  dark?: boolean;
   style?: StyleProp<ViewStyle>;
   onSelect?: (id: string) => void;
   /** Popup tapped. */
@@ -55,8 +67,7 @@ const LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 // If the map has not reported `ready` by now, assume the CDN or the tiles are unreachable.
 const READY_TIMEOUT_MS = 15000;
 
-function buildHtml(center: LatLng, zoom: number, interactive: boolean, dark: boolean): string {
-  const bg = dark ? "#101a14" : "#e9efe9";
+function buildHtml(center: LatLng, zoom: number, interactive: boolean, background: string): string {
   const on = interactive ? "true" : "false";
   return `<!doctype html>
 <html>
@@ -65,8 +76,8 @@ function buildHtml(center: LatLng, zoom: number, interactive: boolean, dark: boo
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <link rel="stylesheet" href="${LEAFLET_CSS}" />
 <style>
-  html, body, #map { height: 100%; margin: 0; padding: 0; background: ${bg}; }
-  .leaflet-container { background: ${bg}; font-family: -apple-system, Roboto, sans-serif; }
+  html, body, #map { height: 100%; margin: 0; padding: 0; background: ${background}; }
+  .leaflet-container { background: ${background}; font-family: -apple-system, Roboto, sans-serif; }
   .pin { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.45); }
   .cal .meta { color: #6b776e; font-size: 11px; margin-top: 2px; }
   .me { width: 100%; height: 100%; border-radius: 50%; background: #2979ff; border: 2px solid #fff; box-shadow: 0 0 0 6px rgba(41,121,255,.22); }
@@ -219,19 +230,31 @@ function buildHtml(center: LatLng, zoom: number, interactive: boolean, dark: boo
 </html>`;
 }
 
-export default function OsmMap(props: Props) {
-  const { markers, center, zoom = 12, userLocation = null, interactive = true, dark = false, style, onSelect, onOpen } = props;
+export default function OsmMap({
+  markers,
+  center,
+  zoom = 12,
+  userLocation = null,
+  interactive = true,
+  style,
+  onSelect,
+  onOpen,
+}: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(mapStyles);
   const webRef = useRef<WebView>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
+  const background = theme.color.surfaceMuted;
+
   // The HTML is built once per attempt. Marker data is pushed in afterwards so that a scan
   // result never remounts the WebView and throws away the user's pan/zoom.
   const html = useMemo(
-    () => buildHtml(center, zoom, interactive, dark),
+    () => buildHtml(center, zoom, interactive, background),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [center.latitude, center.longitude, zoom, interactive, dark, attempt]
+    [center.latitude, center.longitude, zoom, interactive, background, attempt]
   );
 
   const push = useCallback(() => {
@@ -253,87 +276,98 @@ export default function OsmMap(props: Props) {
     return () => clearTimeout(t);
   }, [status, attempt]);
 
-  const retry = () => {
+  const retry = useCallback(() => {
     setError(null);
     setStatus("loading");
-    setAttempt((n) => n + 1);
-  };
+    setAttempt((prev) => prev + 1);
+  }, []);
 
-  const onMessage = (e: any) => {
-    let msg: any;
-    try {
-      msg = JSON.parse(e.nativeEvent.data);
-    } catch {
-      return;
-    }
-    if (msg.type === "ready") setStatus("ready");
-    else if (msg.type === "select") onSelect?.(msg.id);
-    else if (msg.type === "open") onOpen?.(msg.id);
-    else if (msg.type === "error") {
-      setStatus("failed");
-      setError(String(msg.error));
-    }
-  };
+  const onMessage = useCallback(
+    (e: any) => {
+      let msg: any;
+      try {
+        msg = JSON.parse(e.nativeEvent.data);
+      } catch {
+        return;
+      }
+      if (msg.type === "ready") setStatus("ready");
+      else if (msg.type === "select") onSelect?.(msg.id);
+      else if (msg.type === "open") onOpen?.(msg.id);
+      else if (msg.type === "error") {
+        setStatus("failed");
+        setError(String(msg.error));
+      }
+    },
+    [onOpen, onSelect]
+  );
+
+  const onFailed = useCallback(() => {
+    setStatus("failed");
+    setError("The map failed to load.");
+  }, []);
 
   // The guard. A map that cannot draw says so; it never leaves an empty rectangle behind that
   // could be mistaken for "no parking found here".
   if (status === "failed") {
     return (
-      <View style={[s.fallback, dark && s.fallbackDark, style]}>
-        <Text style={[s.icon, dark && s.textDark]}>◎</Text>
-        <Text style={[s.title, dark && s.textDark]}>Map unavailable</Text>
-        <Text style={[s.body, dark && s.bodyDark]}>{error ?? "The map could not be loaded."}</Text>
-        <Text style={[s.body, dark && s.bodyDark]}>Scanning and detection are unaffected.</Text>
-        <Pressable onPress={retry} style={s.retry} accessibilityRole="button">
-          <Text style={s.retryText}>Try again</Text>
-        </Pressable>
+      <View style={[styles.fallback, style]}>
+        <Text style={styles.icon}>◎</Text>
+        <Text style={styles.title}>Map unavailable</Text>
+        <Text style={styles.body}>{error ?? "The map could not be loaded."}</Text>
+        <Text style={styles.body}>Scanning and detection are unaffected.</Text>
+        <Button onPress={retry}>
+          <ButtonText>Try again</ButtonText>
+        </Button>
       </View>
     );
   }
 
   return (
-    <View style={[s.wrap, style]}>
+    <View style={[styles.wrap, style]}>
       <WebView
         key={attempt}
         ref={webRef}
         source={{ html }}
-        originWhitelist={["*"]}
+        originWhitelist={ORIGIN_WHITELIST}
         javaScriptEnabled
         domStorageEnabled
         scrollEnabled={false}
         overScrollMode="never"
         androidLayerType="hardware"
-        style={s.web}
+        style={styles.web}
         onMessage={onMessage}
-        onError={() => {
-          setStatus("failed");
-          setError("The map failed to load.");
-        }}
-        onHttpError={() => {
-          setStatus("failed");
-          setError("The map failed to load.");
-        }}
+        onError={onFailed}
+        onHttpError={onFailed}
       />
-      {status === "loading" && (
-        <View style={[s.loading, dark && s.fallbackDark]} pointerEvents="none">
-          <ActivityIndicator size="small" color="#247b52" />
+      {status === "loading" ? (
+        <View style={styles.loading} pointerEvents="none">
+          <ActivityIndicator size="small" color={theme.color.accent} />
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
 
-const s = StyleSheet.create({
-  wrap: { overflow: "hidden" },
-  web: { flex: 1, backgroundColor: "transparent" },
-  loading: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", backgroundColor: "#e9efe9" },
-  fallback: { alignItems: "center", justifyContent: "center", padding: 20, backgroundColor: "#e9efe9" },
-  fallbackDark: { backgroundColor: "#101a14" },
-  icon: { fontSize: 26, color: "#5d6b62", marginBottom: 6 },
-  title: { fontSize: 15, fontWeight: "700", color: "#1f2a23", marginBottom: 4 },
-  body: { fontSize: 12, color: "#6b776e", textAlign: "center" },
-  bodyDark: { color: "#9aaa9e" },
-  textDark: { color: "#eaf2ec" },
-  retry: { marginTop: 12, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: "#247b52" },
-  retryText: { color: "#fff", fontSize: 13, fontWeight: "600" },
-});
+const ORIGIN_WHITELIST = ["*"];
+
+const mapStyles = (theme: Theme) =>
+  StyleSheet.create({
+    wrap: { overflow: "hidden" },
+    web: { flex: 1, backgroundColor: "transparent" },
+    loading: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.color.surfaceMuted,
+    },
+    fallback: {
+      alignItems: "center",
+      justifyContent: "center",
+      gap: theme.space.sm,
+      padding: theme.space.xl,
+      backgroundColor: theme.color.surfaceMuted,
+    },
+    icon: { fontSize: theme.fontSize.title, color: theme.color.textMuted },
+    title: { fontSize: theme.fontSize.body, fontWeight: "700", color: theme.color.text },
+    body: { fontSize: theme.fontSize.caption, color: theme.color.textMuted, textAlign: "center" },
+  });

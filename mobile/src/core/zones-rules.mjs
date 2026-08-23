@@ -10,6 +10,19 @@ const TZ = 'America/Edmonton'
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
 let _icu = null
+let _wallClock = null
+
+/**
+ * Intl objects are expensive to build, so the wall-clock formatter is created once and reused.
+ * Lazily, not at module load: it is only ever reached after tzSupport() has proved that
+ * constructing it with a named time zone actually works on this runtime.
+ */
+function wallClockFormat () {
+  if (_wallClock === null) {
+    _wallClock = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+  }
+  return _wallClock
+}
 
 /** Does this runtime actually apply the America/Edmonton zone? Cached. */
 export function tzSupport () {
@@ -50,7 +63,7 @@ function mountainOffsetHours (date) {
  */
 export function localNow (date = new Date(), opts = {}) {
   if (!opts.forceFallback && tzSupport()) {
-    const parts = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+    const parts = wallClockFormat().formatToParts(date)
     const get = (t) => parts.find((p) => p.type === t)?.value
     const dow = DAYS.indexOf(get('weekday').toUpperCase().slice(0, 3))
     return { dow, minutes: Number(get('hour')) * 60 + Number(get('minute')) }

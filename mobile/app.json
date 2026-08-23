@@ -5,8 +5,12 @@
     "version": "1.0.0",
     "platforms": ["android", "ios"],
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "scheme": "baestaciona",
+    "assetBundlePatterns": ["assets/**"],
+    "experiments": {
+      "reactCompiler": true
+    },
     "plugins": [
       [
         "expo-build-properties",
