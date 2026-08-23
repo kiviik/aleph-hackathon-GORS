@@ -3,6 +3,7 @@
 export {
   FlashList as List,
   type FlashListProps as ListProps,
+  type FlashListRef as ListRef,
   type ListRenderItem,
   type ListRenderItemInfo,
 } from "@shopify/flash-list";

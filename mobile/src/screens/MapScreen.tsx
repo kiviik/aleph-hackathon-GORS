@@ -280,10 +280,12 @@ export function MapScreen({ navigation }: Props) {
     [setQuery, setStatusFilter]
   );
 
+  // Both ways into Evidence -- the pin popup's "Tap to see the frame" and the sheet's button --
+  // are a request for the image, so both carry the nonce that scrolls it back into view.
   const onOpenEvidence = useCallback(
     (spotId: string) => {
       selectSpot(spotId);
-      navigate("Evidence");
+      navigate("Evidence", { frameNonce: Date.now() });
     },
     [navigate, selectSpot]
   );
@@ -308,7 +310,10 @@ export function MapScreen({ navigation }: Props) {
     if (selected) toggleFavorite(selected.id);
   }, [selected, toggleFavorite]);
 
-  const onOpenSelectedEvidence = useCallback(() => navigate("Evidence"), [navigate]);
+  const onOpenSelectedEvidence = useCallback(
+    () => navigate("Evidence", { frameNonce: Date.now() }),
+    [navigate]
+  );
 
   const onToggleSheet = useCallback(
     () => snapTo(sheetIndex === 0 ? 1 : 0),

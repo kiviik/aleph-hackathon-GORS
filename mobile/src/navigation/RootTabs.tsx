@@ -13,7 +13,15 @@ import { SavedScreen } from "../screens/SavedScreen";
 
 export type RootTabParamList = {
   Map: undefined;
-  Evidence: undefined;
+  /**
+   * `frameNonce` means "I came here for the frame, put it back in view". A native tab keeps its
+   * scroll offset, so arriving from the map otherwise drops you wherever you last left the list --
+   * usually somewhere down in OTHER SEGMENTS, with the actual evidence above the fold.
+   *
+   * It is a nonce rather than a flag because the request repeats: tapping the same pin twice has
+   * to scroll twice, and an unchanged param would look like nothing was asked for.
+   */
+  Evidence: { frameNonce?: number } | undefined;
   Saved: undefined;
 };
 

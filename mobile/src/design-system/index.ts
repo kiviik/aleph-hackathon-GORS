@@ -3,7 +3,13 @@
 export { ActivityIndicator, type ActivityIndicatorProps } from "./activity-indicator";
 export { Button, ButtonIcon, ButtonText, type ButtonVariant } from "./button";
 export { Image, type ImageProps } from "./image";
-export { List, type ListProps, type ListRenderItem, type ListRenderItemInfo } from "./list";
+export {
+  List,
+  type ListProps,
+  type ListRef,
+  type ListRenderItem,
+  type ListRenderItemInfo,
+} from "./list";
 export {
   Animated,
   Easing,

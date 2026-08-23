@@ -4,7 +4,7 @@
 // `contentInsetAdjustmentBehavior="automatic"` on the root scrollable, and the native tab bar
 // takes care of the bottom edge. Android has no equivalent for the top edge, so the inset is
 // applied there — and only there — rather than wrapping everything in a SafeAreaView.
-import { useMemo, type ReactNode } from "react";
+import { useMemo, type ReactNode, type Ref } from "react";
 import {
   Platform,
   StyleSheet,
@@ -13,7 +13,7 @@ import {
   type ViewStyle,
 } from "react-native";
 
-import { List, type ListProps } from "./list";
+import { List, type ListProps, type ListRef } from "./list";
 import { useSafeAreaInsets } from "./safe-area";
 import { ScrollView } from "./scroll-view";
 import { useTheme } from "./use-theme";
@@ -97,8 +97,15 @@ export function ScreenScrollView({
 /** A screen whose root *is* the list. Same inset story, no ScrollView wrapping a virtualiser. */
 export function ScreenList<TItem>({
   contentContainerStyle,
+  listRef,
   ...props
-}: ListProps<TItem>) {
+}: ListProps<TItem> & {
+  /**
+   * Handle on the virtualiser. A generic component cannot be wrapped in forwardRef without losing
+   * its type parameter, so the ref travels as an ordinary prop.
+   */
+  listRef?: Ref<ListRef<TItem>>;
+}) {
   const theme = useTheme();
   const topInset = useUnhandledTopInset();
   // FlashList types `style` as a plain ViewStyle, so this one stays a single flattened object.
@@ -114,6 +121,7 @@ export function ScreenList<TItem>({
   return (
     <List
       {...props}
+      ref={listRef}
       style={containerStyle}
       contentContainerStyle={contentStyle}
       contentInsetAdjustmentBehavior="automatic"

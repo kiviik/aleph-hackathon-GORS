@@ -9,7 +9,8 @@
 // factor (view width / frame width) places all three together. That width is measured with
 // onLayout rather than read off Dimensions: a Dimensions snapshot is wrong the moment the app is
 // rotated or put in split screen, and it silently misplaces every overlay when it is.
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { NativeBottomTabScreenProps } from "@bottom-tabs/react-navigation";
 
 import { Card, CardTitle, Muted, SectionLabel } from "../components/Card";
 import { EvidenceSpotRow } from "../components/EvidenceSpotRow";
@@ -27,21 +28,44 @@ import {
   Text,
   View,
   useThemedStyles,
+  type ListRef,
   type ListRenderItemInfo,
   type Theme,
   type ViewStyle,
 } from "../design-system";
+import type { RootTabParamList } from "../navigation/RootTabs";
 import type { FrameEvidence } from "../scan/scan";
 import { agoPhrase, spotExtent, spotTitle, type Spot, type Status } from "../state/spots";
 import { useAppStore } from "../state/store";
 
 const spotKeyExtractor = (spot: Spot) => spot.id;
 
-export function EvidenceScreen() {
+type Props = NativeBottomTabScreenProps<RootTabParamList, "Evidence">;
+
+export function EvidenceScreen({ route }: Props) {
   const styles = useThemedStyles(evidenceStyles);
   const spots = useAppStore((s) => s.spots);
   const selectedSpotId = useAppStore((s) => s.selectedSpotId);
   const selectSpot = useAppStore((s) => s.selectSpot);
+
+  const listRef = useRef<ListRef<Spot>>(null);
+  const frameNonce = route.params?.frameNonce;
+
+  /**
+   * Put the frame back in view whenever which frame is being shown changes.
+   *
+   * The image is the point of this screen and it lives in the list header, so anything that swaps
+   * it has to scroll back up to it. Two things do: arriving from the map, which a native tab
+   * answers by restoring the scroll offset you left behind (landing you in OTHER SEGMENTS with the
+   * evidence above the fold), and tapping a row here, which changes the header and otherwise looks
+   * like the tap did nothing at all.
+   *
+   * Not animated: the header content has already changed under the old offset, so an animation
+   * would be a scroll through a frame that is no longer the one on screen.
+   */
+  useEffect(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [frameNonce, selectedSpotId]);
 
   // This camera's own curbs first: they are the ones visible in the frame above. Sorting makes a
   // new array but keeps the inner Spot references, which is what the virtualiser compares.
@@ -71,6 +95,7 @@ export function EvidenceScreen() {
   return (
     <View style={styles.root}>
       <ScreenList
+        listRef={listRef}
         data={ordered}
         renderItem={renderSpot}
         keyExtractor={spotKeyExtractor}
