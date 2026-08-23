@@ -6,7 +6,9 @@ export const SIZE = 640
 export const SCORE_MIN_RAW = 0.15 // detector-side floor; the client applies its own threshold
 export const SCORE_MIN = 0.25     // low on purpose: parked vehicles are confirmed by persistence, not score
 export const DEDUPE_IOU = 0.55
-export const VEHICLE_LABELS = new Set(['car', 'truck', 'bus', 'motorcycle'])
+// Cars only: the parking model counts car-sized spots, so trucks, buses and motorcycles
+// are deliberately not treated as occupants.
+export const VEHICLE_LABELS = new Set(['car'])
 
 export const LABELS = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
 
