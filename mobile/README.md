@@ -86,6 +86,12 @@ npm run verify:pipeline 76 4      # full on-device path, live camera
   network; **inference never leaves the phone**.
 - **The curb geometry was learned offline**, on a laptop, from hours of camera history.
   The phone consumes `src/data/bands.json` (15 cameras, 16 bands) — it does not learn it.
+- The offline learner is side-aware: it extracts one narrow line at a time and removes only that
+  line's inliers, so opposite curbs become separate bands instead of one widened corridor. At
+  runtime a detection is assigned to the nearest band only where perspective makes corridors
+  overlap. Regenerate `bands.json` from the original tracked history to apply this to a camera;
+  the checked-in fixture cannot reconstruct a missing side because it contains geometry, not raw
+  history.
 - Only those 15 cameras are covered, of 208.
 - A curb segment needs **three consistent observations** before it can read "free". One
   scan always shows `review`. That is the design, not a bug.

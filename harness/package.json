@@ -14,6 +14,7 @@
     "verify:preprocess": "node scripts/verify-mobile-preprocess.mjs",
     "verify:detection": "node scripts/verify-mobile-detection.mjs",
     "verify:pipeline": "node scripts/verify-mobile-pipeline.mjs",
+    "learn:bands": "node scripts/learn-bands.mjs",
     "export:bands": "node scripts/export-mobile-assets.mjs"
   },
   "dependencies": {

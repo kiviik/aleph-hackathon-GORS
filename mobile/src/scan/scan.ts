@@ -12,6 +12,8 @@ import { createBandState, updateBandState } from "../core/temporal.mjs";
 import { buildObservation, buildRules } from "../evidence/evidence.mjs";
 // @ts-ignore
 import { referenceDecision } from "../policy/policy.mjs";
+// @ts-ignore
+import { assignVehiclesToBands } from "../core/band.mjs";
 import { detector } from "../detector/client";
 import { status as modelStatus } from "../model/model";
 import { bytesToBase64, fetchFrame, haversineM, pointAlongZone, zoneHeading } from "../data/frames";
@@ -221,6 +223,7 @@ export async function scanCamera(
   }
 
   const results: BandResult[] = [];
+  const vehiclesByBand = assignVehiclesToBands(camera.bands, r.vehicles);
   for (const band of camera.bands) {
     const guarded = r.perBand[band.id];
     // Only a genuinely new frame advances the temporal filter; re-scanning a stale frame must not
@@ -232,7 +235,7 @@ export async function scanCamera(
       scale: camera.scales[band.id],
       bandState: mem.bandStates[band.id],
       guarded,
-      vehicles: r.vehicles,
+      vehicles: vehiclesByBand[band.id] || [],
       source: "calgary-traffic-camera",
       frame: {
         width: r.width,

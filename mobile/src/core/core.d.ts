@@ -30,6 +30,10 @@ declare module "*/core/temporal.mjs" {
   export function updateBandState(state: any, gapResult: any, opts?: { stale?: boolean; now?: number }): any;
   export function stableGaps(state: any, scale: any): any[];
 }
+declare module "*/core/band.mjs" {
+  export function inBand(band: any, point: number[], slack?: number): boolean;
+  export function assignVehiclesToBands(bands: any[], vehicles: any[]): Record<string, any[]>;
+}
 declare module "*/evidence/evidence.mjs" {
   export function buildObservation(args: any): any;
   export function buildRules(zone: any, at?: Date): any;

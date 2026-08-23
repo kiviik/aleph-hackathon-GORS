@@ -70,7 +70,18 @@ The only thing left unexercised is `@qvac/onnx` linking itself, which needs a de
 npm run verify:pipeline 76 4
 ```
 
-### 4. Band export — `npm run export:bands`
+### 4. Side-aware band learning — `npm run learn:bands -- history.jsonl`
+
+The learner fits one narrow curb line, removes only that line's inliers, and continues looking for
+another supported line. Cars parked on opposite sides therefore remain independent bands instead
+of pulling one wide fit toward the middle of the road. Its JSON output contains `bands` and fitted
+`scales` for review; it never overwrites `data/state.json` or the mobile fixture implicitly.
+
+The input can be a JSON observation array, `{ "observations": [...] }`, or JSONL with one
+observation per line. Each observation needs `vehicles[].box`; tracked `dwell` values are used when
+present and otherwise reconstructed in timestamp order. Use local, privacy-safe history only.
+
+### 5. Band export — `npm run export:bands`
 
 Band learning needs ~20 distinct frames per camera and is far too expensive for a phone, so it
 stays offline. The phone gets the *result*: band geometry, the fitted perspective scale, and the
@@ -88,10 +99,9 @@ needs neither `turf` nor the 340 KB zone dataset.
 | `data/snapshots/`, `data/debug-*.jpg` | 6.6 MB | archive — reference overlays from the research runs |
 
 The raw detection history those bands were learned from is **not** here. It is 208 cameras of
-per-frame `.jsonl` (~19 MB) and no script in this harness reads it: the band-learning stack
-(`bands.mjs`, `scale.mjs`, `stationary.mjs`, `history.mjs`) stayed in the `calgary-free-parking`
-research repo alongside it. `state.json` is therefore the trusted input for `export:bands`, taken
-on faith rather than recomputable here — re-derive it in the research repo if you need to.
+per-frame `.jsonl` (~19 MB). The side-aware learner can now consume an explicitly supplied local
+history, but `state.json` remains the trusted checked-in input for `export:bands`; no retained
+history means the existing geometry cannot be automatically reconstructed in a clean clone.
 `data/snapshots/labels.csv` is likewise inert: an unfilled label template for the accuracy-scoring
 script, which also stayed behind.
 

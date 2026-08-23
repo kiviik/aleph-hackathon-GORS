@@ -10,6 +10,7 @@ import { toSourceVehicles, dedupe, addSignatures } from './boxes.mjs'
 import { annotateLatest } from './stationary.mjs'
 import { computeGaps } from './gaps.mjs'
 import { guardGaps, energyAt } from './appearance.mjs'
+import { assignVehiclesToBands } from './band.mjs'
 
 export const FAR_CROP = { left: 0.1, top: 0.05, width: 0.8, height: 0.55 }
 /** The far crop only contributes small/distant boxes; large ones read better from the full frame. */
@@ -52,10 +53,12 @@ export function createFramePipeline ({ infer, tensor = null, scratch = null, max
     // Gap + texture guard per band, here rather than on the far side of IPC: the gray plane is
     // ~529 KB and has no business crossing a bridge.
     const perBand = {}
+    const vehiclesByBand = assignVehiclesToBands(bands, vehicles)
     for (const band of bands) {
       const scale = scales[band.id]
       if (!scale) continue
-      perBand[band.id] = guardGaps(gray, band, scale, computeGaps(band, scale, vehicles), vehicles)
+      const assigned = vehiclesByBand[band.id] || []
+      perBand[band.id] = guardGaps(gray, band, scale, computeGaps(band, scale, assigned), vehicles)
     }
 
     return {
