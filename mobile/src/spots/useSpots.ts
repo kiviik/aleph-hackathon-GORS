@@ -4,10 +4,12 @@
 // the legend and the saved tab all read from it and need no changes. Only the values become real.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   cameras,
   camerasByDistance,
   scanCamera,
+  usableBands,
   fixtureMeta,
   CAMERA_REFRESH_MS,
   DEFAULT_NEARBY,
@@ -16,7 +18,11 @@ import {
   type Camera,
   type FrameEvidence,
 } from "../scan/scan";
-import { pointAlongZone, zoneHeading } from "../data/frames";
+import { zoneHeading } from "../data/frames";
+// @ts-ignore
+import { bandSide, placeBand, zoneForBand } from "../core/placement.mjs";
+// @ts-ignore
+import { packVerdicts, restoreVerdicts } from "../core/verdicts.mjs";
 import type { PipelineStage, TraceEvent } from "../contracts";
 
 export type Status = "free" | "occupied" | "review" | "unscanned";
@@ -42,6 +48,21 @@ export type Spot = {
   cameraId?: string;
   bandId?: string;
   scanned?: boolean;
+  /** Which curb this is: a compass side when a zone matched it, else near/far in the camera view. */
+  sideKey?: string | null;
+  nearness?: string | null;
+  sideLabel?: string | null;
+  zoneId?: string | null;
+  /** Metres of uncertainty on the coordinate, and metres of curb the band can read. */
+  accuracyM?: number;
+  spanM?: number;
+  placement?: string;
+  /** The stretch of curb, as [lat, lng] pairs for Leaflet. */
+  curb?: [number, number][] | null;
+  /** Siblings that share a camera and must be told apart on the map. */
+  pairKey?: string;
+  /** When the frame behind this verdict was taken, so its age can be re-read after a restart. */
+  capturedAt?: number | null;
   /** Prebaked corridor geometry + the confirmed gaps, both in source-frame pixels. */
   band?: any;
   gaps?: any[];
@@ -77,9 +98,10 @@ function ago(ts: number | null | undefined): string {
 function seedSpots(): Spot[] {
   const out: Spot[] = [];
   for (const c of cameras as Camera[]) {
-    for (const band of c.bands as any[]) {
-      const [lng, lat] = pointAlongZone(c.zone, 0.5);
-      const { street, number } = splitAddress(c.zone.address);
+    // Seed and scan go through the same placement, so a pin never jumps on its first result.
+    for (const band of usableBands(c)) {
+      const zone = zoneForBand(c, band) ?? c.zone;
+      const { street, number } = splitAddress(zone.address ?? c.zone.address);
       out.push({
         id: `${c.id}-${band.id}`,
         cameraId: c.id,
@@ -87,19 +109,39 @@ function seedSpots(): Spot[] {
         band,
         street,
         number,
-        neighborhood: c.zone.brz || c.quadrant || "Calgary",
+        neighborhood: zone.brz || c.zone.brz || c.quadrant || "Calgary",
         status: "unscanned",
-        latitude: lat,
-        longitude: lng,
         confidence: "—",
         checked: "not checked",
-        heading: zoneHeading(c.zone),
         scanned: false,
         reason: "Sin escanear todavía.",
+        pairKey: c.id,
+        ...geo(c, band),
       });
     }
   }
   return out;
+}
+
+/** The map-facing half of a band: where it is, how well that is known, and which curb it is. */
+function geo(camera: Camera, band: any) {
+  const scale = camera.scales[band.id];
+  const zone = zoneForBand(camera, band) ?? camera.zone;
+  const p = placeBand(camera, band, scale);
+  const side = bandSide(camera, band, scale, usableBands(camera));
+  return {
+    latitude: p.lat,
+    longitude: p.lng,
+    heading: zone?.p0 && zone?.p1 ? zoneHeading(zone) : 0,
+    accuracyM: p.accuracyM,
+    spanM: p.spanM,
+    placement: p.placement,
+    zoneId: p.zoneId,
+    sideKey: side.key,
+    nearness: side.nearness,
+    sideLabel: side.label,
+    curb: (p.endpoints?.map(([lng, lat]: number[]) => [lat, lng]) ?? null) as [number, number][] | null,
+  };
 }
 
 function toSpot(prev: Spot, r: BandResult, camera: Camera): Spot {
@@ -113,8 +155,17 @@ function toSpot(prev: Spot, r: BandResult, camera: Camera): Spot {
     latitude: r.lat,
     longitude: r.lng,
     heading: r.heading,
+    accuracyM: r.accuracyM,
+    spanM: r.spanM,
+    placement: r.placement,
+    zoneId: r.zoneId,
+    sideKey: r.sideKey,
+    nearness: r.nearness,
+    sideLabel: r.sideLabel,
+    curb: (r.curb?.map(([lng, lat]: number[]) => [lat, lng]) ?? prev.curb ?? null) as [number, number][] | null,
     confidence: o.confidence ? `${Math.round(o.confidence * 100)}%` : "—",
     checked: ago(o.capturedAt),
+    capturedAt: o.capturedAt ?? null,
     carsFit: o.carsFit,
     freeMetres: o.freeMetres,
     decision: decision.decision,
@@ -125,6 +176,26 @@ function toSpot(prev: Spot, r: BandResult, camera: Camera): Spot {
     gaps: o.gaps ?? [],
     scanned: true,
   };
+}
+
+const SPOTS_KEY = "ba-estaciona-spots-v1";
+
+/**
+ * Last session's answers, so re-opening the app does not show "unscanned" for the five minutes the
+ * rotation needs to look at every camera again. What may be restored -- and what has gone stale --
+ * is decided by core/verdicts.mjs, which is unit-tested off-device; this only does the I/O.
+ */
+async function loadVerdicts(): Promise<Record<string, any>> {
+  try {
+    const raw = await AsyncStorage.getItem(SPOTS_KEY);
+    return restoreVerdicts(raw ? JSON.parse(raw) : null, fixtureMeta.exportedAt);
+  } catch {
+    return {};
+  }
+}
+
+function saveVerdicts(spots: Spot[]) {
+  AsyncStorage.setItem(SPOTS_KEY, JSON.stringify(packVerdicts(spots, fixtureMeta.exportedAt))).catch(() => {});
 }
 
 export type ScanProgress = { cameraId: string; stage: PipelineStage; status: TraceEvent["status"]; detail: string };
@@ -153,6 +224,21 @@ export function useSpots(
     // this latched true for the rest of the session and silently discard every scan result.
     cancelled.current = false;
     return () => { cancelled.current = true; };
+  }, []);
+
+  // Paint last session's verdicts before the first scan can land, so a returning user is not shown
+  // an all-grey map for the five minutes the rotation needs to revisit every camera. A restored
+  // verdict keeps the age of the frame it came from, and anything older than RESTORE_MAX_AGE_MS is
+  // dropped rather than presented as current.
+  useEffect(() => {
+    let live = true;
+    loadVerdicts().then((stored) => {
+      if (!live || !Object.keys(stored).length) return;
+      setSpots((current) =>
+        current.map((s) => (stored[s.id] ? { ...s, ...stored[s.id], checked: ago(stored[s.id].capturedAt) } : s))
+      );
+    });
+    return () => { live = false; };
   }, []);
 
   const scan = useCallback(
@@ -190,12 +276,14 @@ export function useSpots(
           });
           if (cancelled.current) return;
           if (ev) setEvidence((current) => ({ ...current, [ev.cameraId]: ev }));
-          setSpots((current) =>
-            current.map((s) => {
+          setSpots((current) => {
+            const next = current.map((s) => {
               const r = results.find((x) => `${x.cameraId}-${x.bandId}` === s.id);
               return r ? toSpot(s, r, camera) : s;
-            })
-          );
+            });
+            saveVerdicts(next);
+            return next;
+          });
         }
         setLastScanAt(Date.now());
       } catch (e: any) {
@@ -221,9 +309,13 @@ export function useSpots(
     let kicked = false;
     const start = () => {
       if (timer) return;
-      // Scan once straight away rather than making the user watch an untouched map for a minute.
-      // Only on the first foreground: re-kicking on every resume would re-fetch on every glance.
-      if (!kicked) { kicked = true; void scanRef.current({ rotate: true }); }
+      // Scan once straight away rather than making the user watch an untouched map for a minute,
+      // and cast a slightly wider net on that first pass: a first-ever launch has no stored
+      // verdicts to fall back on, so the opening burst is the only thing standing between the user
+      // and an all-grey map. Later ticks go back to DEFAULT_NEARBY, which is the cost the rotation
+      // is budgeted for. Only on the first foreground: re-kicking on every resume would re-fetch on
+      // every glance.
+      if (!kicked) { kicked = true; void scanRef.current({ rotate: true, count: MAX_NEARBY }); }
       timer = setInterval(() => { void scanRef.current({ rotate: true }); }, CAMERA_REFRESH_MS);
     };
     const stop = () => { if (timer) { clearInterval(timer); timer = null; } };

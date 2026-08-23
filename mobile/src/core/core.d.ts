@@ -32,7 +32,34 @@ declare module "*/core/temporal.mjs" {
 }
 declare module "*/core/band.mjs" {
   export function inBand(band: any, point: number[], slack?: number): boolean;
-  export function assignVehiclesToBands(bands: any[], vehicles: any[]): Record<string, any[]>;
+  export function assignVehiclesToBands(bands: any[], vehicles: any[], scales?: Record<string, any> | null): Record<string, any[]>;
+}
+declare module "*/core/verdicts.mjs" {
+  export const RESTORE_MAX_AGE_MS: number;
+  export const VERDICT_KEYS: string[];
+  export function verdictOf(spot: any): Record<string, any>;
+  export function packVerdicts(spots: any[], exportedAt: string): { exportedAt: string; spots: Record<string, any> };
+  export function restoreVerdicts(blob: any, exportedAt: string, now?: number): Record<string, any>;
+}
+declare module "*/core/placement.mjs" {
+  export const STREET_WIDTH_M: number;
+  export const MIN_ACCURACY_M: number;
+  export type Placement = {
+    lng: number; lat: number; accuracyM: number; placement: string; offsetM: number;
+    spanM: number; zoneId: string | null; endpoints: number[][] | null;
+  };
+  export function localFrame(origin: number[]): { toLocal(p: number[]): number[]; toGeo(p: number[]): number[] };
+  export function zoneAxis(zone: any): { origin: number[]; frame: any; u: number[]; normal: number[]; lengthM: number };
+  export function nearEnd(band: any, scale: any): "t0" | "t1" | null;
+  export function coreRange(band: any): number[];
+  export function metresFromNearEnd(band: any, scale: any, t: number): number;
+  export function bandSpanM(band: any, scale: any): number;
+  export function zoneForBand(camera: any, band: any): any;
+  export function bandSide(camera: any, band: any, scale: any, bands?: any[]): {
+    key: string | null; nearness: string | null; label: string | null; source: string;
+  };
+  export function offsetForSide(zone: any, sideKey: string | null, widthM?: number): number;
+  export function placeBand(camera: any, band: any, scale: any, opts?: { t?: number | null }): Placement;
 }
 declare module "*/evidence/evidence.mjs" {
   export function buildObservation(args: any): any;

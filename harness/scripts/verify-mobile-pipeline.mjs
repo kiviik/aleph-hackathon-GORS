@@ -8,6 +8,8 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { createFramePipeline } from '../../mobile/src/core/frame-pipeline.mjs'
+import { assignVehiclesToBands } from '../../mobile/src/core/band.mjs'
+import { bandSide, placeBand, zoneForBand } from '../../mobile/src/core/placement.mjs'
 import { SIZE } from '../../mobile/src/core/preprocess.mjs'
 import { createBandState, updateBandState } from '../../mobile/src/core/temporal.mjs'
 import { buildObservation, buildRules } from '../../mobile/src/evidence/evidence.mjs'
@@ -79,6 +81,9 @@ for (let scan = 1; scan <= SCANS; scan++) {
   })
   tracks = r.tracks
 
+  // Same per-band slice the phone judges: on a two-band camera, feeding every vehicle to both
+  // bands double-counts every car and the rehearsal stops matching scan.ts.
+  const vehiclesByBand = assignVehiclesToBands(cam.bands, r.vehicles, cam.scales)
   for (const b of cam.bands) {
     const guarded = r.perBand[b.id]
     updateBandState(states[b.id], guarded, { stale: f.stale })
@@ -87,14 +92,20 @@ for (let scan = 1; scan <= SCANS; scan++) {
       scale: cam.scales[b.id],
       bandState: states[b.id],
       guarded,
-      vehicles: r.vehicles,
+      vehicles: vehiclesByBand[b.id] || [],
       frame: { width: r.width, height: r.height, meanLuma: r.meanLuma, energy: r.energy, stale: f.stale, capturedAt: f.capturedAt }
     })
-    const decision = referenceDecision({ observation: obs, sector: { sector_id: cam.zone.id }, rules: buildRules(cam.zone) })
+    // Per band, exactly as scan.ts does it: a band's own zone when the fixture matched one.
+    const zone = zoneForBand(cam, b)
+    const rules = buildRules(zone)
+    const decision = referenceDecision({ observation: obs, sector: { sector_id: zone?.id ?? cam.zone.id }, rules })
+    const place = placeBand(cam, b, cam.scales[b.id])
+    const side = bandSide(cam, b, cam.scales[b.id], cam.bands)
     if (b.id === cam.bands[0].id) {
       console.log(`scan ${scan}  ${r.vehicles.length} vehicles  ${r.ms.decode}ms decode + ${r.ms.infer}ms infer  luma ${r.meanLuma} energy ${r.energy}${fresh ? '' : '  (camera not refreshed)'}`)
     }
-    console.log(`   band ${b.id}: ${obs.state}/${obs.quality} conf ${obs.confidence} ticks ${obs.ticks} — ${obs.carsFit} cars fit, ${obs.freeMetres} m  => ${decision.decision} (${decision.code})`)
-    if (scan === SCANS) console.log(`             ${obs.explanation}\n             rules: ${buildRules(cam.zone).explanation}`)
+    console.log(`   band ${b.id} [${side.label ?? 'no side'}, zone ${zone?.id ?? '—'}]: ${obs.state}/${obs.quality} conf ${obs.confidence} ticks ${obs.ticks} — ${obs.carsFit} cars fit, ${obs.freeMetres} m  => ${decision.decision} (${decision.code})`)
+    console.log(`             ${vehiclesByBand[b.id]?.length ?? 0} of ${r.vehicles.length} vehicles on this curb · place ${place.lat},${place.lng} ±${place.accuracyM} m (${place.placement}, ${place.spanM} m of curb)`)
+    if (scan === SCANS) console.log(`             ${obs.explanation}\n             rules: ${rules.explanation}`)
   }
 }

@@ -53,10 +53,13 @@ export function createFramePipeline ({ infer, tensor = null, scratch = null, max
     // Gap + texture guard per band, here rather than on the far side of IPC: the gray plane is
     // ~529 KB and has no business crossing a bridge.
     const perBand = {}
-    const vehiclesByBand = assignVehiclesToBands(bands, vehicles)
+    // A band with no fitted scale cannot be measured in metres at all. Report it instead of
+    // silently leaving perBand[id] undefined, which used to mark the band stale forever.
+    const skippedBands = []
+    const vehiclesByBand = assignVehiclesToBands(bands, vehicles, scales)
     for (const band of bands) {
       const scale = scales[band.id]
-      if (!scale) continue
+      if (!scale?.ok) { skippedBands.push(band.id); continue }
       const assigned = vehiclesByBand[band.id] || []
       perBand[band.id] = guardGaps(gray, band, scale, computeGaps(band, scale, assigned), vehicles)
     }
@@ -67,6 +70,7 @@ export function createFramePipeline ({ infer, tensor = null, scratch = null, max
       vehicles,
       tracks: nextTracks.map(({ box, sig, dwell, missed }) => ({ box, sig, dwell, missed })),
       perBand,
+      skippedBands,
       meanLuma: +luma.toFixed(1),
       energy: energy == null ? null : +energy.toFixed(2),
       ms: { decode: tDecode - t0, infer: tInfer - tDecode, total: Date.now() - t0 }

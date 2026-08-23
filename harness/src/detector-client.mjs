@@ -51,17 +51,17 @@ export async function letterbox (jpeg, crop = null) {
  * [{label, cls, score, box:[x1,y1,x2,y2], bottomCenter:[x,y], w, h}]
  */
 export async function detectVehicles (jpeg, { retries = 3, far = true, sides = true } = {}) {
-  const a = await detectOnce(jpeg, null, retries)
+  const a = await detectOnce(jpeg, null, retries, 'full')
   let all = [...a.vehicles], ms = a.inferenceMs
   if (far) {
-    const b = await detectOnce(jpeg, FAR_CROP, retries)
+    const b = await detectOnce(jpeg, FAR_CROP, retries, 'far')
     // keep far-crop boxes only when they are small (the crop exists for small objects; big ones are better from the full frame)
     all.push(...b.vehicles.filter((v) => Math.max(v.w, v.h) < 0.12 * a.width))
     ms += b.inferenceMs
   }
   if (sides) {
-    for (const crop of SIDE_CROPS) {
-      const c = await detectOnce(jpeg, crop, retries)
+    for (const [i, crop] of SIDE_CROPS.entries()) {
+      const c = await detectOnce(jpeg, crop, retries, i === 0 ? 'side-l' : 'side-r')
       // drop boxes touching the crop's inner edge (cut-off vehicles)
       const x1 = crop.left * a.width, x2 = (crop.left + crop.width) * a.width
       all.push(...c.vehicles.filter((v) => (crop.left === 0 ? v.box[2] < x2 - 2 : v.box[0] > x1 + 2)))
@@ -102,7 +102,7 @@ export function signature (rgb, width, height, box) {
   return sig
 }
 
-async function detectOnce (jpeg, crop, retries) {
+async function detectOnce (jpeg, crop, retries, pass = 'full') {
   const lb = await letterbox(jpeg, crop)
   let res
   for (let attempt = 0; ; attempt++) {
@@ -120,17 +120,25 @@ async function detectOnce (jpeg, crop, retries) {
     const x2 = (o.box[2] * SIZE - lb.padX) / lb.scale
     const y2 = (o.box[3] * SIZE - lb.padY) / lb.scale
     const box = [clamp(x1, 0, lb.width) + lb.offX, clamp(y1, 0, lb.height) + lb.offY, clamp(x2, 0, lb.width) + lb.offX, clamp(y2, 0, lb.height) + lb.offY].map((v) => +v.toFixed(1))
-    out.push({ label: o.label, cls: o.cls, score: o.score, box, bottomCenter: [+((box[0] + box[2]) / 2).toFixed(1), box[3]], w: +(box[2] - box[0]).toFixed(1), h: +(box[3] - box[1]).toFixed(1) })
+    out.push({ label: o.label, cls: o.cls, score: o.score, box, bottomCenter: [+((box[0] + box[2]) / 2).toFixed(1), box[3]], w: +(box[2] - box[0]).toFixed(1), h: +(box[3] - box[1]).toFixed(1), passes: [pass] })
   }
   return { vehicles: out, inferenceMs: ms, width: lb.full.width, height: lb.full.height }
 }
 
-/** Class-agnostic suppression: the end-to-end head can emit the same box as car and truck. */
+/**
+ * Class-agnostic suppression: the end-to-end head can emit the same box as car and truck.
+ *
+ * A suppressed duplicate donates its pass name to the survivor. That record is what lets the band
+ * learner be re-run over only the passes the PHONE runs: learning from 4-pass detections the
+ * 2-pass phone cannot reproduce would teach it curb that then reads as free space.
+ */
 export function dedupe (dets, iouThr = DEDUPE_IOU) {
   const sorted = [...dets].sort((a, b) => b.score - a.score)
   const kept = []
   for (const d of sorted) {
-    if (kept.every((k) => iou(k.box, d.box) < iouThr)) kept.push(d)
+    const hit = kept.find((k) => iou(k.box, d.box) >= iouThr)
+    if (!hit) { kept.push({ ...d, passes: [...(d.passes || [])] }); continue }
+    for (const pass of d.passes || []) if (!hit.passes?.includes(pass)) (hit.passes ||= []).push(pass)
   }
   return kept
 }

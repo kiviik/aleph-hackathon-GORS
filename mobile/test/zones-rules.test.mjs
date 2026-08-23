@@ -92,6 +92,17 @@ test('fixture integrity: every camera has bands, a scale per band, and a zone', 
       assert.ok(c.scales[b.id]?.ok, `camera ${id} band ${b.id} has no usable scale`)
       assert.ok(b.length > 0 && b.halfWidth > 0 && b.meanBoxH > 0)
       assert.ok(Math.abs(Math.hypot(b.dir[0], b.dir[1]) - 1) < 1e-3, 'dir must be a unit vector')
+      // Fixture v2 fields are optional, but a band that carries one must carry a usable one:
+      // a half-stated side is worse than none, because the UI would name the wrong curb.
+      if (b.zoneId) assert.ok(c.zones?.[b.zoneId], `camera ${id} band ${b.id} names zone ${b.zoneId}, which is not shipped`)
+      if (b.sideKey) assert.ok(['N', 'S', 'E', 'W'].includes(b.sideKey), `camera ${id} band ${b.id} side ${b.sideKey}`)
+      if (b.nearness) assert.ok(['near', 'far'].includes(b.nearness))
+    }
+    // Two bands of one camera are two different curbs: they may not claim the same side, the same
+    // zone or the same distance rank, or the map would draw one on top of the other.
+    for (const key of ['sideKey', 'nearness', 'zoneId']) {
+      const stated = c.bands.map((b) => b[key]).filter(Boolean)
+      assert.equal(new Set(stated).size, stated.length, `camera ${id} repeats ${key} across bands`)
     }
   }
 })

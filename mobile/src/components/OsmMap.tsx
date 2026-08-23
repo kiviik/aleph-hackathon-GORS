@@ -25,6 +25,12 @@ export type OsmMarker = {
   title?: string;
   status?: string;
   hint?: string;
+  /** Third popup line: extent and accuracy, e.g. "5 Av → 6 Av · ~15 m of curb, ±10 m". */
+  meta?: string;
+  /** The stretch of curb this pin stands for, as [lat, lng] pairs. Drawn instead of implying a point. */
+  curb?: [number, number][] | null;
+  /** Markers sharing this key are two curbs of one street and must never hide each other. */
+  pairKey?: string;
 };
 
 type LatLng = { latitude: number; longitude: number };
@@ -62,6 +68,7 @@ function buildHtml(center: LatLng, zoom: number, interactive: boolean, dark: boo
   html, body, #map { height: 100%; margin: 0; padding: 0; background: ${bg}; }
   .leaflet-container { background: ${bg}; font-family: -apple-system, Roboto, sans-serif; }
   .pin { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.45); }
+  .cal .meta { color: #6b776e; font-size: 11px; margin-top: 2px; }
   .me { width: 100%; height: 100%; border-radius: 50%; background: #2979ff; border: 2px solid #fff; box-shadow: 0 0 0 6px rgba(41,121,255,.22); }
   .cal { font-size: 13px; line-height: 1.35; min-width: 150px; }
   .cal b { display: block; font-size: 14px; margin-bottom: 2px; }
@@ -109,17 +116,60 @@ function buildHtml(center: LatLng, zoom: number, interactive: boolean, dark: boo
   var layer = L.layerGroup().addTo(map);
   var meMarker = null;
 
+  var placed = [];
+
+  function icon (m, dx, dy) {
+    return L.divIcon({
+      className: '',
+      html: '<div class="pin" style="background:' + m.color + '"></div>',
+      iconSize: [18, 18],
+      // Displacement goes through iconAnchor: Leaflet rewrites the element transform on every pan,
+      // and moving the latlng instead would put the pin somewhere it is not.
+      iconAnchor: [9 - dx, 9 - dy]
+    });
+  }
+
+  /**
+   * Two curbs of one street are ~12 m apart; the map opens at zoom 12, where that is half a pixel.
+   * Keep every marker at its true coordinate and separate them on screen instead, with a leader
+   * line back to the real point so the displacement is visible rather than silent.
+   */
+  function declutter () {
+    var buckets = {};
+    placed.forEach(function (p) {
+      var pt = map.latLngToLayerPoint(p.latlng);
+      var key = Math.round(pt.x / 20) + ':' + Math.round(pt.y / 20);
+      (buckets[key] = buckets[key] || []).push(p);
+    });
+    Object.keys(buckets).forEach(function (key) {
+      var group = buckets[key];
+      group.forEach(function (p, i) {
+        if (p.leader) { layer.removeLayer(p.leader); p.leader = null; }
+        if (group.length < 2) { p.marker.setIcon(icon(p.m, 0, 0)); return; }
+        var angle = (2 * Math.PI * i) / group.length;
+        var dx = Math.round(Math.cos(angle) * 14), dy = Math.round(Math.sin(angle) * 14);
+        p.marker.setIcon(icon(p.m, dx, dy));
+        var from = map.latLngToLayerPoint(p.latlng);
+        var to = map.layerPointToLatLng(L.point(from.x + dx, from.y + dy));
+        p.leader = L.polyline([p.latlng, to], { color: p.m.color, weight: 1, opacity: 0.8, dashArray: '2,3' }).addTo(layer);
+      });
+    });
+  }
+
+  map.on('zoomend', declutter);
+
   window.__setMarkers = function (list) {
     layer.clearLayers();
+    placed = [];
     list.forEach(function (m) {
-      var mk = L.marker([m.latitude, m.longitude], {
-        icon: L.divIcon({
-          className: '',
-          html: '<div class="pin" style="background:' + m.color + '"></div>',
-          iconSize: [18, 18],
-          iconAnchor: [9, 9]
-        })
-      }).addTo(layer);
+      // The curb this pin describes, drawn as a segment: a band reads a stretch, not a point.
+      if (m.curb && m.curb.length === 2) {
+        L.polyline(m.curb, { color: m.color, weight: 6, opacity: 0.55, lineCap: 'round' })
+          .addTo(layer)
+          .on('click', function () { post({ type: 'select', id: m.id }); });
+      }
+      var mk = L.marker([m.latitude, m.longitude], { icon: icon(m, 0, 0) }).addTo(layer);
+      placed.push({ m: m, marker: mk, latlng: L.latLng(m.latitude, m.longitude), leader: null });
       mk.on('click', function () { post({ type: 'select', id: m.id }); });
       if (m.title && interactive) {
         // Built with textContent, never string concatenation: street names are data.
@@ -135,6 +185,12 @@ function buildHtml(center: LatLng, zoom: number, interactive: boolean, dark: boo
           s.textContent = m.status;
           el.appendChild(s);
         }
+        if (m.meta) {
+          var mt = document.createElement('div');
+          mt.className = 'meta';
+          mt.textContent = m.meta;
+          el.appendChild(mt);
+        }
         if (m.hint) {
           var h = document.createElement('div');
           h.className = 'hint';
@@ -145,6 +201,7 @@ function buildHtml(center: LatLng, zoom: number, interactive: boolean, dark: boo
         mk.bindPopup(el);
       }
     });
+    declutter();
   };
 
   window.__setUser = function (u) {

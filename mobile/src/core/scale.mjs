@@ -22,6 +22,26 @@ export function groundExtent (band, box) {
 
 /**
  * Fit pxPerMetre(t) = a + b·t from parked cars supporting the band.
+ *
+ * KNOWN BIAS, deliberately left in place. `boxExtent` projects all four corners of the box, so it
+ * adds h·|dir_y| -- pure box height leaking into "length". Measured on the golden frame that is
+ * +1.5-1.9 m per car on camera 76's near band and +2.5-3.1 m on its far one, and the two bands are
+ * biased by different amounts because they sit at different angles.
+ *
+ * It is not fixed by swapping in `groundExtent` here: `computeGaps` shares the same extent
+ * function, so the errors currently cancel in the conservative direction (a car measures 4.6 m by
+ * construction, while an empty stretch -- which has no height to inflate -- reads 1.5-2.6x SHORT,
+ * so real gaps get dropped at MIN_GAP_M rather than invented). Changing only the fit would flip
+ * that optimistic and manufacture free space; changing both is also wrong, because `groundExtent`
+ * measures a near-end-on car at 1.3-1.5 m.
+ *
+ * The real fix is to fit px/m from the median centre-to-centre spacing of ADJACENT parked cars
+ * (5.5-6.0 m, no height leakage at any view angle), which must ship together with a re-learn of
+ * every scale plus an `extentModel` field in bands.json so the fixture and this module cannot
+ * drift apart. Until then, gap metres here are conservative, and `bandSpanM / slots` reads
+ * 2.0-3.0 m per slot on several cameras -- physically impossible for parallel parking, and the
+ * signal that this is still outstanding.
+ *
  * @returns {a, b, samples, ok}
  */
 export function fitScale (band, observations) {
@@ -63,12 +83,30 @@ export function metresBetween (scale, t1, t2) {
 export function pxForMetres (scale, t, metres) { return metres * pxPerMetre(scale, t) }
 
 export const EXTEND_CAR_LENGTHS = 2
+/**
+ * ... but never more than this share of what the band actually observed, per end.
+ *
+ * Two car lengths is an absolute figure, and on a short band it is nearly all extrapolation:
+ * measured over real history, camera 76's far curb learned 9.6 m of parked cars and was padded
+ * with 21.3 m of guessed curb (2.2x its own evidence), and camera 164's second band reached across
+ * a crosswalk into the intersection. Extending past a few observed slots is not "judging the curb
+ * just beyond the parked cars" any more, it is inventing curb.
+ */
+export const EXTEND_MAX_FRAC_OF_CORE = 0.5
 
 /**
  * Extend a learned band past each end by up to EXTEND_CAR_LENGTHS car lengths (in local pixels), clipped to the
  * frame. Parked cars only teach where cars *have* parked; the extension lets the gap logic — and the
  * asphalt-texture guard — judge the curb just beyond them. Returns a new band and a re-parametrised scale.
  */
+export function extendBandBounded (band, scale, width, height, { maxFracOfCore = EXTEND_MAX_FRAC_OF_CORE } = {}) {
+  if (!scale?.ok) return { band, scale }
+  const [c0, c1] = Array.isArray(band.coreT) && band.coreT.length === 2 ? band.coreT : [0, band.length]
+  const coreM = metresBetween(scale, Math.min(c0, c1), Math.max(c0, c1))
+  const allowedM = Math.min(EXTEND_CAR_LENGTHS * CAR_LENGTH_M, maxFracOfCore * coreM)
+  return extendBand(band, scale, width, height, allowedM / CAR_LENGTH_M)
+}
+
 export function extendBand (band, scale, width, height, carLengths = EXTEND_CAR_LENGTHS) {
   if (!scale?.ok) return { band, scale }
   const margin = 4

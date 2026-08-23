@@ -61,12 +61,12 @@ step. If it fails, `docs/hackaton/07-mobile.md` records the fallbacks.
 ## Test — no device, no model, no network
 
 ```bash
-npm test        # 51 tests
+npm test        # 75 tests
 ```
 
 This covers the detector post-processing, letterbox geometry, dwell tracking, gap
-geometry, the appearance texture guard, Calgary rule parsing, the timezone fallback and
-the whole decision matrix — by replaying `test/fixtures/detector-golden.json`, raw model
+geometry, per-curb band assignment and map placement, the appearance texture guard, Calgary rule
+parsing, the timezone fallback and the whole decision matrix — by replaying `test/fixtures/detector-golden.json`, raw model
 output recorded from the desktop sidecar. `src/core/frame-pipeline.mjs` is the *same*
 module the worklet runs, so what is verified here is what ships.
 
@@ -88,13 +88,26 @@ npm run verify:pipeline 76 4      # full on-device path, live camera
   The phone consumes `src/data/bands.json` (15 cameras, 16 bands) — it does not learn it.
 - The offline learner is side-aware: it extracts one narrow line at a time and removes only that
   line's inliers, so opposite curbs become separate bands instead of one widened corridor. At
-  runtime a detection is assigned to the nearest band only where perspective makes corridors
-  overlap. Regenerate `bands.json` from the original tracked history to apply this to a camera;
+  runtime a detection is assigned to **one** band — the nearest centreline in metres — so a car on
+  the far curb can no longer block the near one. Regenerate `bands.json` with the harness
+  (`collect:history` → `learn:bands` → `debug:overlay` → `export:bands`) to apply this to a camera;
   the checked-in fixture cannot reconstruct a missing side because it contains geometry, not raw
   history.
+- **Each curb is placed and judged on its own.** A band's pin is anchored where the camera meets the
+  zone line and walked along it by the band's own metres, clamped to the surveyed segment, with
+  `±accuracy` stated — it no longer slides to the mean gap centre, which resolved metres inside a
+  mapping whose own error is tens of metres. Where the fixture matches a zone per curb, each band is
+  judged under *its* rules: 47% of opposite-side zone pairs in the City data differ somewhere, and
+  25% differ in the restriction window itself.
 - Only those 15 cameras are covered, of 208.
 - A curb segment needs **three consistent observations** before it can read "free". One
   scan always shows `review`. That is the design, not a bug.
+- **Opening the app is not a blank slate.** The curb segments are drawn from the bundled fixture on
+  the first frame, and the last session's verdicts are restored with them — labelled with the age of
+  the frame they came from, and dropped entirely once that frame is over 30 minutes old, the same
+  cut-off at which the band's own history is discarded. Without that, re-opening showed an all-grey
+  map for the five minutes the camera rotation needs to revisit all 15 cameras, despite already
+  knowing the answers. A first-ever launch still has to download the model and take its own frames.
 - Two inference passes per frame instead of the desktop's four. Lower recall, but a missed
   car leaves a textured strip that the appearance guard marks *unknown*, never *free*.
 - Daytime only. Night, rain and snow are untested, and the quality thresholds in

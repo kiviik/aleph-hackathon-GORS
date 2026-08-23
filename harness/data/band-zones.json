@@ -1,0 +1,11 @@
+{
+ "note": "Human-verified band -> parking-zone assignments, applied by scripts/export-mobile-assets.mjs. An entry always wins over the automatic proposal, and an explicit null means 'this curb's zone is unknown' -- the app then reports occupancy but refuses to authorise parking, which is the honest answer when the law for that curb is not known. Verify against data/debug-<id>.jpg (npm run debug:overlay) plus Street View before adding a row: an automatic match is a heuristic over distance and apparent size, and cameras.json carries no camera pose, so pixels cannot be projected onto the ground. A confident wrong curb authorises parking inside a rush-hour ban.",
+ "fields": {
+  "zoneId": "id from data/zones.json, or null for 'unknown'",
+  "sideKey": "N | S | E | W, optional; defaults to the matched zone's blockSide",
+  "nearness": "near | far in the camera view, optional",
+  "verifiedBy": "how it was checked, e.g. 'streetview + data/debug-76.jpg'",
+  "verifiedAt": "YYYY-MM-DD"
+ },
+ "cameras": {}
+}

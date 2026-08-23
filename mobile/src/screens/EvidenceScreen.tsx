@@ -91,6 +91,11 @@ export default function EvidenceScreen(props: Props) {
             <Text style={[s.headerTitle, dark && s.textDark]} numberOfLines={2}>
               {spot.street} {spot.number}
             </Text>
+            {spot.sideLabel || spot.accuracyM ? (
+              <Text style={[s.muted, dark && s.mutedDark]}>
+                {[spot.sideLabel, spot.spanM ? `~${Math.round(spot.spanM)} m of curb` : null, spot.accuracyM ? `±${spot.accuracyM} m` : null].filter(Boolean).join(" · ")}
+              </Text>
+            ) : null}
           </View>
           <View style={[s.pill, { backgroundColor: `${statusColor[spot.status]}22` }]}>
             <View style={[s.pillDot, { backgroundColor: statusColor[spot.status] }]} />
@@ -115,19 +120,31 @@ export default function EvidenceScreen(props: Props) {
             <View style={[s.frameCard, { width, height: frameH }]}>
               <Image source={{ uri: ev.dataUri }} style={{ width, height: frameH }} resizeMode="cover" />
 
-              {/* The learned curb corridor, per band. */}
+              {/* The learned curb corridor, per band. Tapping one selects that curb: this is how the
+                  two pins on the map are told apart -- by pointing at the curb each one means. */}
               {siblings.map((sib) => {
                 const on = sib.id === spot.id;
                 return (
-                  <View
+                  <Pressable
                     key={`band-${sib.id}`}
-                    pointerEvents="none"
+                    onPress={() => onSelect(sib)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Select ${sib.street}${sib.sideLabel ? ` ${sib.sideLabel}` : ""}`}
                     style={[
                       segmentStyle(sib.band, 0, sib.band.length, sib.band.halfWidth, k),
                       s.corridor,
-                      { borderColor: on ? "#ffffff" : "rgba(255,255,255,.35)" },
+                      {
+                        borderColor: on ? statusColor[sib.status] : `${statusColor[sib.status]}88`,
+                        borderWidth: on ? 2.5 : 1.5,
+                      },
                     ]}
-                  />
+                  >
+                    {sib.sideLabel ? (
+                      <View style={[s.sideBadge, on && s.sideBadgeOn]} pointerEvents="none">
+                        <Text style={s.sideBadgeText}>{sib.sideLabel}</Text>
+                      </View>
+                    ) : null}
+                  </Pressable>
                 );
               })}
 
@@ -155,7 +172,13 @@ export default function EvidenceScreen(props: Props) {
                   <View
                     key={`gap-${sib.id}-${i}`}
                     pointerEvents="none"
-                    style={[segmentStyle(sib.band, g.t1, g.t2, sib.band.halfWidth, k), s.gap]}
+                    style={[
+                      segmentStyle(sib.band, g.t1, g.t2, sib.band.halfWidth, k),
+                      s.gap,
+                      // A sibling's confirmed gap belongs to the OTHER curb; drawn identically it
+                      // reads as free space on the segment the user is looking at.
+                      sib.id === spot.id ? null : s.gapOther,
+                    ]}
                   />
                 ))
               )}
@@ -191,7 +214,7 @@ export default function EvidenceScreen(props: Props) {
               <Text style={[s.readTitle, dark && s.textDark]}>
                 {ev.vehicles.length} vehicle{ev.vehicles.length === 1 ? "" : "s"} in frame ·{" "}
                 {spot.status === "free"
-                  ? `≈${spot.carsFit} car${spot.carsFit === 1 ? "" : "s"} fit · ${spot.freeMetres} m free`
+                  ? `${spot.freeMetres} m free · ≈${spot.carsFit} car${spot.carsFit === 1 ? "" : "s"}`
                   : `${spot.ticks ?? 0} of 3 consistent observations`}
               </Text>
               <Text style={[s.muted, dark && s.mutedDark]}>{spot.reason}</Text>
@@ -207,7 +230,8 @@ export default function EvidenceScreen(props: Props) {
 
         <Text style={[s.sectionLabel, dark && s.mutedDark]}>OTHER SEGMENTS</Text>
         <View style={s.picker}>
-          {spots.map((other) => {
+          {/* This camera's own curbs first: they are the ones visible in the frame above. */}
+          {[...spots].sort((a, b) => Number(b.cameraId === spot.cameraId) - Number(a.cameraId === spot.cameraId)).map((other) => {
             const on = other.id === spot.id;
             const has = other.cameraId ? Boolean(evidence[other.cameraId]) : false;
             return (
@@ -218,7 +242,7 @@ export default function EvidenceScreen(props: Props) {
               >
                 <View style={[s.chipDot, { backgroundColor: statusColor[other.status] }]} />
                 <Text style={[s.chipText, dark && s.textDark, on && s.chipTextOn]} numberOfLines={1}>
-                  {other.street} {other.number}
+                  {other.street} {other.sideLabel ? `· ${other.sideLabel}` : other.number}
                 </Text>
                 {!has && <Text style={[s.chipPending, on && s.chipTextOn]}>no frame</Text>}
               </Pressable>
@@ -250,6 +274,10 @@ const s = StyleSheet.create({
   frameCard: { borderRadius: 16, overflow: "hidden", backgroundColor: "#dfe7de", borderWidth: 1, borderColor: "#d9e1d6" },
   corridor: { borderWidth: 1.5, borderRadius: 2, backgroundColor: "rgba(255,255,255,.10)" },
   gap: { borderWidth: 1.5, borderColor: GREEN, borderRadius: 2, backgroundColor: "rgba(36,123,82,.45)" },
+  gapOther: { opacity: 0.3 },
+  sideBadge: { position: "absolute", left: 2, top: -2, paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4, backgroundColor: "rgba(16,23,19,.62)" },
+  sideBadgeOn: { backgroundColor: "rgba(16,23,19,.85)" },
+  sideBadgeText: { color: "#fff", fontSize: 8, fontWeight: "800", letterSpacing: 0.3 },
   box: { position: "absolute", borderWidth: 2, borderRadius: 3 },
   staleTag: { position: "absolute", top: 10, right: 10, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 7, backgroundColor: "rgba(174,124,39,.92)" },
   staleText: { color: "#fff", fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },

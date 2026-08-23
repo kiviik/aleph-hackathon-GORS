@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { referenceDecision, DEFAULT_CONFIDENCE_THRESHOLD } from '../src/policy/policy.mjs'
 import { buildObservation, buildRules, bandRoi, overlapWithRoi } from '../src/evidence/evidence.mjs'
 import { createBandState, updateBandState } from '../src/core/temporal.mjs'
-import { computeGaps } from '../src/core/gaps.mjs'
+import { computeGaps, CAR_SLOT_M, MIN_GAP_M } from '../src/core/gaps.mjs'
 import { guardGaps } from '../src/core/appearance.mjs'
 
 const band = { id: 'b0', p0: [100, 300], p1: [700, 300], dir: [1, 0], length: 600, halfWidth: 27, meanBoxH: 30, coreT: [0, 600] }
@@ -188,4 +188,43 @@ test('detections carry parked/moving so the UI cannot present traffic as a parke
   const obs = observe([moving, ...gapCurb], 4)
   const d = obs.detections.find((x) => x.overlap_with_roi > 0 && x.parked === false)
   assert.ok(d, 'a dwell-1 vehicle must be reported parked:false')
+})
+
+test('two curbs of one street can be judged differently in the same frame', () => {
+  // Measured over the City zone dataset: 47% of opposite-side pairs differ in some rule and 25%
+  // differ in the restriction window itself. Camera 76's own street is one of them -- zone 1716 on
+  // the E curb bans 15:30-18:00, zone 1695 on the W curb has no restriction at all. Applying one
+  // curb's law to the other is how the app would deny a legal spot, or authorise a banned one.
+  const obs = observe(gapCurb, 4)
+  assert.equal(obs.state, 'FREE')
+  const east = referenceDecision({ observation: obs, sector: { sector_id: rushZone.id }, rules: buildRules(rushZone, mon1730) })
+  const west = referenceDecision({ observation: obs, sector: { sector_id: openZone.id }, rules: buildRules(openZone, mon1730) })
+  assert.equal(east.decision, 'DO_NOT_PARK', JSON.stringify(east))
+  assert.equal(east.code, 'RULE_PROHIBITS')
+  assert.equal(west.decision, 'PARK', JSON.stringify(west))
+})
+
+test('a curb with no matched zone refuses when free, but still reports occupancy', () => {
+  // The far curb of a camera may have no zone match. Refusing is the honest answer for free space
+  // -- there is no law to check it against. Occupancy is rule-independent, though: a car parked
+  // there is a fact, and the app must keep saying so rather than hiding behind the missing zone.
+  const free = referenceDecision({ observation: observe(gapCurb, 4), sector, rules: buildRules(null) })
+  assert.equal(free.decision, 'REFUSE')
+  assert.equal(free.code, 'RULES_UNAVAILABLE')
+
+  const full = referenceDecision({ observation: observe(fullCurb, 4), sector, rules: buildRules(null) })
+  assert.equal(full.decision, 'DO_NOT_PARK', JSON.stringify(full))
+  assert.equal(full.code, 'NO_FREE_SPACE')
+})
+
+test('free metres and cars-fit can never disagree about whether there is space', () => {
+  // carsFit is floor(metres / CAR_SLOT_M) per gap, so it only stays consistent with freeMetres
+  // while the smallest reportable gap is at least one slot. Lower MIN_GAP_M for compact cars, or
+  // raise CAR_SLOT_M, and a curb starts reporting "10.8 m free, 0 cars fit".
+  assert.ok(MIN_GAP_M >= CAR_SLOT_M, `MIN_GAP_M ${MIN_GAP_M} must cover a slot of ${CAR_SLOT_M} m`)
+  for (const n of [1, 3, 4, 6]) {
+    const obs = observe(gapCurb, n)
+    if (obs.carsFit === 0) assert.equal(obs.freeMetres, 0, `${obs.freeMetres} m free but no car fits`)
+    if (obs.freeMetres > 0) assert.ok(obs.carsFit > 0)
+  }
 })
