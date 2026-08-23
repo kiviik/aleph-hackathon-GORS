@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, StyleSheet } from "react-native";
 import { detector, type Health } from "../detector/client";
+import { ensureDetector } from "../scan/scan";
 import { ensureModel, status as modelStatus, type ModelStatus, MODEL_URL, MODEL_LICENSE } from "../model/model";
 import { tzSupport } from "../core/zones-rules.mjs";
 import type { ScanProgress } from "../spots/useSpots";
@@ -53,6 +54,14 @@ export default function ScanScreen(props: Props) {
     try {
       const h = await detector.start();
       setHealth(h);
+      // Re-create the ONNX session when the model is already on disk. boot() used to stop at
+      // start(), so every relaunch showed "session: not loaded" and refused every scan until the
+      // user pressed the button again. A first run with no model lands in the catch below, which is
+      // not an engine failure -- the Model card already says "not downloaded".
+      try {
+        await ensureDetector();
+        setHealth(await detector.health());
+      } catch {}
     } catch (e: any) {
       // This is the Gate 0 failure surface. Say so plainly rather than showing an empty screen.
       setHealthError(String(e?.message || e));

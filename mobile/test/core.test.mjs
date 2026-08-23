@@ -8,7 +8,7 @@ import { annotateDwell, isParked, sameSignature, stepTracks } from '../src/core/
 import { inBand } from '../src/core/band.mjs'
 import { metresBetween, groundExtent } from '../src/core/scale.mjs'
 import { computeGaps, merge } from '../src/core/gaps.mjs'
-import { createBandState, updateBandState, stableGaps } from '../src/core/temporal.mjs'
+import { createBandState, updateBandState, stableGaps, MAX_GAP_MS } from '../src/core/temporal.mjs'
 import { guardGaps, energyAt } from '../src/core/appearance.mjs'
 import { dedupe } from '../src/core/boxes.mjs'
 
@@ -88,7 +88,7 @@ test('a moving vehicle over a gap makes it unknown, never free', () => {
   assert.equal(gaps.unknown.length, 1)
 })
 
-test('temporal: needs MIN_TICKS consistent observations; stale resets to nothing', () => {
+test('temporal: needs MIN_TICKS consistent observations; stale never reads free', () => {
   const hist = annotateDwell(syntheticHistory(40, { missingSlot: 5 }))
   const b = syntheticBand()
   const g = computeGaps(b, flatScale, hist[hist.length - 1].vehicles)
@@ -101,6 +101,40 @@ test('temporal: needs MIN_TICKS consistent observations; stale resets to nothing
   assert.ok(runs[0].metres >= 5.5)
   updateBandState(st, null, { stale: true })
   assert.equal(stableGaps(st, flatScale).length, 0, 'stale is never reported as free')
+})
+
+test('temporal: a transient failure suspends the verdict but does not discard the history', () => {
+  // The blip that used to cost a band everything: one unreadable frame between good ones. Zeroing
+  // ticks there restarted the MIN_TICKS climb, so a phone scanning once a minute could never get
+  // ahead of its own flakiness.
+  const hist = annotateDwell(syntheticHistory(40, { missingSlot: 5 }))
+  const b = syntheticBand()
+  const g = computeGaps(b, flatScale, hist[hist.length - 1].vehicles)
+  const st = createBandState(b)
+  updateBandState(st, g); updateBandState(st, g); updateBandState(st, g)
+  assert.equal(stableGaps(st, flatScale).length, 1, 'three good observations earn a gap')
+
+  updateBandState(st, null, { stale: true })
+  assert.equal(stableGaps(st, flatScale).length, 0, 'while the frame is missing, nothing reads free')
+  assert.equal(st.ticks, 3, 'but the history it already earned survives the blip')
+
+  updateBandState(st, g)
+  assert.equal(stableGaps(st, flatScale).length, 1, 'and one good frame restores the verdict')
+})
+
+test('temporal: silence longer than MAX_GAP_MS does expire the evidence', () => {
+  // The other half: not resetting on a blip must not become "trust a ten-minute-old EMA".
+  const hist = annotateDwell(syntheticHistory(40, { missingSlot: 5 }))
+  const b = syntheticBand()
+  const g = computeGaps(b, flatScale, hist[hist.length - 1].vehicles)
+  const st = createBandState(b)
+  const t0 = 1_700_000_000_000
+  updateBandState(st, g, { now: t0 }); updateBandState(st, g, { now: t0 + 1000 }); updateBandState(st, g, { now: t0 + 2000 })
+  assert.equal(stableGaps(st, flatScale).length, 1)
+
+  updateBandState(st, g, { now: t0 + 2000 + MAX_GAP_MS + 1 })
+  assert.equal(st.ticks, 1, 'the stale EMA is thrown away and the count restarts')
+  assert.equal(stableGaps(st, flatScale).length, 0, 'so a curb nobody watched for 10 min is not free')
 })
 
 test('appearance guard: a missed car (textured curb) is never free; flat asphalt stays free', () => {

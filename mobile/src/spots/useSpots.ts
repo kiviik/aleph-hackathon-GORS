@@ -3,12 +3,15 @@
 // The Spot shape is preserved field-for-field on purpose: markers, callouts, the status filters,
 // the legend and the saved tab all read from it and need no changes. Only the values become real.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AppState } from "react-native";
 import {
   cameras,
-  nearestCameras,
+  camerasByDistance,
   scanCamera,
   fixtureMeta,
+  CAMERA_REFRESH_MS,
   DEFAULT_NEARBY,
+  MAX_NEARBY,
   type BandResult,
   type Camera,
   type FrameEvidence,
@@ -16,7 +19,7 @@ import {
 import { pointAlongZone, zoneHeading } from "../data/frames";
 import type { PipelineStage, TraceEvent } from "../contracts";
 
-export type Status = "free" | "occupied" | "review";
+export type Status = "free" | "occupied" | "review" | "unscanned";
 
 export type Spot = {
   id: string;
@@ -63,7 +66,14 @@ function ago(ts: number | null | undefined): string {
   return m < 60 ? `${m} min` : `${Math.round(m / 60)} h`;
 }
 
-/** A camera's bands, before anything has been scanned. Everything starts in "review". */
+/**
+ * A camera's bands, before anything has been scanned.
+ *
+ * These seed as "unscanned", NOT "review". They were the same amber bucket before, which meant a
+ * segment nobody had looked at was presented identically to one the detector had looked at and
+ * found genuinely ambiguous. With only DEFAULT_NEARBY cameras scanned per pass, that made most of
+ * the map permanently "review" and said nothing true about the curb.
+ */
 function seedSpots(): Spot[] {
   const out: Spot[] = [];
   for (const c of cameras as Camera[]) {
@@ -78,7 +88,7 @@ function seedSpots(): Spot[] {
         street,
         number,
         neighborhood: c.zone.brz || c.quadrant || "Calgary",
-        status: "review",
+        status: "unscanned",
         latitude: lat,
         longitude: lng,
         confidence: "—",
@@ -119,7 +129,10 @@ function toSpot(prev: Spot, r: BandResult, camera: Camera): Spot {
 
 export type ScanProgress = { cameraId: string; stage: PipelineStage; status: TraceEvent["status"]; detail: string };
 
-export function useSpots(userLocation: { latitude: number; longitude: number } | null) {
+export function useSpots(
+  userLocation: { latitude: number; longitude: number } | null,
+  { autoScan = true }: { autoScan?: boolean } = {}
+) {
   const [spots, setSpots] = useState<Spot[]>(() => seedSpots());
   const [scanning, setScanning] = useState(false);
   const [lastScanAt, setLastScanAt] = useState<number | null>(null);
@@ -128,21 +141,46 @@ export function useSpots(userLocation: { latitude: number; longitude: number } |
   // Newest frame per camera, so the evidence view can show what the detector actually saw.
   const [evidence, setEvidence] = useState<Record<string, FrameEvidence>>({});
   const cancelled = useRef(false);
+  // The re-entrancy guard has to be a ref, not the `scanning` state: setScanning is async, so two
+  // callers in the same tick (a tap landing on an auto-scan tick) both read `scanning === false`
+  // and run two concurrent scans over the same band state.
+  const scanningRef = useRef(false);
+  // Where the round-robin has got to. A fixed nearest-N never touched the other cameras at all.
+  const rotation = useRef(0);
 
-  useEffect(() => () => { cancelled.current = true; }, []);
+  useEffect(() => {
+    // Set on mount, not just cleared on unmount: StrictMode's double-mount would otherwise leave
+    // this latched true for the rest of the session and silently discard every scan result.
+    cancelled.current = false;
+    return () => { cancelled.current = true; };
+  }, []);
 
   const scan = useCallback(
-    async (opts: { cameraIds?: string[]; count?: number } = {}) => {
-      if (scanning) return;
+    async (opts: { cameraIds?: string[]; count?: number; rotate?: boolean } = {}) => {
+      if (scanningRef.current) return;
+      scanningRef.current = true;
       setScanning(true);
       setError(null);
       setProgress([]);
 
-      const targets: Camera[] = opts.cameraIds
-        ? (cameras as Camera[]).filter((c) => opts.cameraIds!.includes(c.id))
-        : userLocation
-          ? nearestCameras(userLocation.latitude, userLocation.longitude, opts.count ?? DEFAULT_NEARBY)
-          : (cameras as Camera[]).slice(0, opts.count ?? DEFAULT_NEARBY);
+      const count = opts.count ?? DEFAULT_NEARBY;
+      const ordered = userLocation
+        ? camerasByDistance(userLocation.latitude, userLocation.longitude)
+        : (cameras as Camera[]);
+
+      let targets: Camera[];
+      if (opts.cameraIds) {
+        targets = (cameras as Camera[]).filter((c) => opts.cameraIds!.includes(c.id));
+      } else if (opts.rotate) {
+        // Round-robin over the WHOLE fixture, nearest first. Scanning a fixed nearest-N meant the
+        // remaining cameras were never looked at even once, so their segments kept their seeded
+        // value for the life of the app. The cursor only advances on a scan that actually ran, so
+        // a skipped tick cannot silently step over a camera.
+        targets = Array.from({ length: Math.min(count, ordered.length) }, (_, i) => ordered[(rotation.current + i) % ordered.length]);
+        rotation.current = (rotation.current + targets.length) % ordered.length;
+      } else {
+        targets = ordered.slice(0, Math.min(count, MAX_NEARBY));
+      }
 
       try {
         for (const camera of targets) {
@@ -163,11 +201,36 @@ export function useSpots(userLocation: { latitude: number; longitude: number } |
       } catch (e: any) {
         setError(String(e?.message || e));
       } finally {
+        scanningRef.current = false;
         setScanning(false);
       }
     },
-    [scanning, userLocation]
+    [userLocation]
   );
+
+  // A band needs MIN_TICKS frames before it can leave "review", and only a genuinely new frame
+  // counts (see scan.ts). Manual taps never got there: three taps inside a minute all read the same
+  // JPEG and advance the filter once. Re-scan on the camera's own cadence instead -- foreground
+  // only, since each pass costs a fetch plus local inference per camera.
+  const scanRef = useRef(scan);
+  useEffect(() => { scanRef.current = scan; }, [scan]);
+
+  useEffect(() => {
+    if (!autoScan) return;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    let kicked = false;
+    const start = () => {
+      if (timer) return;
+      // Scan once straight away rather than making the user watch an untouched map for a minute.
+      // Only on the first foreground: re-kicking on every resume would re-fetch on every glance.
+      if (!kicked) { kicked = true; void scanRef.current({ rotate: true }); }
+      timer = setInterval(() => { void scanRef.current({ rotate: true }); }, CAMERA_REFRESH_MS);
+    };
+    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+    if (AppState.currentState === "active") start();
+    const sub = AppState.addEventListener("change", (next) => (next === "active" ? start() : stop()));
+    return () => { stop(); sub.remove(); };
+  }, [autoScan]);
 
   const scannedCount = useMemo(() => spots.filter((s) => s.scanned).length, [spots]);
 

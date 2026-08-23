@@ -6,7 +6,7 @@
 // (MIN_TICKS consistent observations) both agree. Everything else is UNCERTAIN.
 import { inBand } from '../core/band.mjs'
 import { boxExtent } from '../core/scale.mjs'
-import { stableGaps } from '../core/temporal.mjs'
+import { MIN_TICKS, stableGaps } from '../core/temporal.mjs'
 import { legality } from '../core/zones-rules.mjs'
 
 // Quality thresholds. NOTE: these are starting points calibrated against the daytime fixture only.
@@ -64,19 +64,26 @@ export function buildObservation ({ band, scale, bandState, guarded, vehicles, f
 
   // State. Note the deliberate asymmetry: OCCUPIED needs positive evidence (vehicles actually seen
   // in the band); an empty detection list with no confirmed gap is UNCERTAIN, never FREE.
+  //
+  // Branch ORDER carries as much weight as the branches. FREE keeps precedence over OCCUPIED -- a
+  // confirmed gap is still a gap when the rest of the band is parked up -- and stays behind the
+  // tick gate, because a gap is only ever earned from temporal agreement. OCCUPIED is deliberately
+  // NOT behind that gate: it is read off the vehicles in THIS frame and needs no history at all.
+  // Gating it made a visibly packed curb report "review" for its first two scans, which is the
+  // opposite of honest, and on a phone that scans on demand it was most spots most of the time.
   let state, explanation
   if (frame.stale) {
     state = 'UNCERTAIN'
     explanation = 'La cámara no se actualizó recientemente; la evidencia está vencida.'
-  } else if (bandState.ticks < 3) {
-    state = 'UNCERTAIN'
-    explanation = `Evidencia insuficiente: ${bandState.ticks} de 3 observaciones consistentes.`
-  } else if (carsFit > 0) {
+  } else if (bandState.ticks >= MIN_TICKS && carsFit > 0) {
     state = 'FREE'
     explanation = `Hueco confirmado de ${freeMetres} m sobre el cordón (entran ~${carsFit}).`
   } else if (inBandV.length > 0) {
     state = 'OCCUPIED'
     explanation = `${inBandV.length} vehículo(s) ocupan el tramo observable.`
+  } else if (bandState.ticks < MIN_TICKS) {
+    state = 'UNCERTAIN'
+    explanation = `Evidencia insuficiente: ${bandState.ticks} de ${MIN_TICKS} observaciones consistentes.`
   } else {
     state = 'UNCERTAIN'
     explanation = 'No se detectaron vehículos, pero tampoco un hueco medible: la ausencia de cajas no prueba que haya lugar.'

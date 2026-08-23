@@ -15,9 +15,10 @@ import type { Spot, Status } from "../spots/useSpots";
 const GREEN = "#247b52";
 const RED = "#b6543b";
 const AMBER = "#ae7c27";
+const GREY = "#718075";
 
-const statusColor: Record<Status, string> = { free: GREEN, occupied: RED, review: AMBER };
-const statusText: Record<Status, string> = { free: "Free", occupied: "Occupied", review: "Review" };
+const statusColor: Record<Status, string> = { free: GREEN, occupied: RED, review: AMBER, unscanned: GREY };
+const statusText: Record<Status, string> = { free: "Free", occupied: "Occupied", review: "Review", unscanned: "Not scanned" };
 
 type Props = {
   spot: Spot;
@@ -106,7 +107,7 @@ export default function EvidenceScreen(props: Props) {
               and shows you exactly what it judged.
             </Text>
             <Pressable onPress={onScan} disabled={scanning} style={[s.scanButton, scanning && s.scanButtonOff]}>
-              <Text style={s.scanButtonText}>{scanning ? "Scanning…" : "Scan nearby cameras"}</Text>
+              <Text style={s.scanButtonText}>{scanning ? "Scanning…" : "Scan this camera"}</Text>
             </Pressable>
           </View>
         ) : (

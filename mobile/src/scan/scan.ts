@@ -13,6 +13,7 @@ import { buildObservation, buildRules } from "../evidence/evidence.mjs";
 // @ts-ignore
 import { referenceDecision } from "../policy/policy.mjs";
 import { detector } from "../detector/client";
+import { status as modelStatus } from "../model/model";
 import { bytesToBase64, fetchFrame, haversineM, pointAlongZone, zoneHeading } from "../data/frames";
 import type { PipelineStage, TraceEvent } from "../contracts";
 
@@ -20,6 +21,12 @@ const STATE_KEY = "ba-estaciona-scan-state-v1";
 /** Keep the phone honest about cost: only ever scan a handful of cameras on demand. */
 export const DEFAULT_NEARBY = 3;
 export const MAX_NEARBY = 5;
+/**
+ * Calgary rewrites every camera JPEG once a minute (measured: loc13 went 00:39:04 -> 00:40:04).
+ * Polling faster than that only re-reads the same frame, which `fresh` below correctly refuses to
+ * count -- so this is the fastest cadence at which the temporal filter can actually make progress.
+ */
+export const CAMERA_REFRESH_MS = 60_000;
 
 export type Camera = {
   id: string; name: string; location: string; quadrant: string;
@@ -90,13 +97,52 @@ export async function resetState() {
   await AsyncStorage.removeItem(STATE_KEY).catch(() => {});
 }
 
-/** Nearest cameras that actually have learned bands. Cameras without one can never report. */
-export function nearestCameras(lat: number, lng: number, n = DEFAULT_NEARBY): Camera[] {
+let detectorReady: Promise<void> | null = null;
+
+async function bootDetector(): Promise<void> {
+  const health = await detector.start();
+  if (health.loaded) return;
+  const m = await modelStatus();
+  if (!m.present) throw new Error("El modelo YOLO26s todavía no está descargado (pestaña Scan).");
+  const loaded = await detector.loadModel(m.path);
+  // Trust the worklet's own flag: a failed createSession otherwise looks healthy here and only
+  // resurfaces as "model not loaded" on every frame of every later scan.
+  if (!loaded?.loaded) throw new Error(`La sesión ONNX no cargó: ${JSON.stringify(loaded)}`);
+}
+
+/**
+ * Bring the worklet and the ONNX session up, once per process, before any frame is detected on.
+ *
+ * This bootstrap used to live ONLY in ScanScreen: the worklet started when the Scan tab mounted,
+ * and the session was loaded only by the "Download model" button's own handler. Two ways that left
+ * the app with no inference at all:
+ *   - relaunching with the model already on disk started the worklet but never re-created the
+ *     session, so every scan came back "model not loaded" until the button was pressed again;
+ *   - scanning from the map or evidence tab, which never mounts ScanScreen, had no worklet at all.
+ * Both ended identically -- refuseAll, and every band amber. Detection is the pipeline's own
+ * responsibility, so it is bootstrapped here. A failure clears the cache so the next scan retries.
+ */
+export function ensureDetector(): Promise<void> {
+  if (!detectorReady) {
+    detectorReady = bootDetector().catch((e) => {
+      detectorReady = null;
+      throw e;
+    });
+  }
+  return detectorReady;
+}
+
+/** Every camera, nearest first. The full ordering, so a caller can rotate through all of them. */
+export function camerasByDistance(lat: number, lng: number): Camera[] {
   return [...cameras]
     .map((c) => ({ c, d: haversineM(lat, lng, c.lat, c.lng) }))
     .sort((a, b) => a.d - b.d)
-    .slice(0, Math.min(n, MAX_NEARBY))
     .map((x) => x.c);
+}
+
+/** Nearest cameras that actually have learned bands. Cameras without one can never report. */
+export function nearestCameras(lat: number, lng: number, n = DEFAULT_NEARBY): Camera[] {
+  return camerasByDistance(lat, lng).slice(0, Math.min(n, MAX_NEARBY));
 }
 
 /**
@@ -111,6 +157,11 @@ export async function scanCamera(
   const stage = (s: PipelineStage, status: TraceEvent["status"], detail: string) => {
     const ev = { stage: s, status, detail };
     trace.push(ev);
+    // A blocked stage means this camera produced no inference at all. The Scan tab shows it, but
+    // only for the scan in flight and only while that tab is open, so an intermittent failure left
+    // no trace anywhere and "it sometimes doesn't detect" was undiagnosable from outside the app.
+    // `adb logcat -s ReactNativeJS` now shows every one of them.
+    if (status === "blocked") console.warn(`[scan] ${camera.id} ${s} BLOCKED: ${detail}`);
     onStage?.(s, ev);
     return ev;
   };
@@ -126,6 +177,18 @@ export async function scanCamera(
 
   const rules = buildRules(camera.zone, at);
 
+  // Bring inference up BEFORE spending a camera fetch on a frame that nothing can look at. With
+  // auto-scan running, a phone whose model is not downloaded yet would otherwise pull a JPEG per
+  // camera per minute and discard every one of them at the detector.
+  try {
+    await ensureDetector();
+  } catch (e: any) {
+    stage("detector", "blocked", `Detector: ${e?.message || e}`);
+    for (const b of camera.bands) updateBandState(mem.bandStates[b.id], null, { stale: true });
+    await saveState();
+    return { results: refuseAll(camera, rules, `Detector no disponible: ${e?.message || e}`), trace };
+  }
+
   const f = await fetchFrame(camera.url);
   if (!f.jpeg) {
     stage("capture", "blocked", `No se pudo leer la cámara: ${f.error}`);
@@ -135,8 +198,10 @@ export async function scanCamera(
   }
   stage("capture", "ready", `Frame de ${(f.jpeg.length / 1024).toFixed(0)} KB${f.stale ? " (vencido)" : ""}`);
 
-  // The desktop pipeline skips detection when the camera has not refreshed. Same saving here,
-  // but the observation is still rebuilt so the UI shows current rule state.
+  // Whether this is a frame we have not already judged. The desktop pipeline skips detection
+  // outright when the camera has not refreshed; this does NOT (it still needs the boxes to report
+  // occupancy, and caching them per camera is not worth the state). What `fresh` gates is the
+  // temporal filter: re-reading one JPEG must never manufacture agreement out of a single frame.
   const fresh = f.capturedAt !== mem.lastCapturedAt;
 
   let r: any;

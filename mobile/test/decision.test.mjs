@@ -45,6 +45,20 @@ test('ROI free + rule allows -> PARK, but only with enough evidence', () => {
   assert.equal(d.decision, 'PARK', JSON.stringify(d))
 })
 
+test('MIN_TICKS is the real number: exactly three observations must be enough for PARK', () => {
+  // The Scan tab tells the user "a segment needs three consistent observations before it can ever
+  // read free", and evidence.mjs prints "N de 3". That promise is only kept by a hair: the EMA
+  // after three ticks is 1 - (1-ALPHA)^3 = 0.784, which rounds to exactly the 0.78 policy
+  // threshold and survives solely because the comparison is a strict `<`. Nudge ALPHA, MIN_TICKS
+  // or DEFAULT_CONFIDENCE_THRESHOLD and three silently stops being enough while every message in
+  // the app still says three. This test fails loudly instead.
+  const obs = observe(gapCurb, 3)
+  assert.equal(obs.state, 'FREE', 'three consistent observations must confirm the gap')
+  assert.ok(obs.confidence >= DEFAULT_CONFIDENCE_THRESHOLD,
+    `confidence at MIN_TICKS (${obs.confidence}) must clear the policy threshold (${DEFAULT_CONFIDENCE_THRESHOLD})`)
+  assert.equal(referenceDecision({ observation: obs, sector, rules: buildRules(openZone, mon1200) }).decision, 'PARK')
+})
+
 test('ROI occupied -> DO_NOT_PARK', () => {
   const obs = observe(fullCurb, 4)
   assert.equal(obs.state, 'OCCUPIED')
@@ -62,7 +76,20 @@ test('an active rush-hour rule beats a visually free curb -> DO_NOT_PARK', () =>
 })
 
 test('a single observation can never be PARK', () => {
+  // The curb still holds 9 detected cars, and reading those off ONE frame is legitimate: OCCUPIED
+  // is positive evidence and needs no temporal history. What a single frame can never buy is PARK.
   const obs = observe(gapCurb, 1)
+  assert.equal(obs.state, 'OCCUPIED')
+  assert.equal(obs.carsFit, 0, 'the vacated slot is not a confirmed gap yet')
+  const d = referenceDecision({ observation: obs, sector, rules: buildRules(openZone, mon1200) })
+  assert.notEqual(d.decision, 'PARK')
+  assert.equal(d.decision, 'DO_NOT_PARK')
+})
+
+test('a single observation of an empty-looking curb is UNCERTAIN, never FREE', () => {
+  // The other half of the asymmetry: with no boxes to stand on, emptiness has to be earned over
+  // MIN_TICKS frames. This is the branch the tick gate exists for.
+  const obs = observe([], 1)
   assert.equal(obs.state, 'UNCERTAIN')
   assert.match(obs.explanation, /1 de 3/)
   assert.equal(referenceDecision({ observation: obs, sector, rules: buildRules(openZone, mon1200) }).decision, 'REFUSE')

@@ -53,7 +53,7 @@ test('tracks carry dwell across scans, so a parked car is confirmed by persisten
   assert.equal(lastDwell, 3, 'the same box across 3 frames must reach dwell 3')
 })
 
-test('a real camera goes REFUSE -> decided only after MIN_TICKS, on real geometry and real rules', async () => {
+test('a real camera: PARK only after MIN_TICKS, on real geometry and real rules', async () => {
   const band = cam76.bands[0]
   const scale = cam76.scales[band.id]
   const state = createBandState(band)
@@ -73,7 +73,14 @@ test('a real camera goes REFUSE -> decided only after MIN_TICKS, on real geometr
     decisions.push(referenceDecision({ observation, sector: { sector_id: cam76.zone.id }, rules }).decision)
   }
 
-  assert.deepEqual(decisions.slice(0, 2), ['REFUSE', 'REFUSE'], 'fewer than MIN_TICKS observations must refuse')
+  // The safety property, stated directly: a confirmed gap is what buys PARK, and that takes
+  // MIN_TICKS frames. Nothing below that count may ever come back PARK.
+  assert.ok(!decisions.slice(0, 2).includes('PARK'), `PARK before MIN_TICKS: ${decisions.join(',')}`)
+  // This curb has vehicles sitting in the band, and that is readable from frame one -- it does not
+  // have to wait out the temporal filter to say so. Before the fix these two were REFUSE, which
+  // showed a visibly full curb as "review" for the first two scans.
+  assert.deepEqual(decisions.slice(0, 2), ['DO_NOT_PARK', 'DO_NOT_PARK'],
+    `occupancy is positive evidence and needs no history: ${decisions.join(',')}`)
   assert.ok(decisions[3] !== 'REFUSE', `expected a decision by scan 4, got ${decisions.join(',')}`)
 })
 

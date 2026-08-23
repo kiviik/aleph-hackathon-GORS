@@ -25,8 +25,10 @@ import ScanScreen from "./src/screens/ScanScreen";
 type TestCheck = { spotId: string; correct: boolean; checkedAt: number };
 type Tab = "map" | "evidence" | "saved" | "scan" | "testing";
 
-const statusText: Record<Status, string> = { free: "Free", occupied: "Occupied", review: "Review" };
-const statusColor: Record<Status, string> = { free: "#247b52", occupied: "#b6543b", review: "#ae7c27" };
+const statusText: Record<Status, string> = { free: "Free", occupied: "Occupied", review: "Review", unscanned: "Not scanned" };
+// Grey, not amber: "not looked at yet" must not read as a detector verdict. Matches the neutral
+// tone the testing screen already uses for a spot with no verdict.
+const statusColor: Record<Status, string> = { free: "#247b52", occupied: "#b6543b", review: "#ae7c27", unscanned: "#718075" };
 
 const storageKey = "ba-estaciona-mobile-memory";
 const themeStorageKey = "ba-estaciona-mobile-theme";
@@ -149,6 +151,7 @@ export default function App() {
     free: searchedSpots.filter((spot) => spot.status === "free").length,
     occupied: searchedSpots.filter((spot) => spot.status === "occupied").length,
     review: searchedSpots.filter((spot) => spot.status === "review").length,
+    unscanned: searchedSpots.filter((spot) => spot.status === "unscanned").length,
   }), [searchedSpots]);
   const streetSuggestions = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -160,6 +163,7 @@ export default function App() {
     { key: "free", label: "free nearby", value: counts.free, color: statusColor.free },
     { key: "occupied", label: "occupied", value: counts.occupied, color: statusColor.occupied },
     { key: "review", label: "review", value: counts.review, color: statusColor.review },
+    { key: "unscanned", label: "not scanned", value: counts.unscanned, color: statusColor.unscanned },
   ];
 
   const saveMemory = (next: Memory) => {
@@ -224,11 +228,11 @@ export default function App() {
             onSelect={(id) => setSelectedId(id)}
             onOpen={(id) => { setSelectedId(id); setTab("evidence"); }}
           />
-          <View style={[styles.mapLegend, darkMode && styles.darkCard]}><View><View style={[styles.legendDot, { backgroundColor: statusColor.free }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Free</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.occupied }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Occupied</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.review }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Review</Text></View></View>
+          <View style={[styles.mapLegend, darkMode && styles.darkCard]}><View><View style={[styles.legendDot, { backgroundColor: statusColor.free }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Free</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.occupied }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Occupied</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.review }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Review</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.unscanned }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Not scanned</Text></View></View>
           <View style={[styles.selectedCard, darkMode && styles.darkCard]}><View style={[styles.selectedDot, { backgroundColor: statusColor[selected.status] }]} /><View style={styles.selectedCopy}><Text style={[styles.selectedStreet, darkMode && styles.textDark]}>{selected.street} {selected.number}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{selected.scanned ? `${selected.neighborhood} · read ${selected.checked} ago · ${selected.confidence}` : selected.neighborhood}</Text>{selected.scanned && <Text style={[styles.muted, darkMode && styles.textMutedDark]} numberOfLines={2}>{selected.status === "free" ? `≈${selected.carsFit} car${selected.carsFit === 1 ? "" : "s"} fit · ${selected.freeMetres} m free` : selected.reason}</Text>}{selected.scanned && selected.rule ? <Text style={[styles.muted, darkMode && styles.textMutedDark]} numberOfLines={2}>{selected.rule}</Text> : null}</View><Pressable onPress={toggleFavorite} style={styles.starButton}><Text style={styles.star}>{memory.favoriteIds.includes(selected.id) ? "★" : "☆"}</Text></Pressable><Pressable onPress={openEvidenceTab} style={styles.streetButton}><Text style={styles.streetButtonText}>Evidence</Text></Pressable></View>
         </View>}
         {tab === "scan" && <ScanScreen darkMode={darkMode} scanning={scanning} progress={progress} error={scanError} scannedCount={scannedCount} totalSpots={spots.length} lastScanAt={lastScanAt} fixtureMeta={fixtureMeta} onScan={() => void scan()} />}
-        {tab === "evidence" && <EvidenceScreen spot={selected} spots={spots} evidence={evidence} darkMode={darkMode} scanning={scanning} onToggleTheme={toggleTheme} onSelect={(spot) => setSelectedId(spot.id)} onScan={() => void scan()} width={width - 36} />}
+        {tab === "evidence" && <EvidenceScreen spot={selected} spots={spots} evidence={evidence} darkMode={darkMode} scanning={scanning} onToggleTheme={toggleTheme} onSelect={(spot) => setSelectedId(spot.id)} onScan={() => void scan(selected.cameraId ? { cameraIds: [selected.cameraId] } : {})} width={width - 36} />}
         {tab === "saved" && <View style={[styles.savedScreen, darkMode && styles.screenDark]}><View style={styles.header}><View><Text style={[styles.kicker, darkMode && styles.textMutedDark]}>YOUR MEMORY</Text><Text style={[styles.screenTitle, darkMode && styles.textDark]}>Saved places</Text></View><View style={styles.headerTheme}><ThemeToggle darkMode={darkMode} onPress={toggleTheme} /></View><View style={styles.headerActions}><Text style={styles.savedCount}>{memory.favoriteIds.length}</Text></View></View><Text style={[styles.sectionLabel, darkMode && styles.textMutedDark]}>FAVORITES</Text>{memory.favoriteIds.length === 0 ? <View style={styles.empty}><Text style={styles.emptyIcon}>☆</Text><Text style={[styles.emptyTitle, darkMode && styles.textDark]}>You have no saved places yet</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Tap ☆ on any map point to save it here.</Text></View> : <FlatList data={spots.filter((spot) => memory.favoriteIds.includes(spot.id))} keyExtractor={(spot) => spot.id} contentContainerStyle={styles.savedList} renderItem={({ item }) => <Pressable style={[styles.savedRow, darkMode && styles.darkCard]} onPress={() => { setSelectedId(item.id); setTab("map"); }}><View style={[styles.savedDot, { backgroundColor: statusColor[item.status] }]} /><View style={styles.savedCopy}><Text style={[styles.savedStreet, darkMode && styles.textDark]}>{item.street} {item.number}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{item.neighborhood} · {statusText[item.status]}</Text></View><Text style={[styles.rowArrow, darkMode && styles.textMutedDark]}>›</Text></Pressable>} />}
           <Text style={[styles.sectionLabel, darkMode && styles.textMutedDark]}>MOST SEARCHED ON THIS PHONE</Text>{memory.asked.length === 0 ? <Text style={[styles.muted, darkMode && styles.textMutedDark]}>Your frequent searches will appear here.</Text> : <View style={styles.askedWrap}>{memory.asked.map((place) => <Pressable key={place} style={[styles.askedChip, darkMode && styles.darkPill]} onPress={() => { setQuery(place); setTab("map"); }}><Text style={[styles.askedText, darkMode && styles.textDark]}>⌕ {place}</Text></Pressable>)}</View>}
           <Pressable style={styles.clearButton} onPress={() => saveMemory({ favoriteIds: [], asked: [] })}><Text style={styles.clearText}>Clear local memory</Text></Pressable>
