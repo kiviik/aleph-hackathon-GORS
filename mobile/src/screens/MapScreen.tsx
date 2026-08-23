@@ -3,6 +3,7 @@ import { Alert } from "react-native";
 import type { NativeBottomTabScreenProps } from "@bottom-tabs/react-navigation";
 
 import { Card, Muted } from "../components/Card";
+import { DetectorBanner } from "../components/DetectorBanner";
 import { FilterCard, type FilterKey } from "../components/FilterCard";
 import OsmMap, { type OsmMarker } from "../components/OsmMap";
 import { ScreenHeader } from "../components/ScreenHeader";
@@ -207,6 +208,8 @@ export function MapScreen({ navigation }: Props) {
   return (
     <Screen style={styles.screen}>
       <ScreenHeader title="Calgary Parking" />
+
+      <DetectorBanner />
 
       <View style={styles.searchBox}>
         <Text style={styles.searchIcon}>⌕</Text>

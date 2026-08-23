@@ -1,4 +1,4 @@
-// One store for everything the five tabs share.
+// One store for everything the three tabs share.
 //
 // A store rather than React Context because list rows subscribe with selectors: toggling one
 // favourite re-renders one row, not the list parent. Every writer uses the `set(prev => ...)`
@@ -13,6 +13,7 @@ import * as Location from "expo-location";
 import {
   cameras,
   camerasByDistance,
+  ensureDetector,
   scanCamera,
   DEFAULT_NEARBY,
   MAX_NEARBY,
@@ -25,7 +26,6 @@ import {
   saveVerdicts,
   seedSpots,
   toSpot,
-  type ScanProgress,
   type Spot,
   type Status,
 } from "./spots";
@@ -33,8 +33,6 @@ import {
 const memoryStorageKey = "ba-estaciona-mobile-memory";
 
 type PersistedMemory = { favoriteIds: string[]; asked: string[] };
-
-export type TestCheck = { spotId: string; correct: boolean; checkedAt: number };
 
 export type LocateResult = "ok" | "denied" | "failed";
 
@@ -63,20 +61,16 @@ type AppState = {
   locating: boolean;
   locate: () => Promise<LocateResult>;
 
-  // --- testing tab -------------------------------------------------------
-  /** Append-only log. Accuracy, verdicts and progress are all derived from it. */
-  checks: readonly TestCheck[];
-  feedRefreshedAt: number;
-  reviewSpot: (spotId: string, correct: boolean) => void;
-  resetChecks: () => void;
-  refreshFeed: () => void;
+  // --- detector bootstrap ------------------------------------------------
+  /** 0..1 while the first-run model download is in flight, null at every other time. */
+  modelProgress: number | null;
+  /** Why the detector could not come up. Non-null means every scan will refuse.  */
+  detectorError: string | null;
+  prepareDetector: () => Promise<void>;
 
   // --- scan pipeline -----------------------------------------------------
   spots: readonly Spot[];
   scanning: boolean;
-  lastScanAt: number | null;
-  progress: readonly ScanProgress[];
-  scanError: string | null;
   /** Newest frame per camera, so the evidence view can show what the detector actually saw. */
   evidence: Readonly<Record<string, FrameEvidence>>;
   scan: (opts?: ScanOptions) => Promise<void>;
@@ -158,23 +152,31 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  checks: [],
-  feedRefreshedAt: Date.now(),
-  reviewSpot: (spotId, correct) =>
-    set((prev) => ({ checks: [...prev.checks, { spotId, correct, checkedAt: Date.now() }] })),
-  resetChecks: () => set({ checks: [] }),
-  refreshFeed: () => set({ feedRefreshedAt: Date.now() }),
+  modelProgress: null,
+  detectorError: null,
+  prepareDetector: async () => {
+    // ensureDetector caches its promise, so this is a cheap no-op on every call after the first.
+    // The point of routing it through the store is that the first-run download -- 38 MB, a minute
+    // or two on a phone -- gets a fraction the map can show, instead of looking like a hung app.
+    try {
+      await ensureDetector((fraction) => set({ modelProgress: fraction }));
+      set({ detectorError: null });
+    } catch (e: any) {
+      // ensureDetector drops its cache on failure, so the next scan genuinely retries and this
+      // line is re-evaluated rather than left stale.
+      set({ detectorError: String(e?.message || e) });
+    } finally {
+      set({ modelProgress: null });
+    }
+  },
 
   spots: initialSpots,
   scanning: false,
-  lastScanAt: null,
-  progress: [],
-  scanError: null,
   evidence: {},
   scan: async (opts = {}) => {
     if (scanInFlight) return;
     scanInFlight = true;
-    set({ scanning: true, scanError: null, progress: [] });
+    set({ scanning: true });
 
     const { cameraIds, count = DEFAULT_NEARBY, rotate } = opts;
     const { userLocation } = get();
@@ -200,16 +202,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
 
     try {
+      // Before spending a camera fetch: bring the detector up (and download the model on a first
+      // run) where the progress is visible. scanCamera does this itself too, but silently.
+      await get().prepareDetector();
+
       for (const camera of targets) {
-        const { results, evidence: frame } = await scanCamera(camera, {
-          onStage: (stage, e) =>
-            set((prev) => ({
-              progress: [
-                ...prev.progress,
-                { cameraId: camera.id, stage, status: e.status!, detail: e.detail! },
-              ],
-            })),
-        });
+        const { results, evidence: frame } = await scanCamera(camera);
         set((prev) => {
           const spots = prev.spots.map((spot) => {
             const result = results.find((x) => `${x.cameraId}-${x.bandId}` === spot.id);
@@ -222,9 +220,11 @@ export const useAppStore = create<AppState>((set, get) => ({
           };
         });
       }
-      set({ lastScanAt: Date.now() });
     } catch (e: any) {
-      set({ scanError: String(e?.message || e) });
+      // Nothing on screen reads this: a detector that will not come up is already reported by
+      // detectorError, and everything else here is unexpected. `adb logcat -s ReactNativeJS`, the
+      // same channel a blocked pipeline stage uses.
+      console.warn(`[scan] aborted: ${e?.message || e}`);
     } finally {
       scanInFlight = false;
       set({ scanning: false });
@@ -269,23 +269,7 @@ function persistMemory(state: AppState): Promise<void> {
 // --- selectors ------------------------------------------------------------
 // Kept next to the store so rows can subscribe to exactly one primitive each.
 
-export const selectIsFavorite = (spotId: string) => (s: AppState) => s.favoriteIds.has(spotId);
-
 export const selectIsSelected = (spotId: string) => (s: AppState) => s.selectedSpotId === spotId;
 
 export const selectHasEvidence = (cameraId: string | undefined) => (s: AppState) =>
   cameraId ? Boolean(s.evidence[cameraId]) : false;
-
-/** Latest verdict a reviewer gave this spot, or undefined if they never judged it. */
-export const selectVerdict = (spotId: string) => (s: AppState) => {
-  for (let i = s.checks.length - 1; i >= 0; i -= 1) {
-    if (s.checks[i].spotId === spotId) return s.checks[i].correct;
-  }
-  return undefined;
-};
-
-export function countScanned(spots: readonly Spot[]): number {
-  let total = 0;
-  for (const spot of spots) if (spot.scanned) total += 1;
-  return total;
-}

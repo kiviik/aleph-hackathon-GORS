@@ -79,11 +79,6 @@ export function haversineM(aLat: number, aLng: number, bLat: number, bLng: numbe
 }
 
 /** Point at `fraction` along the baked zone endpoints -> [lng, lat]. Replaces turf's along(). */
-export function pointAlongZone(zone: { p0: number[]; p1: number[] }, fraction: number): [number, number] {
-  const f = Math.max(0, Math.min(1, fraction));
-  return [zone.p0[0] + (zone.p1[0] - zone.p0[0]) * f, zone.p0[1] + (zone.p1[1] - zone.p0[1]) * f];
-}
-
 /** Compass bearing of the zone line, so Street View can face the curb instead of due north. */
 export function zoneHeading(zone: { p0: number[]; p1: number[] }): number {
   const [lng1, lat1] = zone.p0;

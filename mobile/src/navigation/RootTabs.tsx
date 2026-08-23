@@ -10,14 +10,10 @@ import { useTheme } from "../design-system";
 import { EvidenceScreen } from "../screens/EvidenceScreen";
 import { MapScreen } from "../screens/MapScreen";
 import { SavedScreen } from "../screens/SavedScreen";
-import { ScanScreen } from "../screens/ScanScreen";
-import { TestingScreen } from "../screens/TestingScreen";
 
 export type RootTabParamList = {
   Map: undefined;
-  Scan: undefined;
   Evidence: undefined;
-  Testing: undefined;
   Saved: undefined;
 };
 
@@ -30,20 +26,10 @@ const mapIcon = () =>
     ios: { sfSymbol: "mappin.and.ellipse" } as const,
     default: require("../../assets/tabs/map.png"),
   });
-const scanIcon = () =>
-  Platform.select({
-    ios: { sfSymbol: "dot.viewfinder" } as const,
-    default: require("../../assets/tabs/scan.png"),
-  });
 const evidenceIcon = () =>
   Platform.select({
     ios: { sfSymbol: "eye" } as const,
     default: require("../../assets/tabs/evidence.png"),
-  });
-const testingIcon = () =>
-  Platform.select({
-    ios: { sfSymbol: "checkmark.circle" } as const,
-    default: require("../../assets/tabs/testing.png"),
   });
 const savedIcon = () =>
   Platform.select({
@@ -52,9 +38,7 @@ const savedIcon = () =>
   });
 
 const mapOptions = { title: "Map", tabBarIcon: mapIcon };
-const scanOptions = { title: "Scan", tabBarIcon: scanIcon };
 const evidenceOptions = { title: "Evidence", tabBarIcon: evidenceIcon };
-const testingOptions = { title: "Testing", tabBarIcon: testingIcon };
 const savedOptions = { title: "Saved", tabBarIcon: savedIcon };
 
 export function RootTabs() {
@@ -74,9 +58,7 @@ export function RootTabs() {
       hapticFeedbackEnabled
     >
       <Tabs.Screen name="Map" component={MapScreen} options={mapOptions} />
-      <Tabs.Screen name="Scan" component={ScanScreen} options={scanOptions} />
       <Tabs.Screen name="Evidence" component={EvidenceScreen} options={evidenceOptions} />
-      <Tabs.Screen name="Testing" component={TestingScreen} options={testingOptions} />
       <Tabs.Screen name="Saved" component={SavedScreen} options={savedOptions} />
     </Tabs.Navigator>
   );

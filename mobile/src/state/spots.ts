@@ -12,9 +12,6 @@ import { zoneHeading } from "../data/frames";
 import { bandSide, placeBand, zoneForBand } from "../core/placement.mjs";
 // @ts-ignore
 import { packVerdicts, restoreVerdicts } from "../core/verdicts.mjs";
-import type { PipelineStage, TraceEvent } from "../contracts";
-
-export { fixtureMeta };
 
 export type Status = "free" | "occupied" | "review" | "unscanned";
 
@@ -57,13 +54,6 @@ export type Spot = {
   /** Prebaked corridor geometry + the confirmed gaps, both in source-frame pixels. */
   band?: any;
   gaps?: any[];
-};
-
-export type ScanProgress = {
-  cameraId: string;
-  stage: PipelineStage;
-  status: TraceEvent["status"];
-  detail: string;
 };
 
 /**

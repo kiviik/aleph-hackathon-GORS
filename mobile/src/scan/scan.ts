@@ -17,7 +17,7 @@ import { assignVehiclesToBands } from "../core/band.mjs";
 // @ts-ignore
 import { bandSide, placeBand, zoneForBand } from "../core/placement.mjs";
 import { detector } from "../detector/client";
-import { status as modelStatus } from "../model/model";
+import { ensureModel, status as modelStatus } from "../model/model";
 import { bytesToBase64, fetchFrame, haversineM, zoneHeading } from "../data/frames";
 import type { PipelineStage, TraceEvent } from "../contracts";
 
@@ -116,19 +116,16 @@ async function saveState() {
   }
 }
 
-export async function resetState() {
-  memory = {};
-  loaded = true;
-  await AsyncStorage.removeItem(STATE_KEY).catch(() => {});
-}
-
 let detectorReady: Promise<void> | null = null;
 
-async function bootDetector(): Promise<void> {
+async function bootDetector(onProgress?: (fraction: number) => void): Promise<void> {
   const health = await detector.start();
   if (health.loaded) return;
-  const m = await modelStatus();
-  if (!m.present) throw new Error("El modelo YOLO26s todavía no está descargado (pestaña Scan).");
+  let m = await modelStatus();
+  // First run: the 38 MB model is not bundled in the APK. It used to sit behind a "Download model"
+  // button on a status tab; with that tab gone, fetching it is part of bringing the detector up.
+  // ensureModel is a no-op once the file is on disk, so this costs nothing on later launches.
+  if (!m.present) m = await ensureModel((f) => onProgress?.(f));
   const loaded = await detector.loadModel(m.path);
   // Trust the worklet's own flag: a failed createSession otherwise looks healthy here and only
   // resurfaces as "model not loaded" on every frame of every later scan.
@@ -136,20 +133,21 @@ async function bootDetector(): Promise<void> {
 }
 
 /**
- * Bring the worklet and the ONNX session up, once per process, before any frame is detected on.
+ * Bring the model, the worklet and the ONNX session up, once per process, before any frame is
+ * detected on.
  *
- * This bootstrap used to live ONLY in ScanScreen: the worklet started when the Scan tab mounted,
- * and the session was loaded only by the "Download model" button's own handler. Two ways that left
- * the app with no inference at all:
- *   - relaunching with the model already on disk started the worklet but never re-created the
- *     session, so every scan came back "model not loaded" until the button was pressed again;
- *   - scanning from the map or evidence tab, which never mounts ScanScreen, had no worklet at all.
- * Both ended identically -- refuseAll, and every band amber. Detection is the pipeline's own
- * responsibility, so it is bootstrapped here. A failure clears the cache so the next scan retries.
+ * Bootstrapping used to be split across a status screen: the worklet started when that tab
+ * mounted, and the session was loaded only by its "Download model" button. Either half could be
+ * skipped -- by relaunching with the model already on disk, or by never opening the tab -- and both
+ * ended identically: refuseAll, and every band amber. Detection is the pipeline's own
+ * responsibility, so all of it lives here. A failure clears the cache so the next scan retries.
+ *
+ * `onProgress` reports the first-run download only, and only to the caller that wins the race to
+ * create the promise; every later caller just awaits the same boot.
  */
-export function ensureDetector(): Promise<void> {
+export function ensureDetector(onProgress?: (fraction: number) => void): Promise<void> {
   if (!detectorReady) {
-    detectorReady = bootDetector().catch((e) => {
+    detectorReady = bootDetector(onProgress).catch((e) => {
       detectorReady = null;
       throw e;
     });
@@ -163,11 +161,6 @@ export function camerasByDistance(lat: number, lng: number): Camera[] {
     .map((c) => ({ c, d: haversineM(lat, lng, c.lat, c.lng) }))
     .sort((a, b) => a.d - b.d)
     .map((x) => x.c);
-}
-
-/** Nearest cameras that actually have learned bands. Cameras without one can never report. */
-export function nearestCameras(lat: number, lng: number, n = DEFAULT_NEARBY): Camera[] {
-  return camerasByDistance(lat, lng).slice(0, Math.min(n, MAX_NEARBY));
 }
 
 /**
@@ -184,18 +177,17 @@ export function usableBands(camera: Camera): any[] {
  */
 export async function scanCamera(
   camera: Camera,
-  { passes = ["full", "far"], at = new Date(), onStage }: { passes?: string[]; at?: Date; onStage?: (s: PipelineStage, e: Partial<TraceEvent>) => void } = {}
+  { passes = ["full", "far"], at = new Date() }: { passes?: string[]; at?: Date } = {}
 ): Promise<{ results: BandResult[]; trace: TraceEvent[]; frameError?: string; evidence?: FrameEvidence }> {
   const trace: TraceEvent[] = [];
   const stage = (s: PipelineStage, status: TraceEvent["status"], detail: string) => {
     const ev = { stage: s, status, detail };
     trace.push(ev);
-    // A blocked stage means this camera produced no inference at all. The Scan tab shows it, but
-    // only for the scan in flight and only while that tab is open, so an intermittent failure left
-    // no trace anywhere and "it sometimes doesn't detect" was undiagnosable from outside the app.
-    // `adb logcat -s ReactNativeJS` now shows every one of them.
+    // A blocked stage means this camera produced no inference at all. There is no pipeline view in
+    // the app to notice that in, so an intermittent failure would otherwise leave no trace anywhere
+    // and "it sometimes doesn't detect" would be undiagnosable from outside the app.
+    // `adb logcat -s ReactNativeJS` shows every one of them.
     if (status === "blocked") console.warn(`[scan] ${camera.id} ${s} BLOCKED: ${detail}`);
-    onStage?.(s, ev);
     return ev;
   };
 
