@@ -42,6 +42,31 @@ export function fetchFrame(url: string, { timeoutMs = 15000 } = {}): Promise<Fra
   });
 }
 
+const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+/**
+ * JPEG bytes -> base64, so the exact frame the detector ran on can be shown back to the user.
+ * RN guarantees neither btoa nor Buffer, and re-fetching the camera URL would show a DIFFERENT
+ * frame than the one the boxes were computed from -- which is the whole point of the view.
+ */
+export function bytesToBase64(bytes: Uint8Array): string {
+  let out = "";
+  const n = bytes.length;
+  let i = 0;
+  for (; i + 2 < n; i += 3) {
+    const v = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+    out += B64[(v >> 18) & 63] + B64[(v >> 12) & 63] + B64[(v >> 6) & 63] + B64[v & 63];
+  }
+  if (i + 1 === n) {
+    const v = bytes[i] << 16;
+    out += B64[(v >> 18) & 63] + B64[(v >> 12) & 63] + "==";
+  } else if (i + 2 === n) {
+    const v = (bytes[i] << 16) | (bytes[i + 1] << 8);
+    out += B64[(v >> 18) & 63] + B64[(v >> 12) & 63] + B64[(v >> 6) & 63] + "=";
+  }
+  return out;
+}
+
 /** Great-circle metres. Ported from pipeline.mjs:haversineM. */
 export function haversineM(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const R = 6371000;

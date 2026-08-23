@@ -13,7 +13,7 @@ import { buildObservation, buildRules } from "../evidence/evidence.mjs";
 // @ts-ignore
 import { referenceDecision } from "../policy/policy.mjs";
 import { detector } from "../detector/client";
-import { fetchFrame, haversineM, pointAlongZone, zoneHeading } from "../data/frames";
+import { bytesToBase64, fetchFrame, haversineM, pointAlongZone, zoneHeading } from "../data/frames";
 import type { PipelineStage, TraceEvent } from "../contracts";
 
 const STATE_KEY = "ba-estaciona-scan-state-v1";
@@ -38,6 +38,25 @@ export type BandResult = {
   lat: number;
   lng: number;
   heading: number;
+  /** Prebaked geometry, carried through so the evidence view can draw the corridor it judged. */
+  band: any;
+};
+
+/**
+ * The frame the detector actually ran on, plus the boxes it produced -- kept so the app can show
+ * its own evidence instead of asking the user to trust a number. Band geometry, gaps and boxes are
+ * all in the same source-pixel space, so one uniform scale factor draws them together.
+ */
+export type FrameEvidence = {
+  cameraId: string;
+  cameraName: string;
+  address: string;
+  dataUri: string;
+  width: number;
+  height: number;
+  capturedAt: number | null;
+  stale: boolean;
+  vehicles: { box: number[]; label: string; score: number; parked: boolean }[];
 };
 
 type Persisted = Record<string, { bandStates: Record<string, any>; tracks: any[]; lastCapturedAt: number | null }>;
@@ -87,7 +106,7 @@ export function nearestCameras(lat: number, lng: number, n = DEFAULT_NEARBY): Ca
 export async function scanCamera(
   camera: Camera,
   { passes = ["full", "far"], at = new Date(), onStage }: { passes?: string[]; at?: Date; onStage?: (s: PipelineStage, e: Partial<TraceEvent>) => void } = {}
-): Promise<{ results: BandResult[]; trace: TraceEvent[]; frameError?: string }> {
+): Promise<{ results: BandResult[]; trace: TraceEvent[]; frameError?: string; evidence?: FrameEvidence }> {
   const trace: TraceEvent[] = [];
   const stage = (s: PipelineStage, status: TraceEvent["status"], detail: string) => {
     const ev = { stage: s, status, detail };
@@ -168,13 +187,30 @@ export async function scanCamera(
       : 0.5;
     const [lng, lat] = pointAlongZone(camera.zone, centre);
 
-    results.push({ cameraId: camera.id, bandId: band.id, observation, decision, rules, lat, lng, heading: zoneHeading(camera.zone) });
+    results.push({ cameraId: camera.id, bandId: band.id, observation, decision, rules, lat, lng, heading: zoneHeading(camera.zone), band });
   }
 
   stage("evidence", "ready", `${results.filter((x) => x.observation.state === "FREE").length}/${results.length} tramos con hueco confirmado`);
   stage("policy", "ready", results.map((x) => x.decision.decision).join(", "));
   await saveState();
-  return { results, trace };
+
+  const evidence: FrameEvidence = {
+    cameraId: camera.id,
+    cameraName: camera.name,
+    address: camera.zone?.address ?? camera.location,
+    dataUri: `data:image/jpeg;base64,${bytesToBase64(f.jpeg)}`,
+    width: r.width,
+    height: r.height,
+    capturedAt: f.capturedAt,
+    stale: f.stale,
+    vehicles: r.vehicles.map((v: any) => ({
+      box: v.box,
+      label: v.label,
+      score: v.score,
+      parked: (v.dwell || 1) >= 2,
+    })),
+  };
+  return { results, trace, evidence };
 }
 
 function refuseAll(camera: Camera, rules: any, reason: string): BandResult[] {
@@ -187,5 +223,6 @@ function refuseAll(camera: Camera, rules: any, reason: string): BandResult[] {
     lat: camera.lat,
     lng: camera.lng,
     heading: zoneHeading(camera.zone),
+    band,
   }));
 }

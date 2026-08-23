@@ -4,12 +4,9 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  ActivityIndicator,
   Dimensions,
   FlatList,
-  Image,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   Pressable,
   SafeAreaView,
@@ -20,13 +17,13 @@ import {
   useColorScheme,
   View,
 } from "react-native";
-import { WebView } from "react-native-webview";
 import OsmMap from "./src/components/OsmMap";
+import EvidenceScreen from "./src/screens/EvidenceScreen";
 import { useSpots, type Spot, type Status } from "./src/spots/useSpots";
 import ScanScreen from "./src/screens/ScanScreen";
 
 type TestCheck = { spotId: string; correct: boolean; checkedAt: number };
-type Tab = "map" | "street" | "saved" | "scan" | "testing";
+type Tab = "map" | "evidence" | "saved" | "scan" | "testing";
 
 const statusText: Record<Status, string> = { free: "Free", occupied: "Occupied", review: "Review" };
 const statusColor: Record<Status, string> = { free: "#247b52", occupied: "#b6543b", review: "#ae7c27" };
@@ -41,81 +38,6 @@ type Memory = { favoriteIds: string[]; asked: string[] };
 
 function ThemeToggle({ darkMode, onPress }: { darkMode: boolean; onPress: () => void }) {
   return <Pressable accessibilityRole="button" accessibilityLabel={darkMode ? "Enable light mode" : "Enable dark mode"} onPress={onPress} style={[styles.themeButton, darkMode && styles.themeButtonDark]}><Text style={[styles.themeIcon, darkMode && styles.textDark]}>{darkMode ? "☀" : "☾"}</Text></Pressable>;
-}
-
-function StreetView({ spot, spots, onSelect, darkMode, onToggleTheme }: { spot: Spot; spots: Spot[]; onSelect: (spot: Spot) => void; darkMode: boolean; onToggleTheme: () => void }) {
-  // Keep the live panorama interactive. The thumbnail is only a fallback for
-  // devices where Google blocks the Maps page inside an Expo WebView.
-  const [streetViewError, setStreetViewError] = useState(false);
-  const [thumbnailHost, setThumbnailHost] = useState(0);
-  const [thumbnailError, setThumbnailError] = useState(false);
-  const [webViewKey, setWebViewKey] = useState(0);
-  const [interactiveLoading, setInteractiveLoading] = useState(true);
-  const thumbnailHosts = ["https://geo0.ggpht.com/cbk", "https://geo1.ggpht.com/cbk"];
-  const thumbnailSource = `${thumbnailHosts[thumbnailHost]}?cb_client=maps_sv.tactile&authuser=0&hl=en&gl=ca&output=thumbnail&thumb=2&w=900&h=600&ll=${spot.latitude},${spot.longitude}&yaw=${spot.heading}&pitch=0&thumbfov=90`;
-  const mapsSource = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${spot.latitude},${spot.longitude}&heading=${spot.heading}&pitch=0&fov=90&hl=en`;
-  const legacyEmbedSource = `https://maps.google.com/maps?q=&layer=c&cbll=${spot.latitude},${spot.longitude}&cbp=11,${spot.heading},0,0,0&output=svembed&hl=en`;
-  const embedKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const interactiveSource = embedKey
-    ? `https://www.google.com/maps/embed/v1/streetview?location=${spot.latitude},${spot.longitude}&heading=${spot.heading}&pitch=0&fov=90&key=${embedKey}`
-    : legacyEmbedSource;
-
-  useEffect(() => {
-    setStreetViewError(false);
-    setThumbnailHost(0);
-    setThumbnailError(false);
-    setWebViewKey((key) => key + 1);
-    setInteractiveLoading(true);
-  }, [spot.id]);
-
-  useEffect(() => {
-    if (streetViewError || !interactiveLoading) return undefined;
-    const timeout = setTimeout(() => setStreetViewError(true), 15000);
-    return () => clearTimeout(timeout);
-  }, [interactiveLoading, streetViewError, spot.id, webViewKey]);
-
-  const reloadStreetView = () => {
-    setStreetViewError(false);
-    setThumbnailHost(0);
-    setThumbnailError(false);
-    setInteractiveLoading(true);
-    setWebViewKey((key) => key + 1);
-  };
-  const handleThumbnailError = () => {
-    if (thumbnailHost === 0) {
-      setThumbnailHost(1);
-      return;
-    }
-    setThumbnailError(true);
-  };
-  return (
-    <View style={[styles.streetScreen, darkMode && styles.screenDark]}>
-      <View style={styles.streetTopBar}>
-        <View><Text style={[styles.kicker, darkMode && styles.textMutedDark]}>EXPLORE THE BLOCK</Text><Text style={[styles.streetPageTitle, darkMode && styles.textDark]}>Street View</Text></View>
-        <View style={styles.headerTheme}><ThemeToggle darkMode={darkMode} onPress={onToggleTheme} /></View><View style={styles.headerActions}><View style={[styles.livePill, darkMode && styles.darkPill]}><View style={styles.liveDot} /><Text style={[styles.liveText, darkMode && styles.textMutedDark]}>GOOGLE STREET VIEW</Text></View></View>
-      </View>
-      <View style={[styles.streetHeroCard, darkMode && styles.darkCard]}>
-        <View style={[styles.streetViewerHeader, darkMode && styles.darkCard]}>
-          <View><Text style={[styles.streetViewerLabel, darkMode && styles.textMutedDark]}>SELECTED LOCATION</Text><Text style={[styles.streetViewerTitle, darkMode && styles.textDark]}>{spot.street} {spot.number}</Text></View>
-          <View style={[styles.streetStatus, { backgroundColor: `${statusColor[spot.status]}18` }]}><View style={[styles.chipDot, { backgroundColor: statusColor[spot.status] }]} /><Text style={[styles.streetStatusText, { color: statusColor[spot.status] }]}>{statusText[spot.status]}</Text></View>
-        </View>
-        <View style={styles.streetFrame}>
-          {streetViewError ? <View style={styles.streetFallback}>{thumbnailError ? <OsmMap style={styles.streetFallbackMap} markers={[{ id: spot.id, latitude: spot.latitude, longitude: spot.longitude, color: statusColor[spot.status] }]} center={{ latitude: spot.latitude, longitude: spot.longitude }} zoom={16} interactive={false} dark={darkMode} /> : <Image source={{ uri: thumbnailSource }} style={styles.streetImage} resizeMode="cover" onError={handleThumbnailError} />}<View style={[styles.streetFallbackPanel, darkMode && styles.darkCard]}><Text style={[styles.webErrorIcon, darkMode && styles.textDark]}>◎</Text><Text style={[styles.webErrorTitle, darkMode && styles.textDark]}>Interactive Street View unavailable</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Google blocked the live panorama in this preview. This is a static backup only.</Text><View style={styles.streetFallbackActions}><Pressable onPress={reloadStreetView} style={styles.webRetry}><Text style={styles.webRetryText}>Try again</Text></Pressable><Pressable onPress={() => void Linking.openURL(mapsSource)} style={styles.webOpen}><Text style={[styles.webOpenText, darkMode && styles.textDark]}>Open Google Maps</Text></Pressable></View></View></View> : <WebView key={webViewKey} source={{ uri: interactiveSource }} style={styles.webView} originWhitelist={["*"]} javaScriptEnabled domStorageEnabled cacheEnabled thirdPartyCookiesEnabled setSupportMultipleWindows={false} allowsInlineMediaPlayback mediaPlaybackRequiresUserAction={false} mixedContentMode="always" startInLoadingState renderLoading={() => <View style={styles.webLoading}><ActivityIndicator size="large" color="#247b52" /><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Loading live Street View…</Text></View>} onLoadStart={() => setInteractiveLoading(true)} onLoadEnd={() => setInteractiveLoading(false)} onError={() => setStreetViewError(true)} onHttpError={() => setStreetViewError(true)} />}
-          <View style={styles.streetCompass}><Text style={styles.streetCompassArrow}>↑</Text><Text style={styles.streetCompassText}>N</Text></View>
-          <View style={styles.streetSource}><Text style={styles.streetSourceText}>Google Street View</Text></View>
-        </View>
-      </View>
-      <View style={[styles.streetInfoCard, darkMode && styles.darkCard]}>
-        <View style={[styles.streetInfoIcon, darkMode && styles.darkPill]}><Text style={[styles.streetInfoIconText, darkMode && styles.textMutedDark]}>⌖</Text></View>
-        <View style={styles.streetInfoCopy}><Text style={[styles.streetInfoTitle, darkMode && styles.textDark]}>{spot.neighborhood}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Last local reading · {spot.checked} ago · agreement {spot.confidence}</Text></View>
-        <Pressable onPress={() => onSelect(spot)} style={[styles.streetRefresh, darkMode && styles.darkPill]}><Text style={[styles.streetRefreshText, darkMode && styles.textMutedDark]}>↻</Text></Pressable>
-      </View>
-      <Text style={[styles.streetSectionLabel, darkMode && styles.textMutedDark]}>CHANGE LOCATION</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.spotPicker}>
-        {spots.filter((candidate) => candidate.status === "free").map((candidate) => <Pressable key={candidate.id} onPress={() => onSelect(candidate)} style={[styles.streetAvailableButton, darkMode && styles.darkCard, candidate.id === spot.id && styles.streetAvailableSelected]}><View style={styles.streetAvailableDot} /><Text numberOfLines={1} ellipsizeMode="tail" style={[styles.streetAvailableStreet, darkMode && styles.textDark, candidate.id === spot.id && styles.streetAvailableTextSelected]}>{candidate.street} {candidate.number}</Text><Text style={[styles.streetAvailableArrow, darkMode && styles.textMutedDark, candidate.id === spot.id && styles.streetAvailableTextSelected]}>›</Text></Pressable>)}
-      </ScrollView>
-    </View>
-  );
 }
 
 function TabButton({ icon, label, active, onPress }: { icon: string; label: string; active: boolean; onPress: () => void }) {
@@ -173,7 +95,7 @@ function TestingScreen({
           const verdict = latestReviews[spot.id];
           return <View key={spot.id} style={[styles.testingSpotCard, darkMode && styles.darkCard]}>
             <View style={[styles.testingSpotDot, { backgroundColor: statusColor[spot.status] }]} />
-            <View style={styles.testingSpotCopy}><View style={styles.testingSpotTitleRow}><Text style={[styles.testingSpotStreet, darkMode && styles.textDark]}>{spot.street} {spot.number}</Text><Text style={[styles.testingPrediction, { color: statusColor[spot.status] }]}>{statusText[spot.status]}</Text></View><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{spot.neighborhood} · model confidence {spot.confidence} · checked {spot.checked} ago</Text><Pressable onPress={() => onOpenStreet(spot)}><Text style={styles.testingStreetLink}>Open Street View ›</Text></Pressable></View>
+            <View style={styles.testingSpotCopy}><View style={styles.testingSpotTitleRow}><Text style={[styles.testingSpotStreet, darkMode && styles.textDark]}>{spot.street} {spot.number}</Text><Text style={[styles.testingPrediction, { color: statusColor[spot.status] }]}>{statusText[spot.status]}</Text></View><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{spot.neighborhood} · model confidence {spot.confidence} · checked {spot.checked} ago</Text><Pressable onPress={() => onOpenStreet(spot)}><Text style={styles.testingStreetLink}>See the frame ›</Text></Pressable></View>
             <View style={styles.testingButtons}><Pressable accessibilityRole="button" accessibilityLabel={`Mark ${spot.street} ${spot.number} correct`} onPress={() => onReview(spot.id, true)} style={[styles.testingVerdictButton, darkMode && styles.testingVerdictButtonDark, verdict === true && styles.testingCorrectActive]}><Text style={[styles.testingVerdictText, verdict === true && styles.testingVerdictTextActive]}>✓</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel={`Mark ${spot.street} ${spot.number} incorrect`} onPress={() => onReview(spot.id, false)} style={[styles.testingVerdictButton, darkMode && styles.testingVerdictButtonDark, verdict === false && styles.testingIncorrectActive]}><Text style={[styles.testingVerdictText, verdict === false && styles.testingIncorrectTextActive]}>×</Text></Pressable></View>
           </View>;
         })}
@@ -193,7 +115,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(systemColorScheme === "dark");
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locating, setLocating] = useState(false);
-  const { spots, scanning, lastScanAt, progress, error: scanError, scan, scannedCount, fixtureMeta } = useSpots(userLocation);
+  const { spots, scanning, lastScanAt, progress, error: scanError, scan, scannedCount, fixtureMeta, evidence } = useSpots(userLocation);
   const calgarySuggestions = useMemo(
     () => Array.from(new Set(spots.flatMap((s) => [s.street, s.neighborhood]).filter(Boolean))),
     [spots]
@@ -220,7 +142,7 @@ export default function App() {
     color: statusColor[spot.status],
     title: `${spot.street} ${spot.number}`,
     status: `${statusText[spot.status]} · ${spot.confidence}`,
-    hint: "Tap to open Street View",
+    hint: "Tap to see the frame",
   })), [visibleSpots]);
   const counts = useMemo(() => ({
     all: searchedSpots.length,
@@ -279,7 +201,7 @@ export default function App() {
     }
   };
 
-  const openStreetTab = () => setTab("street");
+  const openEvidenceTab = () => setTab("evidence");
   const markTest = (spotId: string, correct: boolean) => setTestChecks((current) => [...current, { spotId, correct, checkedAt: Date.now() }]);
   const refreshTestingFeed = () => setFeedUpdatedAt(new Date());
 
@@ -300,19 +222,19 @@ export default function App() {
             userLocation={userLocation}
             dark={darkMode}
             onSelect={(id) => setSelectedId(id)}
-            onOpen={(id) => { setSelectedId(id); setTab("street"); }}
+            onOpen={(id) => { setSelectedId(id); setTab("evidence"); }}
           />
           <View style={[styles.mapLegend, darkMode && styles.darkCard]}><View><View style={[styles.legendDot, { backgroundColor: statusColor.free }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Free</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.occupied }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Occupied</Text></View><View><View style={[styles.legendDot, { backgroundColor: statusColor.review }]} /><Text style={[styles.legendText, darkMode && styles.textMutedDark]}>Review</Text></View></View>
-          <View style={[styles.selectedCard, darkMode && styles.darkCard]}><View style={[styles.selectedDot, { backgroundColor: statusColor[selected.status] }]} /><View style={styles.selectedCopy}><Text style={[styles.selectedStreet, darkMode && styles.textDark]}>{selected.street} {selected.number}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{selected.scanned ? `${selected.neighborhood} · read ${selected.checked} ago · ${selected.confidence}` : selected.neighborhood}</Text>{selected.scanned && <Text style={[styles.muted, darkMode && styles.textMutedDark]} numberOfLines={2}>{selected.status === "free" ? `≈${selected.carsFit} car${selected.carsFit === 1 ? "" : "s"} fit · ${selected.freeMetres} m free` : selected.reason}</Text>}{selected.scanned && selected.rule ? <Text style={[styles.muted, darkMode && styles.textMutedDark]} numberOfLines={2}>{selected.rule}</Text> : null}</View><Pressable onPress={toggleFavorite} style={styles.starButton}><Text style={styles.star}>{memory.favoriteIds.includes(selected.id) ? "★" : "☆"}</Text></Pressable><Pressable onPress={openStreetTab} style={styles.streetButton}><Text style={styles.streetButtonText}>Street View</Text></Pressable></View>
+          <View style={[styles.selectedCard, darkMode && styles.darkCard]}><View style={[styles.selectedDot, { backgroundColor: statusColor[selected.status] }]} /><View style={styles.selectedCopy}><Text style={[styles.selectedStreet, darkMode && styles.textDark]}>{selected.street} {selected.number}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{selected.scanned ? `${selected.neighborhood} · read ${selected.checked} ago · ${selected.confidence}` : selected.neighborhood}</Text>{selected.scanned && <Text style={[styles.muted, darkMode && styles.textMutedDark]} numberOfLines={2}>{selected.status === "free" ? `≈${selected.carsFit} car${selected.carsFit === 1 ? "" : "s"} fit · ${selected.freeMetres} m free` : selected.reason}</Text>}{selected.scanned && selected.rule ? <Text style={[styles.muted, darkMode && styles.textMutedDark]} numberOfLines={2}>{selected.rule}</Text> : null}</View><Pressable onPress={toggleFavorite} style={styles.starButton}><Text style={styles.star}>{memory.favoriteIds.includes(selected.id) ? "★" : "☆"}</Text></Pressable><Pressable onPress={openEvidenceTab} style={styles.streetButton}><Text style={styles.streetButtonText}>Evidence</Text></Pressable></View>
         </View>}
         {tab === "scan" && <ScanScreen darkMode={darkMode} scanning={scanning} progress={progress} error={scanError} scannedCount={scannedCount} totalSpots={spots.length} lastScanAt={lastScanAt} fixtureMeta={fixtureMeta} onScan={() => void scan()} />}
-        {tab === "street" && <StreetView spot={selected} spots={spots} darkMode={darkMode} onToggleTheme={toggleTheme} onSelect={(spot) => setSelectedId(spot.id)} />}
+        {tab === "evidence" && <EvidenceScreen spot={selected} spots={spots} evidence={evidence} darkMode={darkMode} scanning={scanning} onToggleTheme={toggleTheme} onSelect={(spot) => setSelectedId(spot.id)} onScan={() => void scan()} width={width - 36} />}
         {tab === "saved" && <View style={[styles.savedScreen, darkMode && styles.screenDark]}><View style={styles.header}><View><Text style={[styles.kicker, darkMode && styles.textMutedDark]}>YOUR MEMORY</Text><Text style={[styles.screenTitle, darkMode && styles.textDark]}>Saved places</Text></View><View style={styles.headerTheme}><ThemeToggle darkMode={darkMode} onPress={toggleTheme} /></View><View style={styles.headerActions}><Text style={styles.savedCount}>{memory.favoriteIds.length}</Text></View></View><Text style={[styles.sectionLabel, darkMode && styles.textMutedDark]}>FAVORITES</Text>{memory.favoriteIds.length === 0 ? <View style={styles.empty}><Text style={styles.emptyIcon}>☆</Text><Text style={[styles.emptyTitle, darkMode && styles.textDark]}>You have no saved places yet</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>Tap ☆ on any map point to save it here.</Text></View> : <FlatList data={spots.filter((spot) => memory.favoriteIds.includes(spot.id))} keyExtractor={(spot) => spot.id} contentContainerStyle={styles.savedList} renderItem={({ item }) => <Pressable style={[styles.savedRow, darkMode && styles.darkCard]} onPress={() => { setSelectedId(item.id); setTab("map"); }}><View style={[styles.savedDot, { backgroundColor: statusColor[item.status] }]} /><View style={styles.savedCopy}><Text style={[styles.savedStreet, darkMode && styles.textDark]}>{item.street} {item.number}</Text><Text style={[styles.muted, darkMode && styles.textMutedDark]}>{item.neighborhood} · {statusText[item.status]}</Text></View><Text style={[styles.rowArrow, darkMode && styles.textMutedDark]}>›</Text></Pressable>} />}
           <Text style={[styles.sectionLabel, darkMode && styles.textMutedDark]}>MOST SEARCHED ON THIS PHONE</Text>{memory.asked.length === 0 ? <Text style={[styles.muted, darkMode && styles.textMutedDark]}>Your frequent searches will appear here.</Text> : <View style={styles.askedWrap}>{memory.asked.map((place) => <Pressable key={place} style={[styles.askedChip, darkMode && styles.darkPill]} onPress={() => { setQuery(place); setTab("map"); }}><Text style={[styles.askedText, darkMode && styles.textDark]}>⌕ {place}</Text></Pressable>)}</View>}
           <Pressable style={styles.clearButton} onPress={() => saveMemory({ favoriteIds: [], asked: [] })}><Text style={styles.clearText}>Clear local memory</Text></Pressable>
         </View>}
-        {tab === "testing" && <TestingScreen spots={spots} darkMode={darkMode} onToggleTheme={toggleTheme} checks={testChecks} onReview={markTest} onReset={() => setTestChecks([])} lastUpdated={feedUpdatedAt} onRefresh={refreshTestingFeed} onOpenStreet={(spot) => { setSelectedId(spot.id); setTab("street"); }} />}
-        <View style={[styles.tabBar, darkMode && styles.darkTabBar]}><TabButton icon="⌖" label="Map" active={tab === "map"} onPress={() => setTab("map")} /><TabButton icon="◎" label="Scan" active={tab === "scan"} onPress={() => setTab("scan")} /><TabButton icon="◉" label="Street View" active={tab === "street"} onPress={openStreetTab} /><TabButton icon="✓" label="Testing" active={tab === "testing"} onPress={() => setTab("testing")} /><TabButton icon="★" label="Saved" active={tab === "saved"} onPress={() => setTab("saved")} /></View>
+        {tab === "testing" && <TestingScreen spots={spots} darkMode={darkMode} onToggleTheme={toggleTheme} checks={testChecks} onReview={markTest} onReset={() => setTestChecks([])} lastUpdated={feedUpdatedAt} onRefresh={refreshTestingFeed} onOpenStreet={(spot) => { setSelectedId(spot.id); setTab("evidence"); }} />}
+        <View style={[styles.tabBar, darkMode && styles.darkTabBar]}><TabButton icon="⌖" label="Map" active={tab === "map"} onPress={() => setTab("map")} /><TabButton icon="◎" label="Scan" active={tab === "scan"} onPress={() => setTab("scan")} /><TabButton icon="◉" label="Evidence" active={tab === "evidence"} onPress={openEvidenceTab} /><TabButton icon="✓" label="Testing" active={tab === "testing"} onPress={() => setTab("testing")} /><TabButton icon="★" label="Saved" active={tab === "saved"} onPress={() => setTab("saved")} /></View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

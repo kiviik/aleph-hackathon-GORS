@@ -11,6 +11,7 @@ import {
   DEFAULT_NEARBY,
   type BandResult,
   type Camera,
+  type FrameEvidence,
 } from "../scan/scan";
 import { pointAlongZone, zoneHeading } from "../data/frames";
 import type { PipelineStage, TraceEvent } from "../contracts";
@@ -36,7 +37,11 @@ export type Spot = {
   rule?: string;
   ticks?: number;
   cameraId?: string;
+  bandId?: string;
   scanned?: boolean;
+  /** Prebaked corridor geometry + the confirmed gaps, both in source-frame pixels. */
+  band?: any;
+  gaps?: any[];
 };
 
 /** "7 St SW ,  Fr 5 Av SW To 6 Av SW" -> { street: "7 St SW", number: "5 Av → 6 Av" } */
@@ -68,6 +73,8 @@ function seedSpots(): Spot[] {
       out.push({
         id: `${c.id}-${band.id}`,
         cameraId: c.id,
+        bandId: band.id,
+        band,
         street,
         number,
         neighborhood: c.zone.brz || c.quadrant || "Calgary",
@@ -104,6 +111,8 @@ function toSpot(prev: Spot, r: BandResult, camera: Camera): Spot {
     reason: decision.reason,
     rule: r.rules?.explanation,
     ticks: o.ticks,
+    band: r.band ?? prev.band,
+    gaps: o.gaps ?? [],
     scanned: true,
   };
 }
@@ -116,6 +125,8 @@ export function useSpots(userLocation: { latitude: number; longitude: number } |
   const [lastScanAt, setLastScanAt] = useState<number | null>(null);
   const [progress, setProgress] = useState<ScanProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // Newest frame per camera, so the evidence view can show what the detector actually saw.
+  const [evidence, setEvidence] = useState<Record<string, FrameEvidence>>({});
   const cancelled = useRef(false);
 
   useEffect(() => () => { cancelled.current = true; }, []);
@@ -135,11 +146,12 @@ export function useSpots(userLocation: { latitude: number; longitude: number } |
 
       try {
         for (const camera of targets) {
-          const { results } = await scanCamera(camera, {
+          const { results, evidence: ev } = await scanCamera(camera, {
             onStage: (stage, e) =>
               setProgress((p) => [...p, { cameraId: camera.id, stage, status: e.status!, detail: e.detail! }]),
           });
           if (cancelled.current) return;
+          if (ev) setEvidence((current) => ({ ...current, [ev.cameraId]: ev }));
           setSpots((current) =>
             current.map((s) => {
               const r = results.find((x) => `${x.cameraId}-${x.bandId}` === s.id);
@@ -159,5 +171,5 @@ export function useSpots(userLocation: { latitude: number; longitude: number } |
 
   const scannedCount = useMemo(() => spots.filter((s) => s.scanned).length, [spots]);
 
-  return { spots, scanning, lastScanAt, progress, error, scan, scannedCount, fixtureMeta };
+  return { spots, scanning, lastScanAt, progress, error, scan, scannedCount, fixtureMeta, evidence };
 }
