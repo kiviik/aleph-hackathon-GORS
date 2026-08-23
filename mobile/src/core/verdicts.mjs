@@ -2,7 +2,7 @@
 //
 // The band state (the 160-cell EMA and its tick count) was already persisted, but the *verdicts*
 // were not: `spots` was re-seeded from the fixture on every mount, so re-opening the app showed an
-// all-grey "unscanned" map for the ~5 minutes the camera rotation needs to look at all 15 cameras
+// all-grey "unscanned" map for the ~5 minutes the camera rotation needs to look at all 13 cameras
 // again -- even though the answers from a minute ago were still sitting on disk.
 //
 // Two things a restored verdict must never do: outlive its evidence, or survive geometry it no

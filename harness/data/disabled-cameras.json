@@ -1,0 +1,20 @@
+{
+ "note": "Cameras permanently excluded from the shipped fixture, applied by scripts/export-mobile-assets.mjs. A camera listed here is dropped from mobile/src/data/bands.json and can never be re-added by an export -- not by --source fixture, not by --only, not from state.json or learned-bands.json. Removing a row is the only way back, and it should be done only with a fresh overlay proving the camera holds the view its geometry was learned on. The band-loss guard deliberately ignores these ids: disabling one is an intended loss, not the accident the guard exists to catch. Of 208 City cameras the app covers a hand-picked few, so a camera that cannot be trusted is cheap to drop and expensive to keep.",
+ "fields": {
+  "why": "one line: what makes this camera unusable",
+  "evidence": "how it was established, reproducibly",
+  "disabledAt": "YYYY-MM-DD"
+ },
+ "cameras": {
+  "162": {
+   "why": "PTZ: the camera no longer holds the view its band was learned on.",
+   "evidence": "Corner direction label read E on the learning-era frame (data/debug-162.jpg) and W live. The shipped band drawn on a current frame crosses the roadway and the crosswalk instead of lying on a curb. Re-learning from data/history/162.jsonl (303 rows) yields ZERO bands, which is what a view change looks like to the learner.",
+   "disabledAt": "2026-08-23"
+  },
+  "182": {
+   "why": "PTZ: the camera no longer holds the view its band was learned on, and the band was never sound to begin with.",
+   "evidence": "Corner direction label read SW on the learning-era frame (data/debug-182.jpg) and NW live; 12 frames sampled over 4 minutes all held the new view. The shipped band drawn on a current frame runs diagonally across both travel lanes. Independently, the band fails today's learner: sideFrac 0.74 in state.json against minSideFrac 0.8 ('traffic both sides'), only 13.9 m of its claimed 33.3 m ever observed (coreT 145.2-440.8 of 697.1 px), and 33.3 m claimed against a 23.9 m zone.",
+   "disabledAt": "2026-08-23"
+  }
+ }
+}

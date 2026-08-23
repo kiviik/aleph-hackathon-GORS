@@ -9,11 +9,14 @@
 //                                   auto (default): learned-bands.json per camera, else state.json;
 //                                   fixture: keep the geometry already shipped and only re-match
 //                                   zones (no re-learn, so nothing about the curbs changes)
-//     --only 76,162                 export just these cameras, keeping the rest of the fixture
+//     --only 76,164                 export just these cameras, keeping the rest of the fixture
 //     --dry-run                     print the diff and write nothing
 //     --allow-band-loss             permit an export that drops bands or cameras
 //
 // Default outDir: mobile/src/data
+//
+// Cameras listed in data/disabled-cameras.json are excluded from every source and are not counted
+// as band loss. That file is the permanent record of which cameras the app refuses to ship.
 //
 // The band-loss guard is not optional caution. `data/state.json` holds ONE band for camera 76,
 // while the shipped fixture holds two -- the two-band entry came from a research-repo export that
@@ -54,8 +57,20 @@ const cameras = await read(dataFile('cameras.json'))
 const zones = await read(dataFile('zones.json'))
 const learnedDoc = await read(dataFile('learned-bands.json'), { cameras: {} })
 const overrides = await read(dataFile('band-zones.json'), { cameras: {} })
-const previous = await read(path.join(OUT, 'bands.json'), { cameras: {} })
+const previousDoc = await read(path.join(OUT, 'bands.json'), { cameras: {} })
+const disabledDoc = await read(dataFile('disabled-cameras.json'), { cameras: {} })
 const byId = new Map(cameras.map((c) => [c.id, c]))
+
+// A disabled camera is filtered out of the shipped fixture *before* anything reads it, which is
+// what makes the exclusion hold for every source: `--source fixture` iterates these keys, `--only`
+// copies them through untouched, and the band-loss guard diffs against them. Dropping them here
+// covers all three at once, and means a disabled camera never counts as lost geometry.
+const DISABLED = new Map(Object.entries(disabledDoc.cameras ?? {}))
+const previous = {
+  ...previousDoc,
+  cameras: Object.fromEntries(Object.entries(previousDoc.cameras ?? {}).filter(([id]) => !DISABLED.has(id)))
+}
+const dropped = Object.keys(previousDoc.cameras ?? {}).filter((id) => DISABLED.has(id))
 
 let sha = 'unknown'
 try { sha = execSync('git rev-parse --short HEAD', { cwd: HARNESS, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() } catch {}
@@ -97,6 +112,9 @@ const ids = ONLY ?? (SOURCE === 'fixture'
   ? Object.keys(previous.cameras ?? {})
   : [...new Set([...Object.keys(state), ...Object.keys(learnedDoc.cameras ?? {})])])
 for (const id of ids) {
+  // state.json and learned-bands.json still carry rows for disabled cameras; this is what stops
+  // `--source auto` from quietly resurrecting one.
+  if (DISABLED.has(id)) { skipped.push(`${id}: disabled — ${DISABLED.get(id).why}`); continue }
   const cam = byId.get(id)
   if (!cam) { skipped.push(`${id}: camera not in cameras.json`); continue }
   const geometry = geometryFor(id)
@@ -194,6 +212,8 @@ for (const id of Object.keys(out).sort((a, b) => Number(a) - Number(b))) {
 for (const n of notes) console.log(`  note: ${n}`)
 for (const s of skipped) console.log(`  skipped ${s}`)
 if (added.length) console.log(`  added cameras: ${added.join(', ')}`)
+for (const id of dropped) console.log(`  removed ${id} from the fixture — disabled in ${rel(dataFile('disabled-cameras.json'))}`)
+if (DISABLED.size) console.log(`  disabled: ${[...DISABLED.keys()].join(', ')}`)
 
 if ((lost.length || shrunk.length) && !ALLOW_BAND_LOSS) {
   console.error('\nREFUSING TO WRITE — this export would remove curb geometry the app already ships:')

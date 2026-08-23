@@ -1,5 +1,5 @@
 {
- "exportedAt": "2026-08-22T21:31:47.905Z",
+ "exportedAt": "2026-08-23T04:25:35.973Z",
  "sourceRepo": "calgary-free-parking",
  "sourceSha": "unknown",
  "note": "Bands learned offline from traffic-camera history. Synthetic of nothing: geometry is real, rules are City of Calgary open data. Not legal parking advice.",
@@ -496,72 +496,6 @@
     ]
    }
   },
-  "162": {
-   "id": "162",
-   "name": "Camera 162",
-   "location": "17 Ave / 4 St SW",
-   "quadrant": "SW",
-   "lat": 51.0377508,
-   "lng": -114.0715981,
-   "url": "https://trafficcam.calgary.ca/loc161.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      198.2,
-      625.2
-     ],
-     "p1": [
-      595,
-      258.2
-     ],
-     "dir": [
-      0.7342,
-      -0.679
-     ],
-     "length": 540.4,
-     "halfWidth": 17.7,
-     "meanBoxH": 50.6,
-     "coreT": [
-      24.1,
-      512.5
-     ],
-     "slots": 9,
-     "support": 424
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 34.997,
-     "b": -0.062368,
-     "samples": 372,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "4490",
-    "address": "17 Av SW ,  Fr 2 St SW To 4 St SW",
-    "blockSide": "N",
-    "stallType": "Parallel",
-    "enforceableTime": "0910-1520 MON-FRI, 0910-1750 SAT",
-    "restrictType": "PM",
-    "restrictTime": "15:30 -18:00",
-    "maxTime": "120.0",
-    "priceZone": "13",
-    "brz": "Uptown 17",
-    "distanceM": 31.9,
-    "onCameraStreet": true,
-    "lengthM": 46.3,
-    "p0": [
-     -114.070932,
-     51.037891
-    ],
-    "p1": [
-     -114.070325,
-     51.037891
-    ]
-   }
-  },
   "163": {
    "id": "163",
    "name": "Camera 163",
@@ -823,72 +757,6 @@
     "p1": [
      -114.064398,
      51.044714
-    ]
-   }
-  },
-  "182": {
-   "id": "182",
-   "name": "Camera 182",
-   "location": "8 Ave / 1 St SW",
-   "quadrant": "SW",
-   "lat": 51.0456784,
-   "lng": -114.0653382,
-   "url": "https://trafficcam.calgary.ca/loc181.jpg",
-   "bands": [
-    {
-     "id": "b0",
-     "p0": [
-      133,
-      10.2
-     ],
-     "p1": [
-      681.1,
-      441
-     ],
-     "dir": [
-      0.7862,
-      0.618
-     ],
-     "length": 697.1,
-     "halfWidth": 20.6,
-     "meanBoxH": 58.9,
-     "coreT": [
-      145.2,
-      440.8
-     ],
-     "slots": 7,
-     "support": 295
-    }
-   ],
-   "scales": {
-    "b0": {
-     "a": 9.8549,
-     "b": 0.040834,
-     "samples": 206,
-     "ok": true
-    }
-   },
-   "zone": {
-    "id": "2495",
-    "address": "1 St SW ,  Fr 8 Av SW To 9 Av SW",
-    "blockSide": "W",
-    "stallType": "Parallel",
-    "enforceableTime": "0840-1520 MON-FRI, 0910-1750 SAT",
-    "restrictType": "AM&PM",
-    "restrictTime": "07:00 - 08:30 , 15:30 - 18:00",
-    "maxTime": "60.0",
-    "priceZone": "4c",
-    "brz": "Downtown",
-    "distanceM": 34.8,
-    "onCameraStreet": true,
-    "lengthM": 23.9,
-    "p0": [
-     -114.065618,
-     51.045199
-    ],
-    "p1": [
-     -114.065603,
-     51.045414
     ]
    }
   },

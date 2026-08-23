@@ -1,7 +1,7 @@
 // Collect detection history from the live Calgary cameras, so bands can be re-learned here.
 //
 //   npm run detector                      # in another terminal
-//   npm run collect:history -- --only 76,162 --frames 45
+//   npm run collect:history -- --only 76,164 --frames 45
 //
 // Why this exists: band learning needs ~20+ distinct frames per camera, and the history the
 // shipped geometry was learned from stayed in the research repo. Without this, `learn:bands` has

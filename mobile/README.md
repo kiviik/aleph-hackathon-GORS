@@ -86,7 +86,7 @@ npm run verify:pipeline 76 4      # full on-device path, live camera
 - Detection is genuinely on-device. Frames come from Calgary's public cameras over the
   network; **inference never leaves the phone**.
 - **The curb geometry was learned offline**, on a laptop, from hours of camera history.
-  The phone consumes `src/data/bands.json` (15 cameras, 16 bands) — it does not learn it.
+  The phone consumes `src/data/bands.json` (13 cameras, 14 bands) — it does not learn it.
 - The offline learner is side-aware: it extracts one narrow line at a time and removes only that
   line's inliers, so opposite curbs become separate bands instead of one widened corridor. At
   runtime a detection is assigned to **one** band — the nearest centreline in metres — so a car on
@@ -100,14 +100,21 @@ npm run verify:pipeline 76 4      # full on-device path, live camera
   mapping whose own error is tens of metres. Where the fixture matches a zone per curb, each band is
   judged under *its* rules: 47% of opposite-side zone pairs in the City data differ somewhere, and
   25% differ in the restriction window itself.
-- Only those 15 cameras are covered, of 208.
+- Only those 13 cameras are covered, of 208.
+- **Some of the City's cameras pan.** A band is geometry in the pixels of one view, so a camera that
+  changes preset makes its own band meaningless — and nothing in the pipeline notices: there is no
+  view fingerprint, and a re-aimed camera keeps being judged against stale geometry. Cameras 162 and
+  182 were caught doing exactly this and are permanently excluded via
+  [`harness/data/disabled-cameras.json`](../harness/data/disabled-cameras.json), which the exporter
+  honours for every source. With 208 cameras in the city, dropping one that will not hold still is
+  cheaper than trusting it. Verify a new camera holds its view before adding it.
 - A curb segment needs **three consistent observations** before it can read "free". One
   scan always shows `review`. That is the design, not a bug.
 - **Opening the app is not a blank slate.** The curb segments are drawn from the bundled fixture on
   the first frame, and the last session's verdicts are restored with them — labelled with the age of
   the frame they came from, and dropped entirely once that frame is over 30 minutes old, the same
   cut-off at which the band's own history is discarded. Without that, re-opening showed an all-grey
-  map for the five minutes the camera rotation needs to revisit all 15 cameras, despite already
+  map for the five minutes the camera rotation needs to revisit all 13 cameras, despite already
   knowing the answers. A first-ever launch still has to download the model and take its own frames.
 - Two inference passes per frame instead of the desktop's four. Lower recall, but a missed
   car leaves a textured strip that the appearance guard marks *unknown*, never *free*.
